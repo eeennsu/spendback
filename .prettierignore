@@ -1,0 +1,5 @@
+android/
+coverage/
+pnpm-lock.yaml
+# 문서는 손으로 정리한다(표 정렬로 diff가 커진다)
+*.md

@@ -31,7 +31,12 @@ export function Chip({ label, selected = false, disabled = false, onPress, class
         className,
       )}
     >
-      <Text className={cn('text-sm', selected ? 'text-fg-on-brand' : 'text-fg')}>{label}</Text>
+      <Text
+        maxFontSizeMultiplier={1.5}
+        className={cn('text-sm', selected ? 'text-fg-on-brand' : 'text-fg')}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

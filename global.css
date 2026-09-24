@@ -19,3 +19,12 @@
     --fg-on-danger: oklch(13% 0.028 261.692);
   }
 }
+
+/*
+ * 임시. react-native-css 3.0.7은 font-variant-numeric을 RN 스타일로 옮기지 않아 tabular-nums가
+ * RN에서 아무 일도 하지 않는다. 같은 클래스에 RN 전용 선언을 더한다. DS 0.3.0의 native 래퍼가
+ * 같은 선언을 내면 지운다(docs/DESIGN.md 5.2).
+ */
+.tabular-nums {
+  -rn-font-variant: tabular-nums;
+}

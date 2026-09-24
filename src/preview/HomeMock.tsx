@@ -22,12 +22,13 @@ export function HomeMock({ variant = 'filled', onRecord }: HomeMockProps) {
         {variant === 'filled' ? <Filled /> : <FirstRun />}
       </ScrollView>
       {/* 기록은 이 앱의 핵심 동작이라 엄지가 닿는 오른쪽 아래에 둔다(docs/DESIGN.md 3장) */}
+      {/* active:는 DS 0.3.0이 Button에 눌림 표시를 넣으면 지운다(docs/DESIGN.md 5.2) */}
       <Button
         label='기록'
         icon='plus'
         size='lg'
         onPress={onRecord}
-        className='absolute bottom-4 right-4 rounded-full shadow-md'
+        className='absolute bottom-4 right-4 rounded-full shadow-md active:bg-brand-hover'
       />
     </View>
   );
@@ -57,6 +58,9 @@ function Filled() {
             {budget.total}
           </Text>
         </Stack>
+        <Text size='sm' tone='muted' className='tabular-nums'>
+          {budget.today}
+        </Text>
         <Text size='sm' className='tabular-nums'>
           {budget.pace}
         </Text>
@@ -64,7 +68,7 @@ function Filled() {
 
       <Section title='고정비' aside={fixedCosts.progress}>
         <Text size='sm' tone='muted'>
-          결제일이 지났는데 아직 기록하지 않았어요
+          결제일이 오늘이거나 지났는데 아직 기록하지 않았어요
         </Text>
         {fixedCosts.overdue.map((item, index) => (
           // 항목을 누르면 입력 시트가 채워진 채로 열린다(PRD 4.4). 줄 전체가 누름 영역이다.
@@ -109,7 +113,7 @@ function Filled() {
         ))}
       </Section>
 
-      <Section title='최근 지출' aside={<Button label='내역 보기' variant='ghost' size='sm' />}>
+      <Section title='최근 지출'>
         {recentExpenses.map((item, index) => (
           // 누르면 같은 입력 시트가 수정 모드로 열린다(docs/DESIGN.md 4장)
           <Row
@@ -128,6 +132,11 @@ function Filled() {
             <Text className='tabular-nums'>{item.amount}</Text>
           </Row>
         ))}
+        <Button
+          label='내역 전체 보기'
+          variant='secondary'
+          className='min-h-12 active:bg-surface-hover'
+        />
       </Section>
     </>
   );
@@ -144,7 +153,11 @@ function FirstRun() {
         <Text size='sm' tone='muted'>
           예산을 정하면 남은 금액과 쓰는 속도를 여기에 보여 줘요
         </Text>
-        <Button label='예산 정하기' variant='secondary' className='self-start' />
+        <Button
+          label='예산 정하기'
+          variant='secondary'
+          className='min-h-12 self-start active:bg-surface-hover'
+        />
       </Stack>
 
       <Section title='최근 지출'>
@@ -201,8 +214,9 @@ function Row({
   onPress?: () => void;
   children: ReactElement | ReactElement[];
 }) {
+  // -mx-4 px-4: 눌림 배경과 구분선을 화면 끝까지 늘려 글자가 눌림 사각형 가장자리에 붙지 않게 한다
   const className = cn(
-    'py-3',
+    '-mx-4 px-4 py-3',
     column ? 'gap-2' : 'flex-row items-center gap-3',
     !last && 'border-b border-border',
   );

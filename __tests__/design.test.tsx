@@ -1,4 +1,4 @@
-import { Box } from '@eeennsu/native';
+import { Box, Text } from '@eeennsu/native';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
@@ -45,6 +45,14 @@ describe('앱 색(C-5b)', () => {
   test('다시 선언하지 않은 danger는 DS 값 그대로다', async () => {
     await mount(<Box className='bg-danger'>{null}</Box>);
     expect(rootStyle()).toMatchObject({ backgroundColor: DANGER_LIGHT });
+  });
+});
+
+describe('숫자', () => {
+  test('tabular-nums가 RN fontVariant로 풀린다(global.css의 임시 선언)', async () => {
+    await mount(<Text className='tabular-nums'>411,600원</Text>);
+    // 문자열로 나오고 RN이 네이티브로 넘길 때 배열로 나눈다(StyleSheet/processFontVariant)
+    expect(screen.getByText('411,600원')).toHaveStyle({ fontVariant: 'tabular-nums' });
   });
 });
 
@@ -128,6 +136,16 @@ describe('홈 시안', () => {
 });
 
 describe('입력 시트 시안', () => {
+  test('결제수단은 미리 고르지 않는다(PRD 4.1)', async () => {
+    await mount(<EntrySheetMock expanded />);
+
+    for (const method of ['카드', '현금', '계좌이체']) {
+      expect(screen.getByRole('button', { name: method }).props.accessibilityState).toMatchObject({
+        selected: false,
+      });
+    }
+  });
+
   test('금액과 카테고리가 있어야 저장할 수 있다', async () => {
     await mount(<EntrySheetMock />);
 
@@ -136,6 +154,8 @@ describe('입력 시트 시안', () => {
 
     await fireEvent.changeText(screen.getByLabelText('금액'), '');
     expect(save().props.accessibilityState).toMatchObject({ disabled: true });
+    // 저장이 왜 안 되는지 글로 알린다
+    expect(screen.getByText('금액을 입력해 주세요')).toBeOnTheScreen();
 
     await fireEvent.changeText(screen.getByLabelText('금액'), '12900');
     expect(screen.getByLabelText('금액').props.value).toBe('12,900');
@@ -158,6 +178,7 @@ describe('입력 시트 시안', () => {
     expect(screen.getByText('수입 기록')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: '급여' })).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: '배달' })).toBeNull();
+    expect(screen.getByText('카테고리를 골라 주세요')).toBeOnTheScreen();
     expect(screen.queryByText('만족도')).toBeNull();
     // 카테고리를 다시 골라야 저장할 수 있다
     expect(screen.getByRole('button', { name: '저장' }).props.accessibilityState).toMatchObject({

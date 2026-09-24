@@ -29,8 +29,10 @@ export const PAYMENT_METHODS = ['카드', '현금', '계좌이체'] as const;
 export const budget = {
   title: '9월 남은 예산',
   remaining: '411,600원',
-  used: '788,400원 사용',
+  used: '788,400원 사용 · 66%',
   total: '예산 1,200,000원',
+  // 게이지의 세로선이 무엇인지 화면 글자로도 적는다(색·모양만으로 뜻을 전하지 않는다)
+  today: '세로선은 오늘이에요 · 이번 달 80% 지남',
   ratio: 0.657,
   elapsed: 0.8,
   valueText: '예산의 66% 사용, 기간의 80% 지남',

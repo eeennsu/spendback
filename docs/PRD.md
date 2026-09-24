@@ -1,6 +1,6 @@
 # spendback PRD
 
-> 상태: 초안 v0.7 · 2026-09-24 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증(기기, 모델 파일), LLM 스파이크, 부트스트랩 결과를 반영하고 고정비 관리를 추가
+> 상태: 초안 v0.8 · 2026-09-25 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증(기기, 모델 파일), LLM 스파이크, 부트스트랩 결과를 반영하고 고정비 관리를 추가. 디자인 시스템 연동(기기 확인 전)과 DESIGN.md 작성을 반영
 >
 > 기획의 정본은 이 문서다. 앱의 디자인과 디자인 시스템 연동은 `docs/DESIGN.md`(12장 3번에서 작성)에 따로 둔다. 결정은 사용자와 합의한 것이므로, 바꿀 이유가 보이면 근거를 붙여 제안하고 합의한 뒤 반영한다. 결정의 이유는 13장에 있다.
 
@@ -280,11 +280,11 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 | 키-값 저장소 | react-native-mmkv 4(Nitro) |
 | 화면 이동 | React Navigation 7 정적 API |
 | 상태 | Zustand(UI 상태만 관리하고, 데이터의 기준은 DB) |
-| 차트 | victory-native + react-native-skia + Reanimated 4 |
-| 스타일링 | 개인 디자인 시스템 `@eeennsu/native`(NativeWind 5 기반). 0.1.0이 2026-09-24 npm에 배포됐다(RN 컴포넌트 5개: Button, Input, Card, Stack, Text). 다크 모드는 이 테마를 따른다. 연동 방식과 앱 디자인은 `docs/DESIGN.md`에 정의한다 |
+| 차트 | victory-native + react-native-skia + Reanimated 4. Reanimated 4.7.0과 react-native-worklets 0.13.0은 NativeWind(react-native-css)가 필요로 해 12장 3번에서 먼저 넣었다 |
+| 스타일링 | 개인 디자인 시스템 `@eeennsu/native`(NativeWind 5 기반). 0.2.0(2026-09-24 npm 배포, RN 컴포넌트 9개: Button, Input, Textarea, Label, Card, Badge, Text, Stack, Box)을 Expo 없이 연동했다. nativewind 5.0.0-preview.4 · react-native-css 3.0.7은 DS peer대로 정확한 버전이고, Tailwind 4와 react-native-svg(DS 아이콘)를 함께 넣었다. react-native-css의 Metro 변환기는 `@expo/metro-config`에 기대므로 같은 일을 하는 앱 변환기(`metro.transformer.js`)로 바꿨다. 다크 모드는 OS를 따르고, 앱 색은 global.css에서 DS의 semantic 색 변수만 다시 선언한다. 연동 방식과 앱 디자인은 `docs/DESIGN.md` |
 | LLM | llama.rn 0.12.x(정확한 버전 고정) |
 | 검증 | Zod 4(LLM 출력 스키마, 백업 가져오기) |
-| 테스트 | Jest 29 + React Native Testing Library 14, E2E는 Maestro. `@react-native/jest-preset` 0.87이 Jest 29 기준이다. RNTL이 쓰는 `test-renderer`는 1.2.0에 고정한다(1.3.0은 react 19.3 이상을 요구하는데 RN 0.87.1은 react 19.2.3이다) |
+| 테스트 | Jest 29 + React Native Testing Library 14, E2E는 Maestro. `@react-native/jest-preset` 0.87이 Jest 29 기준이다. RNTL이 쓰는 `test-renderer`는 1.2.0에 고정한다(1.3.0은 react 19.3 이상을 요구하는데 RN 0.87.1은 react 19.2.3이다). 디자인 시스템 컴포넌트의 스타일은 global.css를 `react-native-css/jest`에 등록해 확인한다(DESIGN.md 1.5) |
 | 도구 | ESLint 9(flat config), Prettier, husky, lint-staged, commitlint. ESLint 9는 지원이 끝났지만 `eslint-plugin-react`와 `eslint-plugin-react-native`가 10을 지원하지 않아 유지한다. 두 플러그인이 10을 지원하면 올린다 |
 
 Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 있다. Android 패키지명은 `com.eeennsu.spendback`이고, 64비트 ABI(arm64-v8a, x86_64)만 빌드한다.
@@ -293,7 +293,7 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 
 - `../expo-plate`: pnpm, husky, commitlint, CI, `.claude/rules` 구성을 참고한다. Expo 기반이라 템플릿으로 쓰지는 않는다.
 - `../rn-upgrade-kit`: RN 업그레이드 스킬 모음이다. Expo를 쓰지 않는다는 전제가 spendback과 맞는다. 그중 `rehearsal`은 Windows에서 실행을 거부하므로 macOS에서 쓴다.
-- `../design-system`: `@eeennsu/{tokens,web,native}`의 원본이다. native는 NativeWind와 react-native-css를 peer로 정확히 고정하고, react와 RN은 범위(react ≥19, RN ≥0.81)로 받는다. 원본 레포에서 로컬 링크로 검증할 때는 react·RN 버전이 정확히 같아야 한다(`../design-system/CLAUDE.md`).
+- `../design-system`: `@eeennsu/{tokens,web,native}`의 원본이다. native는 NativeWind와 react-native-css를 peer로 정확히 고정하고, react와 RN은 범위(react ≥19, RN ≥0.81)로 받는다. 원본 레포에서 로컬 링크로 검증할 때는 react·RN 버전이 정확히 같아야 한다(`../design-system/CLAUDE.md`). spendback에 필요해 만든 0.3.0(Chip, Icon, RN 눌림 표시·누름 영역·입력 포커스, 번들 크기 줄이기)은 publish 전이다(DESIGN.md 5.2).
 
 ## 9. 테스트 전략
 
@@ -312,7 +312,7 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 | 연속으로 추론하면 약 4분 만에 열 상태가 3(severe)까지 오른다 | 회고는 기간마다 한 번 생성하므로 영향이 작다. 하네스는 PC에서 돈다 |
 | Windows에서 llama.rn 설치·빌드가 깨진다: SDK CMake 3.22.1의 ninja가 긴 경로를 지원하지 않고(`LongPathsEnabled=1`이어도 260자 제한), pnpm 10이 설치 스크립트를 막고, Git Bash의 GNU tar가 `C:\` 경로를 원격 호스트로 읽는다 | llama.rn의 CMake `buildStagingDirectory`를 짧은 경로로 옮기고, `pnpm.onlyBuiltDependencies`에 `llama.rn`을 넣고, Windows에서는 PowerShell에서 설치한다. 앞의 둘은 부트스트랩에서 미리 넣었다(`android/build.gradle`, `package.json`) |
 | node-llama-cpp와 llama.rn에 들어간 llama.cpp 버전이 달라 평가 결과와 기기 결과가 어긋날 수 있음. 2026-09-24 기준 llama.rn 0.12.9는 build 10256(`6c8dcaa`), node-llama-cpp 3.21.1은 v0.4.0(2026-09-12 스냅샷)이라 약 5~6주 차이가 나고, `qwen35`와 sampler 코드가 다르다(grammar는 거의 같다) | 두 버전을 기록하고, 기기에서 표본을 교차 확인 |
-| 디자인 시스템 0.1.0이 NativeWind 5.0.0-preview.4와 react-native-css 3.0.7에 고정돼 있다(2026-09-24 상위 최신은 5.0.0-rc.0과 3.1.0-rc.0). Expo 검증 앱(RN 0.86.3)에서만 확인했고, react-native-css가 `@expo/metro-config`를 peer로 요구해 RN CLI 설정은 확인되지 않았다. 로컬 링크로 개발하면 react 버전이 어긋날 때 "Invalid hook call"이 난다 | 부트스트랩한 앱에서 연동을 확인하고(12장 3번), 결과를 DESIGN.md에 적는다 |
+| 디자인 시스템이 NativeWind 5.0.0-preview.4와 react-native-css 3.0.7에 고정돼 있다(2026-09-24 상위 최신은 5.0.0-rc.0과 3.1.0-rc.0). 앱 Metro 변환기는 react-native-css의 컴파일러와 주입 형식에 기대므로 react-native-css를 올리면 깨질 수 있다. 개발 중에는 다른 파일에 더한 새 클래스가 global.css를 다시 저장하거나 Metro를 다시 켜기 전까지 반영되지 않는다. 연동은 Jest와 Metro 번들로만 확인했고 기기에서는 아직 보지 않았다 | DS가 NativeWind를 정식 승격 뒤 한 번 올릴 때(DS 스펙 C-19) 변환기와 DESIGN.md 1.4를 함께 확인한다. 기기 확인 목록은 DESIGN.md 1.6이다 |
 | GBNF로는 한글 수사를 막을 수 없음 | 사후 검사 + 재생성 + 폴백 |
 | 2B급 모델의 한국어 문장 품질. 스파이크(모델당 3회)에서는 Kanana가 가장 자연스러웠고 EXAONE이 가장 장황하고 형식을 자주 벗어났다 | 평가 하네스로 모델을 비교하고 대안 모델로 교체 |
 
@@ -320,7 +320,7 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 
 | 항목 | 결정 시점 | 기본안 |
 |---|---|---|
-| 디자인 시스템 연동 방식과 앱 디자인(색, 간격 리듬, 화면 구조, 필요한 컴포넌트) | 12장 3번 | `@eeennsu/native`. 결과는 `docs/DESIGN.md` |
+| 탭 구성. 설정을 탭으로 둘지, 홈 헤더에서 여는 화면으로 옮겨 탭을 홈·내역·회고 3개로 줄일지. 설정 안의 기능은 대부분 홈·회고에서도 들어간다(DESIGN.md 7.3) | UI 구현(12장 6번) 전 | 5장대로 4개 |
 | 기본 모델 | 평가 하네스 결과가 나온 뒤 | Qwen3.5-2B(잠정) |
 | 예산을 매달 새로 정할지, 한 번 정한 값을 이어 쓸지 | 예산 기능 구현 전 | 직전 달 값을 새 달의 기본값으로 복사 |
 | 예산이 없는 달, 두 달에 걸친 주에서 한 달에만 카테고리 예산이 있을 때의 일할 예산 | 예산 일할 구현 전 | - |
@@ -340,7 +340,7 @@ UI는 디자인 시스템 연동과 DESIGN.md가 준비된 뒤에 만들고, 그
 
 1. **LLM 스파이크**: S24+에서 llama.rn과 후보 모델의 로드 시간, 토큰 속도, 메모리, 플레이스홀더 GBNF 동작을 측정한다. 가장 큰 불확실성이라 가장 먼저 한다. (2026-09-24 완료. 결과는 6장, 10장, 11장, 13장에 반영했다)
 2. **프로젝트 부트스트랩**: RN CLI, pnpm, TypeScript, 린트, Jest (2026-09-24 완료. 릴리스 빌드와 S24+에서 디버그 빌드 실행(Metro 연결)까지 확인했다)
-3. **디자인 시스템 연동과 DESIGN.md**: 부트스트랩한 앱에 npm의 `@eeennsu/native`를 설치해 Expo 없이 기기에서 띄우고 연동 방식을 정한다. 앱마다 갈리는 축(색, 간격 리듬, 화면 구조)과 필요한 컴포넌트를 `docs/DESIGN.md`에 정의하고, 디자인 시스템에 없는 컴포넌트는 디자인 시스템을 개선해 배포한다
+3. **디자인 시스템 연동과 DESIGN.md**: 부트스트랩한 앱에 npm의 `@eeennsu/native`를 설치해 Expo 없이 기기에서 띄우고 연동 방식을 정한다. 앱마다 갈리는 축(색, 간격 리듬, 화면 구조)과 필요한 컴포넌트를 `docs/DESIGN.md`에 정의하고, 디자인 시스템에 없는 컴포넌트는 디자인 시스템을 개선해 배포한다 (2026-09-25 소스 작업 완료. 0.2.0을 연동해 Jest와 Metro 번들로 확인했고, DESIGN.md와 홈·입력 시트 시안을 만들었다. DS에 없던 것은 0.3.0으로 준비했다. 남은 일: 기기 확인(DESIGN.md 1.6), DS 0.3.0 publish 뒤 spendback 버전 올리기와 임시 컴포넌트 교체)
 4. **도메인 계층**: 거래·카테고리·예산·고정비 스키마(drizzle), 지표 계산기, 예산 일할, 고정비 체크리스트 판정, 포맷터(TDD)
 5. **회고 파이프라인**: facts → GBNF 생성 → `narrate` → 사후 검사 → 렌더러, 평가 하네스
 6. **UI**(3번이 끝난 뒤): 입력 폼, 홈, 내역, 회고, 설정

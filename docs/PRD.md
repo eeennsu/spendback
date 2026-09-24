@@ -1,6 +1,8 @@
 # spendback PRD
 
-> 상태: 초안 v0.4 · 2026-09-24 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증 결과(기기, 모델 파일 확인 포함)와 LLM 스파이크 결과를 반영
+> 상태: 초안 v0.5 · 2026-09-24 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증(기기, 모델 파일)과 LLM 스파이크 결과를 반영
+>
+> 기획의 정본은 이 문서 하나다. 결정은 사용자와 합의한 것이므로, 바꿀 이유가 보이면 근거를 붙여 제안하고 합의한 뒤 반영한다. 결정의 이유는 13장에 있다.
 
 ## 1. 개요
 
@@ -45,7 +47,7 @@ spendback은 온디바이스 LLM이 소비 회고를 써 주는 Android 가계�
 
 ### 2단계 이후(우선순위 순)
 
-1. **카드 알림 파싱**: Android `NotificationListenerService` 네이티브 모듈로 알림을 받고, LLM이 거래로 구조화하고, 사용자가 폼에서 확인한 뒤 저장한다. 핵심 원칙의 "입력 구조화"가 처음 적용되는 기능이다.
+1. **카드 알림 파싱**: Android `NotificationListenerService` 네이티브 모듈로 알림을 받고, LLM이 거래로 구조화하고, 사용자가 폼에서 확인한 뒤 저장한다. 결제 취소 알림이 오면 해당 거래를 삭제한다. 핵심 원칙의 "입력 구조화"가 처음 적용되는 기능이다.
 2. **다짐 루프**: 회고 끝에 다음 기간 다짐을 남기고, 다음 회고에서 코드가 달성 여부를 판정한다.
 3. **대화형 질의**: "이번 달 배달 얼마 썼어?" 같은 질문을 LLM이 질의로 구조화하고, 코드가 계산한다.
 4. **보안**: 앱 잠금(생체 인증), DB 암호화(SQLCipher)
@@ -73,8 +75,6 @@ spendback은 온디바이스 LLM이 소비 회고를 써 주는 Android 가계�
 | 메모 | 선택 | 과거 메모 자동완성. 같은 메모에 전에 고른 카테고리를 자동 선택(코드) |
 | 결제수단 | 선택 | 카드 / 현금 / 계좌이체 |
 | 고정비 | 기본값 끔 | 월세·구독 등. 회고에서 변동비와 분리 |
-
-결제가 취소되면 거래를 삭제한다.
 
 ### 4.2 카테고리와 이유 태그
 
@@ -183,7 +183,7 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 
 - llama.rn 0.12.x를 정확한 버전으로 고정한다. npm `latest` 태그가 RC 버전을 가리키고 있어서 `^` 범위 지정을 쓰지 않는다.
 - 대상 기기는 국내판 Galaxy S24+(SM-S926N, Exynos 2400, `ro.soc.model=s5e9945`, RAM 12GB, Android 16)다(2026-09-24 adb 확인). CPU 추론이 전제다. GPU(Xclipse 940)에는 Vulkan 1.3과 OpenCL 드라이버가 있지만, llama.rn 0.12.9의 Android 빌드에는 Vulkan 백엔드가 없다. OpenCL·Hexagon 빌드는 Qualcomm 기기로 판별될 때만 불러오므로, 이 기기에서는 CPU 라이브러리 `rnllama_jni_v8_2_dotprod_i8mm`가 로드된다.
-- 2026-09-24 스파이크에서 세 후보 모델이 모두 로드됐다(`qwen35` 포함). 측정 앱과 결과는 `spike/llm-runtime` 브랜치에 있다.
+- 2026-09-24 스파이크에서 세 후보 모델이 모두 로드됐다(`qwen35` 포함). 측정 앱과 결과는 `spike/llm-runtime` 브랜치의 `spike/llm-runtime/README.md`에 있고, 이 브랜치는 main에 합치지 않는다.
 - Gemini Nano는 사용자의 S24+에서 쓸 수 없다(사용자 확인).
 
 ### 모델 레지스트리
@@ -243,6 +243,7 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 | ReasonTag | id, name, sortOrder, hidden, isDefault |
 | Budget | month(`YYYY-MM`), total, categoryBudgets(categoryId → amount) |
 | Retrospective | id, kind(weekly·monthly), periodStart, periodEnd, facts, output, modelId, promptVersion, createdAt. (kind, periodStart)마다 1개 |
+| Model(앱에 내장한 레지스트리) | id, repo, commit, fileName, sizeBytes, sha256, license. 값은 6장 레지스트리 표를 따른다 |
 | 설정(MMKV) | 사용 모델 ID, 다운로드한 모델 목록 등 |
 
 ## 8. 기술 스택
@@ -266,6 +267,12 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 
 Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 있다.
 
+**참고할 옆 폴더 프로젝트**
+
+- `../expo-plate`: pnpm, husky, commitlint, CI, `.claude/rules` 구성을 참고한다. Expo 기반이라 템플릿으로 쓰지는 않는다.
+- `../rn-upgrade-kit`: RN 업그레이드 스킬 모음이다. Expo를 쓰지 않는다는 전제가 spendback과 맞는다. 그중 `rehearsal`은 Windows에서 실행을 거부하므로 macOS에서 쓴다.
+- `../design-system`: `@eeennsu/native`의 원본(`packages/native`)이다. 사용자가 개선해 npm에 배포하면 도입한다. 소비하는 앱과 react/RN 버전이 정확히 같아야 한다(`../design-system/CLAUDE.md`).
+
 ## 9. 테스트 전략
 
 - **단위(Jest)**: 지표 계산기, 예산 일할, 날짜와 주 경계, 금액 포맷터, 플레이스홀더 렌더러, GBNF 생성기, 한글 수사 검사기, 백업 스키마. 핵심 원칙을 지키는 부분이라 TDD로 만든다.
@@ -282,7 +289,7 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 | llama.rn 0.12.9의 `ignore_eos`·`logit_bias`가 SIGSEGV를 낸다 | 쓰지 않고, 버전을 올릴 때 다시 확인(6장) |
 | 연속으로 추론하면 약 4분 만에 열 상태가 3(severe)까지 오른다 | 회고는 기간마다 한 번 생성하므로 영향이 작다. 하네스는 PC에서 돈다 |
 | Windows에서 llama.rn 설치·빌드가 깨진다: SDK CMake 3.22.1의 ninja가 긴 경로를 지원하지 않고(`LongPathsEnabled=1`이어도 260자 제한), pnpm 10이 설치 스크립트를 막고, Git Bash의 GNU tar가 `C:\` 경로를 원격 호스트로 읽는다 | llama.rn의 CMake `buildStagingDirectory`를 짧은 경로로 옮기고, `pnpm.onlyBuiltDependencies`에 `llama.rn`을 넣고, Windows에서는 PowerShell에서 설치한다 |
-| node-llama-cpp와 llama.rn에 들어간 llama.cpp 버전이 달라 평가 결과와 기기 결과가 어긋날 수 있음 | 두 버전을 기록하고, 기기에서 표본을 교차 확인 |
+| node-llama-cpp와 llama.rn에 들어간 llama.cpp 버전이 달라 평가 결과와 기기 결과가 어긋날 수 있음. 2026-09-24 기준 llama.rn 0.12.9는 build 10256(`6c8dcaa`), node-llama-cpp 3.21.1은 v0.4.0(2026-09-12 스냅샷)이라 약 5~6주 차이가 나고, `qwen35`와 sampler 코드가 다르다(grammar는 거의 같다) | 두 버전을 기록하고, 기기에서 표본을 교차 확인 |
 | 디자인 시스템이 npm 미배포이고 NativeWind 5 preview에 고정됨. react/RN 버전이 정확히 같지 않으면 "Invalid hook call"이 남. 검증 앱이 Expo라서 RN CLI 설정은 확인되지 않음 | 배포 후 도입할 때 버전을 맞추고 RN CLI에서 설정을 검증 |
 | GBNF로는 한글 수사를 막을 수 없음 | 사후 검사 + 재생성 + 폴백 |
 | 2B급 모델의 한국어 문장 품질. 스파이크(모델당 3회)에서는 Kanana가 가장 자연스러웠고 EXAONE이 가장 장황하고 형식을 자주 벗어났다 | 평가 하네스로 모델을 비교하고 대안 모델로 교체 |
@@ -294,15 +301,22 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 | 스타일링과 다크 모드 | 디자인 시스템 npm 배포 후 | `@eeennsu/native` |
 | 기본 모델 | 평가 하네스 결과가 나온 뒤 | Qwen3.5-2B(잠정) |
 | 예산을 매달 새로 정할지, 한 번 정한 값을 이어 쓸지 | 예산 기능 구현 전 | 직전 달 값을 새 달의 기본값으로 복사 |
+| 예산이 없는 달, 두 달에 걸친 주에서 한 달에만 카테고리 예산이 있을 때의 일할 예산 | 예산 일할 구현 전 | - |
+| 홈 "소비 속도" 계산식 | 홈 구현 전 | - |
+| 직전 기간 "데이터 없음"의 기준 | 지표 계산기 구현 전 | 직전 기간이 첫 기록일보다 앞에 있으면 없음으로 본다 |
+| "증감 상위 3개"의 정렬 기준 | 지표 계산기 구현 전 | 증감액의 절댓값이 큰 순 |
 | 백업을 가져올 때 병합할지 교체할지 | 백업 구현 전 | 확인 대화상자 후 전체 교체 |
-| llama.rn 파라미터(컨텍스트 길이, 샘플링) | 평가 하네스 | n_ctx 4096, temperature 0.7, top_k 20, top_p 0.9(스파이크에서 쓴 값) |
+| llama.rn 파라미터(컨텍스트 길이, 샘플링) | 평가 하네스 | n_ctx 4096, temperature 0.7, top_k 20, top_p 0.9(스파이크에서 쓴 값). Qwen3.5 모델 카드의 비추론 권장값(temperature 1.0, top_p 1.0, top_k 20, min_p 0, presence_penalty 2.0)과 비교한다 |
 | 플레이스홀더 키 오용 대책 | 회고 파이프라인 구현 전 | insight마다 사실 묶음(`fact`)을 먼저 고르게 하고, 그 문장에는 그 묶음의 키만 쓰도록 문법을 만든다. 대안은 하네스 점검만 늘리기, 문장 틀을 코드가 만들기(2장 원칙과 충돌) |
+| facts 키 이름 규칙 표 | 회고 파이프라인 구현 전 | id 기반(4.5의 `{category.<id>.name}` 형식) |
+| 플레이스홀더 뒤 조사(이/가, 을/를) 처리. 스파이크에서 "54,000원였어요"처럼 틀렸다 | 회고 파이프라인 구현 전 | - |
+| 평가 하네스의 금지어 목록과 문장 길이 한도 | 평가 하네스 구현 전 | - |
 
 ## 12. 작업 순서(기본안)
 
 디자인 시스템이 배포되기 전에는 UI와 무관한 계층을 먼저 만든다.
 
-1. **LLM 스파이크**: S24+에서 llama.rn과 후보 모델의 로드 시간, 토큰 속도, 메모리, 플레이스홀더 GBNF 동작을 측정한다. 가장 큰 불확실성이라 가장 먼저 한다. (2026-09-24 완료. 결과는 6장, 10장, 13장에 반영했다)
+1. **LLM 스파이크**: S24+에서 llama.rn과 후보 모델의 로드 시간, 토큰 속도, 메모리, 플레이스홀더 GBNF 동작을 측정한다. 가장 큰 불확실성이라 가장 먼저 한다. (2026-09-24 완료. 결과는 6장, 10장, 11장, 13장에 반영했다)
 2. **프로젝트 부트스트랩**: RN CLI, pnpm, TypeScript, 린트, Jest
 3. **도메인 계층**: 거래·카테고리·예산 스키마(drizzle), 지표 계산기, 예산 일할, 포맷터(TDD)
 4. **회고 파이프라인**: facts → GBNF 생성 → `narrate` → 사후 검사 → 렌더러, 평가 하네스

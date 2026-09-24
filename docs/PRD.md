@@ -1,6 +1,6 @@
 # spendback PRD
 
-> 상태: 초안 v0.2 · 2026-09-24 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증 결과를 반영
+> 상태: 초안 v0.3 · 2026-09-24 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증 결과(기기, 모델 파일 확인 포함)를 반영
 
 ## 1. 개요
 
@@ -181,18 +181,32 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 ### 런타임
 
 - llama.rn 0.12.x를 정확한 버전으로 고정한다. npm `latest` 태그가 RC 버전을 가리키고 있어서 `^` 범위 지정을 쓰지 않는다.
-- 대상 기기는 국내판 S24+(Exynos 2400)로 **가정**한다. 이 경우 llama.rn의 GPU 가속(OpenCL, Adreno 전용)과 NPU 가속(Hexagon)을 쓸 수 없어 CPU 추론이 전제다.
+- 대상 기기는 국내판 Galaxy S24+(SM-S926N, Exynos 2400, `ro.soc.model=s5e9945`, RAM 12GB, Android 16)다(2026-09-24 adb 확인). CPU 추론이 전제다. GPU(Xclipse 940)에는 Vulkan 1.3과 OpenCL 드라이버가 있지만, llama.rn 0.12.9의 Android 빌드에는 Vulkan 백엔드가 없다. OpenCL·Hexagon 빌드는 Qualcomm 기기로 판별될 때만 불러오므로, 이 기기에서는 CPU 라이브러리 `rnllama_jni_v8_2_dotprod_i8mm`가 로드된다.
 - Gemini Nano는 사용자의 S24+에서 쓸 수 없다(사용자 확인).
 
 ### 모델 레지스트리
 
-| 모델 | GGUF 저장소 | 크기(Q4_K_M) | 라이선스 | 비고 |
-|---|---|---|---|---|
-| Qwen3.5-2B | `unsloth/Qwen3.5-2B-GGUF`(비공식) | 약 1.28GB | Apache-2.0 | 잠정 기본값. 공식 Qwen 조직에는 GGUF가 없다. Unsloth Dynamic 양자화라 다른 양자화본과 품질이 다를 수 있다 |
-| Kanana-1.5-2.1B | `Grit-Labs/kanana-1.5-2.1b-instruct-2505-GGUF`(비공식) | 약 1.52GB | Apache-2.0 | 한국어 특화. 공식 kakaocorp 조직에는 GGUF가 없어 제3자 변환본만 있다. 직접 변환도 검토한다 |
-| EXAONE 4.0 1.2B | `LGAI-EXAONE/EXAONE-4.0-1.2B-GGUF`(공식) | 약 0.81GB | 비상업, 재배포 금지 | 개인용. 앱은 Hugging Face에서 받기만 한다 |
+| 모델 | GGUF 저장소 | 라이선스 | 비고 |
+|---|---|---|---|
+| Qwen3.5-2B | `unsloth/Qwen3.5-2B-GGUF`(비공식) | Apache-2.0 | 잠정 기본값. 공식 Qwen 조직에는 GGUF가 없다. 표준 Q4_K_M이지만 unsloth 보정 데이터로 만든 imatrix를 써서 다른 양자화본과 품질이 다를 수 있다(`UD-` 접두어의 Dynamic 2.0 파일과는 다르다). 저장소의 비전용 `mmproj-*.gguf`는 받지 않는다 |
+| Kanana-1.5-2.1B | `DevQuasar/kakaocorp.kanana-1.5-2.1b-instruct-2505-GGUF`(비공식) | Apache-2.0 | 한국어 특화. 공식 kakaocorp 조직에는 GGUF가 없어 제3자 변환본만 있다. v0.2에 적었던 `Grit-Labs/kanana-1.5-2.1b-instruct-2505-GGUF`(2026-09-11 생성)는 이 저장소의 파일을 그대로 다시 올린 것이다(SHA-256 동일). 직접 변환도 검토한다 |
+| EXAONE 4.0 1.2B | `LGAI-EXAONE/EXAONE-4.0-1.2B-GGUF`(공식) | EXAONE AI Model License Agreement 1.2 - NC(비상업, 재배포 금지) | 개인용. 앱은 Hugging Face에서 받기만 한다 |
 
-저장소는 2026-09-24 웹 검색으로 확인했다. 파일명, 정확한 크기, SHA-256은 레지스트리에 등록할 때 Hugging Face 파일 페이지에서 확인한다.
+**파일(Q4_K_M)**
+
+| 모델 | 파일명 | 크기(바이트) | SHA-256 | 아키텍처 | 커밋 |
+|---|---|---|---|---|---|
+| Qwen3.5-2B | `Qwen3.5-2B-Q4_K_M.gguf` | 1,280,835,840 | `aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223` | `qwen35` | `f6d5376be1edb4d416d56da11e5397a961aca8ae` |
+| Kanana-1.5-2.1B | `kakaocorp.kanana-1.5-2.1b-instruct-2505.Q4_K_M.gguf` | 1,522,796,768 | `24d3db59d0af2c85c0afc0bbc99da1174b73ef6728bce2650bd91bec28ad1c81` | `llama` | `4d3b6203857d893ebfcaca6c51901e3ea1d00d00` |
+| EXAONE 4.0 1.2B | `EXAONE-4.0-1.2B-Q4_K_M.gguf` | 812,437,792 | `7b5e753540183ae4d56e6febd9b48cdd944de53386e6faa8f51c8f98cb2b47df` | `exaone4` | `162446400ea4596377a3ce1d3ddffa32971af0a6` |
+
+2026-09-24에 아래 파일 페이지와 API(`/api/models/<저장소>/tree/<커밋>`), 다운로드 응답 헤더(`x-linked-size`, `x-linked-etag`)로 확인했고 세 값이 일치했다. 아키텍처는 GGUF 헤더의 `general.architecture`이고, 세 파일 모두 `general.file_type`이 Q4_K_M(15)이다. 세 아키텍처 모두 llama.rn 0.12.9의 `cpp/llama-arch.cpp`에 있다.
+
+- https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/blob/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf
+- https://huggingface.co/DevQuasar/kakaocorp.kanana-1.5-2.1b-instruct-2505-GGUF/blob/4d3b6203857d893ebfcaca6c51901e3ea1d00d00/kakaocorp.kanana-1.5-2.1b-instruct-2505.Q4_K_M.gguf
+- https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B-GGUF/blob/162446400ea4596377a3ce1d3ddffa32971af0a6/EXAONE-4.0-1.2B-Q4_K_M.gguf
+
+앱은 커밋을 고정한 `https://huggingface.co/<저장소>/resolve/<커밋>/<파일명>`으로 받는다. 저장소의 main이 바뀌어도 받는 파일과 SHA-256이 어긋나지 않는다.
 
 기본 모델은 평가 하네스 결과로 확정한다.
 
@@ -260,8 +274,8 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 
 | 위험·가정 | 대응 |
 |---|---|
-| 기기 칩이 Exynos라는 가정, CPU 추론 속도를 모름 | 스파이크에서 칩을 확인하고 토큰 속도를 측정 |
-| llama.rn 0.12.x가 Qwen3.5 GGUF(`qwen35` 아키텍처)를 로드하는지 확인되지 않음 | 스파이크에서 가장 먼저 확인. 안 되면 Qwen3-1.7B나 Kanana로 대체 |
+| CPU 추론만 가능하고 속도를 모름 | 스파이크에서 토큰 속도를 측정 |
+| llama.rn 0.12.9 소스와 Qwen3.5 GGUF 헤더의 아키텍처(`qwen35`)는 맞지만, 실제로 로드되는지는 확인되지 않음 | 스파이크에서 가장 먼저 확인. 안 되면 Qwen3-1.7B나 Kanana로 대체 |
 | node-llama-cpp와 llama.rn에 들어간 llama.cpp 버전이 달라 평가 결과와 기기 결과가 어긋날 수 있음 | 두 버전을 기록하고, 기기에서 표본을 교차 확인 |
 | 디자인 시스템이 npm 미배포이고 NativeWind 5 preview에 고정됨. react/RN 버전이 정확히 같지 않으면 "Invalid hook call"이 남. 검증 앱이 Expo라서 RN CLI 설정은 확인되지 않음 | 배포 후 도입할 때 버전을 맞추고 RN CLI에서 설정을 검증 |
 | GBNF로는 한글 수사를 막을 수 없음 | 사후 검사 + 재생성 + 폴백 |
@@ -276,7 +290,6 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 | 예산을 매달 새로 정할지, 한 번 정한 값을 이어 쓸지 | 예산 기능 구현 전 | 직전 달 값을 새 달의 기본값으로 복사 |
 | 백업을 가져올 때 병합할지 교체할지 | 백업 구현 전 | 확인 대화상자 후 전체 교체 |
 | llama.rn 파라미터(컨텍스트 길이, 샘플링) | 스파이크 | - |
-| 기기 칩 | 스파이크 | adb로 확인 |
 
 ## 12. 작업 순서(기본안)
 

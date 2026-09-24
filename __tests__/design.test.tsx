@@ -13,7 +13,6 @@ import { Meter } from '../src/ui/Meter';
  * 기대값은 global.css의 oklch 값을 sRGB로 바꾼 것이다.
  */
 const BRAND_LIGHT = '#107460';
-const BRAND_HOVER_LIGHT = '#0f6353';
 const BRAND_DARK = '#55c1a3';
 const ON_BRAND_DARK = '#030712';
 const DANGER_LIGHT = '#e7000b';
@@ -66,14 +65,23 @@ describe('Chip(임시)', () => {
     expect(screen.getByText('식비')).toHaveStyle({ color: '#fff' });
   });
 
-  test('누르는 동안 표면이 한 단계 진해진다(active:)', async () => {
-    await mount(<Chip label='식비' selected />);
+  test('누르는 동안 투명도가 내려가고 배경은 그대로다(DS 0.3.0과 같은 눌림 표시)', async () => {
+    await mount(<Chip label='식비' selected className='bg-danger' />);
 
     const chip = screen.getByRole('button', { name: '식비' });
     await fireEvent(chip, 'pressIn');
     expect(screen.getByRole('button', { name: '식비' })).toHaveStyle({
-      backgroundColor: BRAND_HOVER_LIGHT,
+      backgroundColor: DANGER_LIGHT,
+      opacity: 0.8,
     });
+  });
+
+  test('누름 영역은 세로 hitSlop 5와 최소 폭 48이다', async () => {
+    await mount(<Chip label='예' />);
+
+    const chip = screen.getByRole('button', { name: '예' });
+    expect(chip.props.hitSlop).toEqual({ top: 5, bottom: 5 });
+    expect(chip).toHaveStyle({ minWidth: 48 });
   });
 
   test('다크에서 고른 칩의 글자는 거의 검은색이다', async () => {
@@ -125,6 +133,17 @@ describe('홈 시안', () => {
     });
     // 같은 이름의 버튼이 여럿이면 스크린 리더 사용자가 구분하지 못한다
     expect(screen.getByRole('button', { name: /^휴대폰 요금 기록/ })).toBeOnTheScreen();
+  });
+
+  test('총예산을 넘으면 금액을 초과액으로 바꾸고 danger로 쓴다', async () => {
+    await mount(<HomeMock variant='over' />);
+
+    expect(screen.getByText('9월 예산')).toBeOnTheScreen();
+    expect(screen.getByText('18,000원 초과')).toHaveStyle({ color: DANGER_LIGHT });
+    expect(
+      screen.getByRole('progressbar', { name: '9월 예산 사용률' }).props.accessibilityValue,
+    ).toEqual({ text: '예산을 18,000원 넘었어요, 기간의 80% 지남' });
+    expect(screen.queryByText(/하루 .*원까지/)).toBeNull();
   });
 
   test('첫 실행에는 예산을 정하라는 안내와 동작이 있다', async () => {
@@ -201,5 +220,33 @@ describe('입력 시트 시안', () => {
       });
     await fireEvent.press(food());
     expect(food().props.accessibilityState).toMatchObject({ selected: true });
+  });
+
+  test('고정비를 켜면 연결할 항목 칩이 나오고, 줄 전체가 스위치다', async () => {
+    await mount(<EntrySheetMock expanded />);
+
+    expect(screen.queryByText('연결할 고정비 항목')).toBeNull();
+    const row = screen.getByRole('switch', { name: '고정비' });
+    await fireEvent.press(row);
+    expect(screen.getByRole('switch', { name: '고정비' }).props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+    expect(screen.getByText('연결할 고정비 항목')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: '휴대폰 요금' })).toBeOnTheScreen();
+  });
+
+  test('저장이 안 되는 이유는 live region에 있고, 입력 칸에는 placeholder가 없다', async () => {
+    await mount(<EntrySheetMock />);
+
+    await fireEvent.changeText(screen.getByLabelText('금액'), '');
+    // 이유 글자를 감싼 조상 중 live region을 찾는다
+    let node: { props: Record<string, unknown>; parent: unknown } | null =
+      screen.getByText('금액을 입력해 주세요');
+    while (node && node.props.accessibilityLiveRegion === undefined) {
+      node = node.parent as typeof node;
+    }
+    expect(node?.props.accessibilityLiveRegion).toBe('polite');
+    // DS 0.2.0 Input의 placeholder는 플랫폼 기본색이라 대비가 모자라다(docs/DESIGN.md 5.2)
+    expect(screen.getByLabelText('금액').props.placeholder).toBeUndefined();
   });
 });

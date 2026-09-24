@@ -28,7 +28,11 @@ export function Meter({ label, valueText, ratio, marker, size = 'md' }: MeterPro
       accessibilityRole='progressbar'
       accessibilityLabel={label}
       accessibilityValue={{ text: valueText }}
-      className={cn('w-full rounded-full bg-surface-muted', size === 'md' ? 'h-3' : 'h-2')}
+      // 라이트 트랙은 border 색이다. surface-muted는 흰 canvas와 1.1:1이라 예산 전체 길이가 안 보인다
+      className={cn(
+        'w-full rounded-full bg-border dark:bg-surface-muted',
+        size === 'md' ? 'h-3' : 'h-2',
+      )}
     >
       <View className={cn('h-full rounded-full', over ? 'bg-danger' : 'bg-brand')} style={fill} />
       {/* 기준선이 막대 위에 올 때도 3:1 넘게 떨어져 보이도록 배경색 테두리를 두른다(docs/DESIGN.md 2장) */}

@@ -1,5 +1,5 @@
 import { Button, Input, Label, Stack, Text, cn } from '@eeennsu/native';
-import { useEffect, useRef, useState } from 'react';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -16,6 +16,7 @@ import {
   PAYMENT_METHODS,
   REASON_TAGS,
   SATISFACTION,
+  fixedCostItems,
   memoSuggestions,
 } from './fixtures';
 
@@ -45,6 +46,11 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
   const [memo, setMemo] = useState('');
   const [payment, setPayment] = useState('');
   const [fixed, setFixed] = useState(false);
+  const [fixedItem, setFixedItem] = useState('');
+  // KeyboardAvoidingView는 자기 layout(부모 기준)과 키보드 위치(창 기준)를 비교한다. 이 화면이 창 맨 위에서
+  // 떨어진 만큼을 keyboardVerticalOffset으로 넘겨야 키보드가 가리는 높이를 제대로 잰다.
+  const [windowTop, setWindowTop] = useState(0);
+  const rootRef = useRef<ComponentRef<typeof View>>(null);
 
   const amountRef = useRef<{ focus(): void; blur(): void }>(null);
 
@@ -69,7 +75,11 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
   };
 
   return (
-    <View className='flex-1'>
+    <View
+      ref={rootRef}
+      className='flex-1'
+      onLayout={() => rootRef.current?.measureInWindow((_x, y) => setWindowTop(y))}
+    >
       {/* 시트 뒤의 부모 화면. 시트가 떠 있는 동안 스크린 리더가 읽지 않는다 */}
       <View
         className='flex-1'
@@ -86,6 +96,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
       */}
       <KeyboardAvoidingView
         behavior='padding'
+        keyboardVerticalOffset={windowTop}
         pointerEvents='box-none'
         className='absolute inset-0 justify-end'
       >
@@ -103,13 +114,13 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
             <Text heading='1' size='xl'>
               {expense ? '지출 기록' : '수입 기록'}
             </Text>
-            {/* min-h-12·active:는 DS 0.3.0이 Button에 넣으면 지운다(docs/DESIGN.md 5.2) */}
+            {/* min-h-12·active:opacity-80은 DS 0.3.0이 Button에 넣으면 지운다(docs/DESIGN.md 5.2) */}
             <Button
               label='닫기'
               icon='x'
               variant='ghost'
               size='sm'
-              className='min-h-12 active:bg-surface-hover'
+              className='min-h-12 active:opacity-80'
             />
           </Stack>
 
@@ -127,10 +138,11 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                   label='금액'
                   kind='number'
                   size='lg'
-                  placeholder='0'
                   value={withCommas(amount)}
                   onValueChange={text => setAmount(onlyDigits(text))}
-                  className='flex-1 text-2xl tabular-nums'
+                  // placeholder는 DS 0.2.0에서 플랫폼 기본색(흰 표면 위 약 2.7:1)이라 두지 않는다.
+                  // focus:는 DS 0.3.0이 Input에 넣으면 지운다(docs/DESIGN.md 5.2)
+                  className='flex-1 text-2xl tabular-nums focus:border-border-focus'
                 />
                 <Text size='lg'>원</Text>
               </Stack>
@@ -190,9 +202,9 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                     <Input
                       id='memo'
                       label='메모'
-                      placeholder='무엇에 썼나요'
                       value={memo}
                       onValueChange={setMemo}
+                      className='focus:border-border-focus'
                     />
                   </Stack>
                   <Stack direction='row' wrap className='gap-3'>
@@ -218,31 +230,54 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                   optional
                 />
                 {expense && (
-                  <Stack direction='row' align='center' justify='between' className='gap-3'>
+                  // 글자를 눌러도 켜진다. 스위치는 모양만 맡고 스크린 리더는 줄 하나를 읽는다
+                  <Pressable
+                    accessibilityRole='switch'
+                    accessibilityLabel='고정비'
+                    accessibilityState={{ checked: fixed }}
+                    onPress={() => setFixed(on => !on)}
+                    className='-mx-4 flex-row items-center justify-between gap-3 px-4 py-3 active:bg-surface-hover'
+                  >
                     <Stack className='flex-1 gap-1'>
                       <Text>고정비</Text>
                       <Text size='sm' tone='muted'>
                         월세·구독처럼 매달 나가는 지출이에요. 켜면 등록한 항목에 연결해요
                       </Text>
                     </Stack>
-                    <Switch accessibilityLabel='고정비' value={fixed} onValueChange={setFixed} />
-                  </Stack>
+                    <Switch
+                      value={fixed}
+                      onValueChange={setFixed}
+                      accessibilityElementsHidden
+                      importantForAccessibility='no-hide-descendants'
+                    />
+                  </Pressable>
+                )}
+                {expense && fixed && (
+                  <Choices
+                    label='연결할 고정비 항목'
+                    options={fixedCostItems}
+                    value={fixedItem}
+                    onChange={setFixedItem}
+                  />
                 )}
               </>
             )}
           </ScrollView>
 
           <View className='gap-2 border-t border-border px-4 pb-4 pt-3'>
-            {missing !== '' && (
-              <Text size='sm' tone='muted'>
-                {missing}
-              </Text>
-            )}
+            {/* 저장이 안 되는 이유가 바뀌면 스크린 리더가 조용히 알린다 */}
+            <View accessibilityLiveRegion='polite'>
+              {missing !== '' && (
+                <Text size='sm' tone='muted'>
+                  {missing}
+                </Text>
+              )}
+            </View>
             <Button
               label='저장'
               size='lg'
               disabled={missing !== ''}
-              className='w-full active:bg-brand-hover'
+              className='w-full active:opacity-80'
             />
           </View>
         </View>

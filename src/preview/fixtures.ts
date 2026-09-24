@@ -29,6 +29,7 @@ export const PAYMENT_METHODS = ['카드', '현금', '계좌이체'] as const;
 export const budget = {
   title: '9월 남은 예산',
   remaining: '411,600원',
+  over: false,
   used: '788,400원 사용 · 66%',
   total: '예산 1,200,000원',
   // 게이지의 세로선이 무엇인지 화면 글자로도 적는다(색·모양만으로 뜻을 전하지 않는다)
@@ -39,6 +40,23 @@ export const budget = {
   // 소비 속도 계산식은 PRD 11장 미결이다. 시안은 "남은 예산 ÷ 남은 일수" 후보로 그렸다.
   pace: '남은 6일 · 하루 68,600원까지 쓸 수 있어요',
 };
+
+/** 총예산을 넘은 달. 1,218,000원 사용(102%), 같은 날(80% 지남) */
+export const budgetOver: typeof budget = {
+  title: '9월 예산',
+  remaining: '18,000원 초과',
+  over: true,
+  used: '1,218,000원 사용 · 102%',
+  total: '예산 1,200,000원',
+  today: '세로선은 오늘이에요 · 이번 달 80% 지남',
+  ratio: 1.015,
+  elapsed: 0.8,
+  valueText: '예산을 18,000원 넘었어요, 기간의 80% 지남',
+  pace: '남은 6일 · 지금부터 쓰는 만큼 초과가 늘어요',
+};
+
+/** 등록한 고정비 항목. 입력 시트에서 고정비를 켜면 이 중 하나에 연결한다(PRD 4.4) */
+export const fixedCostItems = ['월세', '휴대폰 요금', '인터넷', '넷플릭스', '음악 구독'] as const;
 
 export const fixedCosts = {
   progress: '5개 중 3개 기록',

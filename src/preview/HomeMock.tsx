@@ -3,11 +3,11 @@ import type { ReactElement } from 'react';
 import { Pressable, ScrollView, Text as RNText, View } from 'react-native-css/components';
 
 import { Meter } from '../ui/Meter';
-import { budget, categoryBudgets, fixedCosts, recentExpenses } from './fixtures';
+import { budget, budgetOver, categoryBudgets, fixedCosts, recentExpenses } from './fixtures';
 
 type HomeMockProps = {
-  /** filled: 한 달 가운데쯤의 모습, firstRun: 예산과 기록이 없는 첫 실행 */
-  variant?: 'filled' | 'firstRun';
+  /** filled: 한 달 가운데쯤, over: 총예산을 넘은 달, firstRun: 예산과 기록이 없는 첫 실행 */
+  variant?: 'filled' | 'over' | 'firstRun';
   onRecord?: () => void;
 };
 
@@ -19,50 +19,53 @@ export function HomeMock({ variant = 'filled', onRecord }: HomeMockProps) {
   return (
     <View className='flex-1 bg-canvas'>
       <ScrollView className='flex-1' contentContainerClassName='gap-8 px-4 pb-24 pt-4'>
-        {variant === 'filled' ? <Filled /> : <FirstRun />}
+        {variant === 'firstRun' ? (
+          <FirstRun />
+        ) : (
+          <Filled data={variant === 'over' ? budgetOver : budget} />
+        )}
       </ScrollView>
       {/* 기록은 이 앱의 핵심 동작이라 엄지가 닿는 오른쪽 아래에 둔다(docs/DESIGN.md 3장) */}
-      {/* active:는 DS 0.3.0이 Button에 눌림 표시를 넣으면 지운다(docs/DESIGN.md 5.2) */}
+      {/* active:opacity-80은 DS 0.3.0이 Button에 같은 눌림 표시를 넣으면 지운다(docs/DESIGN.md 5.2) */}
       <Button
         label='기록'
         icon='plus'
         size='lg'
         onPress={onRecord}
-        className='absolute bottom-4 right-4 rounded-full shadow-md active:bg-brand-hover'
+        className='absolute bottom-4 right-4 rounded-full shadow-md active:opacity-80'
       />
     </View>
   );
 }
 
-function Filled() {
+function Filled({ data }: { data: typeof budget }) {
   return (
     <>
+      {/* 금액 바로 밑에 할 수 있는 일(소비 속도)을 두고, 게이지와 그 설명은 뒤에 둔다 */}
       <Stack className='gap-3'>
         <Text size='sm' tone='muted'>
-          {budget.title}
+          {data.title}
         </Text>
-        <Text size='2xl' className='tabular-nums'>
-          {budget.remaining}
+        <Text size='2xl' tone={data.over ? 'danger' : 'default'} className='tabular-nums'>
+          {data.remaining}
         </Text>
+        <Text className='tabular-nums'>{data.pace}</Text>
         <Meter
           label='9월 예산 사용률'
-          valueText={budget.valueText}
-          ratio={budget.ratio}
-          marker={budget.elapsed}
+          valueText={data.valueText}
+          ratio={data.ratio}
+          marker={data.elapsed}
         />
-        <Stack direction='row' justify='between'>
+        <Stack direction='row' justify='between' wrap className='gap-x-3 gap-y-1'>
           <Text size='sm' tone='muted' className='tabular-nums'>
-            {budget.used}
+            {data.used}
           </Text>
           <Text size='sm' tone='muted' className='tabular-nums'>
-            {budget.total}
+            {data.total}
           </Text>
         </Stack>
         <Text size='sm' tone='muted' className='tabular-nums'>
-          {budget.today}
-        </Text>
-        <Text size='sm' className='tabular-nums'>
-          {budget.pace}
+          {data.today}
         </Text>
       </Stack>
 
@@ -132,11 +135,7 @@ function Filled() {
             <Text className='tabular-nums'>{item.amount}</Text>
           </Row>
         ))}
-        <Button
-          label='내역 전체 보기'
-          variant='secondary'
-          className='min-h-12 active:bg-surface-hover'
-        />
+        <Button label='내역 전체 보기' variant='secondary' className='min-h-12 active:opacity-80' />
       </Section>
     </>
   );
@@ -156,7 +155,7 @@ function FirstRun() {
         <Button
           label='예산 정하기'
           variant='secondary'
-          className='min-h-12 self-start active:bg-surface-hover'
+          className='min-h-12 self-start active:opacity-80'
         />
       </Stack>
 

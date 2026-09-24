@@ -9,6 +9,7 @@ import { Chip } from './ui/Chip';
 
 const PREVIEWS = [
   { key: 'home', label: '홈', render: () => <HomeMock /> },
+  { key: 'over', label: '홈 초과', render: () => <HomeMock variant='over' /> },
   { key: 'firstRun', label: '홈 처음', render: () => <HomeMock variant='firstRun' /> },
   { key: 'entry', label: '입력 시트', render: () => <EntrySheetMock /> },
   { key: 'entryMore', label: '입력 시트 펼침', render: () => <EntrySheetMock expanded /> },

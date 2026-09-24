@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native';
 import { ScrollView, View } from 'react-native-css/components';
 
 import { DsCheckScreen } from './preview/DsCheckScreen';
@@ -29,9 +29,15 @@ const statusBarInset = { paddingTop: StatusBar.currentHeight ?? 0 };
 export default function App() {
   const [current, setCurrent] = useState<PreviewKey>('home');
   const preview = PREVIEWS.find(item => item.key === current) ?? PREVIEWS[0];
+  const dark = useColorScheme() === 'dark';
 
   return (
     <View className='flex-1 bg-canvas pb-12' style={statusBarInset}>
+      {/*
+        edge-to-edge는 상태 바를 투명하게만 하고 아이콘 색은 테마에 맡긴다. AppCompat 라이트 테마는 밝은 아이콘이라
+        흰 canvas 위에서 보이지 않아 색 구성표에 맞춰 정한다. 12장 6번에서 내비게이션 루트로 옮긴다(docs/DESIGN.md 3.5)
+      */}
+      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

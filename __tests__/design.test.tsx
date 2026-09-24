@@ -246,6 +246,8 @@ describe('입력 시트 시안', () => {
       node = node.parent as typeof node;
     }
     expect(node?.props.accessibilityLiveRegion).toBe('polite');
+    // 평탄화되면 기기에서 live region이 사라진다(Jest 트리에는 남아 있어 이 단언이 필요하다)
+    expect(node?.props.collapsable).toBe(false);
     // DS 0.2.0 Input의 placeholder는 플랫폼 기본색이라 대비가 모자라다(docs/DESIGN.md 5.2)
     expect(screen.getByLabelText('금액').props.placeholder).toBeUndefined();
   });

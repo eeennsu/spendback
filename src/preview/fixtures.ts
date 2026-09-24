@@ -61,8 +61,8 @@ export const fixedCostItems = ['월세', '휴대폰 요금', '인터넷', '넷�
 export const fixedCosts = {
   progress: '5개 중 3개 기록',
   overdue: [
-    { name: '휴대폰 요금', detail: '21일 결제 · 예상 55,000원' },
     { name: '넷플릭스', detail: '17일 결제 · 예상 17,000원' },
+    { name: '휴대폰 요금', detail: '21일 결제 · 예상 55,000원' },
   ],
 };
 

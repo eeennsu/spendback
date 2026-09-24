@@ -265,8 +265,11 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
           </ScrollView>
 
           <View className='gap-2 border-t border-border px-4 pb-4 pt-3'>
-            {/* 저장이 안 되는 이유가 바뀌면 스크린 리더가 조용히 알린다 */}
-            <View accessibilityLiveRegion='polite'>
+            {/*
+              저장이 안 되는 이유가 바뀌면 스크린 리더가 조용히 알린다. 접근성 prop만 가진 View는 New Architecture가
+              평탄화해 live region이 사라지므로 collapsable={false}로 네이티브 뷰를 남긴다(docs/DESIGN.md 3.7)
+            */}
+            <View accessibilityLiveRegion='polite' collapsable={false}>
               {missing !== '' && (
                 <Text size='sm' tone='muted'>
                   {missing}

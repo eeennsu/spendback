@@ -13,6 +13,7 @@ type ChipProps = {
  * 선택 칩(임시). @eeennsu/native 0.3.0의 Chip과 API·모양이 같아 그 버전을 올리면 import만 바꾼다
  * (docs/DESIGN.md 5장). 칩 줄 간격은 gap-3(12)이고, 세로 hitSlop 5와 최소 폭 48로 누름 영역이 48이다.
  * 누르는 동안은 투명도가 내려간다. 색이 아니라서 className으로 바꾼 배경도 따라간다.
+ * 글자는 사용자 글자 크기 설정을 끝까지 따르고, 칩 묶음이 줄을 바꿔 받는다.
  */
 export function Chip({ label, selected = false, disabled = false, onPress, className }: ChipProps) {
   return (
@@ -30,12 +31,7 @@ export function Chip({ label, selected = false, disabled = false, onPress, class
         className,
       )}
     >
-      <Text
-        maxFontSizeMultiplier={1.5}
-        className={cn('text-sm', selected ? 'text-fg-on-brand' : 'text-fg')}
-      >
-        {label}
-      </Text>
+      <Text className={cn('text-sm', selected ? 'text-fg-on-brand' : 'text-fg')}>{label}</Text>
     </Pressable>
   );
 }

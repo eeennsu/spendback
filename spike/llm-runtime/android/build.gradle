@@ -1,0 +1,31 @@
+buildscript {
+    ext {
+        buildToolsVersion = "37.0.0"
+        minSdkVersion = 24
+        compileSdkVersion = 37
+        targetSdkVersion = 36
+        ndkVersion = "27.1.12297006"
+        kotlinVersion = "2.2.0"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"
+
+// 스파이크: llama.rn의 CMake 중간 산출물 경로가 Windows 260자 제한을 넘는다.
+// (LongPathsEnabled=1이어도 SDK CMake 3.22.1에 들어 있는 ninja는 긴 경로를 지원하지 않는다.) 짧은 임시 경로로 옮긴다.
+subprojects {
+    if (name == "llama.rn") {
+        plugins.withId("com.android.library") {
+            android.externalNativeBuild.cmake.buildStagingDirectory = new File(System.getProperty("java.io.tmpdir"), "lrn-cxx")
+        }
+    }
+}

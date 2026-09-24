@@ -1,0 +1,37 @@
+{
+  "name": "llm-spike",
+  "version": "0.0.0",
+  "private": true,
+  "description": "버릴 코드: S24+에서 llama.rn과 후보 모델을 측정하는 LLM 스파이크",
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "spike": "node scripts/bench.mjs",
+    "build": "cd android && gradlew.bat assembleRelease",
+    "start": "react-native start"
+  },
+  "dependencies": {
+    "llama.rn": "0.12.9",
+    "react": "19.2.3",
+    "react-native": "0.87.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli-platform-android": "20.2.0",
+    "@react-native/babel-preset": "0.87.1",
+    "@react-native/metro-config": "0.87.1",
+    "@react-native/typescript-config": "0.87.1",
+    "@types/react": "^19.2.0",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": "^22.13.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "llama.rn"
+    ]
+  }
+}

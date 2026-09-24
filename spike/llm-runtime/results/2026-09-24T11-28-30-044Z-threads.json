@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "date": "2026-09-24T11:28:30.044Z",
+    "model": "SM-S926N",
+    "soc": "s5e9945",
+    "android": "16",
+    "thermalBefore": "0",
+    "battery": "72",
+    "thermalAfter": "0"
+  },
+  "params": {
+    "suite": "threads",
+    "models": [
+      "qwen"
+    ],
+    "threads": "2,4,6,8",
+    "runs": "3"
+  },
+  "events": [
+    {
+      "t": 1790249311077,
+      "ev": "suite-start",
+      "suite": "threads",
+      "models": [
+        "qwen"
+      ],
+      "threads": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "runs": 3,
+      "nCtx": 4096
+    },
+    {
+      "t": 1790249311078,
+      "ev": "phase",
+      "phase": "load:qwen:t2"
+    },
+    {
+      "t": 1790249314907,
+      "ev": "loaded",
+      "model": "qwen",
+      "threads": 2,
+      "loadMs": 3829,
+      "androidLib": "rnllama_jni_v8_2_dotprod_i8mm",
+      "gpu": false,
+      "reasonNoGPU": "GPU backend is not available",
+      "devices": [],
+      "systemInfo": "system_info: n_threads = 2 / 10 | CPU : NEON = 1 | ARM_FMA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | REPACK = 1 | ",
+      "desc": "qwen35 2B Q4_K - Medium",
+      "size": 1269873920,
+      "nParams": 1881825088,
+      "jinja": true
+    },
+    {
+      "t": 1790249314907,
+      "ev": "phase",
+      "phase": "speed:qwen:t2"
+    },
+    {
+      "t": 1790249319490,
+      "ev": "speed",
+      "model": "qwen",
+      "threads": 2,
+      "wallMs": 4583,
+      "firstTokenMs": 569,
+      "timings": {
+        "cache_n": 87,
+        "prompt_n": 27,
+        "prompt_ms": 557.992,
+        "prompt_per_token_ms": 20.66637037037037,
+        "prompt_per_second": 48.38779050595708,
+        "predicted_n": 59,
+        "predicted_ms": 3949.7989999999995,
+        "predicted_per_token_ms": 66.94574576271185,
+        "predicted_per_second": 14.93746896993999
+      },
+      "text": "가계부를 꾸준히 쓰는 방법은 단순한 기록을 넘어 재정 건강을 위한 일관된 습관으로 접근해야 하며, 이를 위해 월간 소득과 지출을 세분화하고 핵심 항목을 추적하며, 이를 바탕으로 목표 설정과 수정 계획을 수립하는 과정을 반복적으로 수행해야 합니다."
+    },
+    {
+      "t": 1790249319490,
+      "ev": "phase",
+      "phase": "release:qwen:t2"
+    },
+    {
+      "t": 1790249319720,
+      "ev": "phase",
+      "phase": "load:qwen:t4"
+    },
+    {
+      "t": 1790249321389,
+      "ev": "loaded",
+      "model": "qwen",
+      "threads": 4,
+      "loadMs": 1668,
+      "androidLib": "rnllama_jni_v8_2_dotprod_i8mm",
+      "gpu": false,
+      "reasonNoGPU": "GPU backend is not available",
+      "devices": [],
+      "systemInfo": "system_info: n_threads = 4 / 10 | CPU : NEON = 1 | ARM_FMA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | REPACK = 1 | ",
+      "desc": "qwen35 2B Q4_K - Medium",
+      "size": 1269873920,
+      "nParams": 1881825088,
+      "jinja": true
+    },
+    {
+      "t": 1790249321389,
+      "ev": "phase",
+      "phase": "speed:qwen:t4"
+    },
+    {
+      "t": 1790249324868,
+      "ev": "speed",
+      "model": "qwen",
+      "threads": 4,
+      "wallMs": 3479,
+      "firstTokenMs": 398,
+      "timings": {
+        "cache_n": 87,
+        "prompt_n": 27,
+        "prompt_ms": 393.046,
+        "prompt_per_token_ms": 14.55725925925926,
+        "prompt_per_second": 68.69424952804506,
+        "predicted_n": 59,
+        "predicted_ms": 3031.4669999999996,
+        "predicted_per_token_ms": 51.38079661016948,
+        "predicted_per_second": 19.462524249810407
+      },
+      "text": "가계부를 꾸준히 쓰는 방법은 단순한 기록을 넘어 재정 건강을 위한 일관된 습관으로 접근해야 하며, 이를 위해 월간 소득과 지출을 세분화하고 핵심 항목을 추적하며, 이를 바탕으로 목표 설정과 수정 계획을 수립하는 과정을 반복적으로 수행해야 합니다."
+    },
+    {
+      "t": 1790249324869,
+      "ev": "phase",
+      "phase": "release:qwen:t4"
+    },
+    {
+      "t": 1790249325111,
+      "ev": "phase",
+      "phase": "load:qwen:t6"
+    },
+    {
+      "t": 1790249326803,
+      "ev": "loaded",
+      "model": "qwen",
+      "threads": 6,
+      "loadMs": 1692,
+      "androidLib": "rnllama_jni_v8_2_dotprod_i8mm",
+      "gpu": false,
+      "reasonNoGPU": "GPU backend is not available",
+      "devices": [],
+      "systemInfo": "system_info: n_threads = 6 / 10 | CPU : NEON = 1 | ARM_FMA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | REPACK = 1 | ",
+      "desc": "qwen35 2B Q4_K - Medium",
+      "size": 1269873920,
+      "nParams": 1881825088,
+      "jinja": true
+    },
+    {
+      "t": 1790249326803,
+      "ev": "phase",
+      "phase": "speed:qwen:t6"
+    },
+    {
+      "t": 1790249329874,
+      "ev": "speed",
+      "model": "qwen",
+      "threads": 6,
+      "wallMs": 3071,
+      "firstTokenMs": 297,
+      "timings": {
+        "cache_n": 87,
+        "prompt_n": 27,
+        "prompt_ms": 291.427,
+        "prompt_per_token_ms": 10.793592592592594,
+        "prompt_per_second": 92.64755839369721,
+        "predicted_n": 59,
+        "predicted_ms": 2731.649,
+        "predicted_per_token_ms": 46.299135593220335,
+        "predicted_per_second": 21.598675378864563
+      },
+      "text": "가계부를 꾸준히 쓰는 방법은 단순한 기록을 넘어 재정 건강을 위한 일관된 습관으로 접근해야 하며, 이를 위해 월간 소득과 지출을 세분화하고 핵심 항목을 추적하며, 이를 바탕으로 목표 설정과 수정 계획을 수립하는 과정을 반복적으로 수행해야 합니다."
+    },
+    {
+      "t": 1790249329874,
+      "ev": "phase",
+      "phase": "release:qwen:t6"
+    },
+    {
+      "t": 1790249330103,
+      "ev": "phase",
+      "phase": "load:qwen:t8"
+    },
+    {
+      "t": 1790249331928,
+      "ev": "loaded",
+      "model": "qwen",
+      "threads": 8,
+      "loadMs": 1825,
+      "androidLib": "rnllama_jni_v8_2_dotprod_i8mm",
+      "gpu": false,
+      "reasonNoGPU": "GPU backend is not available",
+      "devices": [],
+      "systemInfo": "system_info: n_threads = 8 / 10 | CPU : NEON = 1 | ARM_FMA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | REPACK = 1 | ",
+      "desc": "qwen35 2B Q4_K - Medium",
+      "size": 1269873920,
+      "nParams": 1881825088,
+      "jinja": true
+    },
+    {
+      "t": 1790249331928,
+      "ev": "phase",
+      "phase": "speed:qwen:t8"
+    },
+    {
+      "t": 1790249335478,
+      "ev": "speed",
+      "model": "qwen",
+      "threads": 8,
+      "wallMs": 3550,
+      "firstTokenMs": 393,
+      "timings": {
+        "cache_n": 87,
+        "prompt_n": 27,
+        "prompt_ms": 384.50600000000003,
+        "prompt_per_token_ms": 14.240962962962964,
+        "prompt_per_second": 70.21997055962716,
+        "predicted_n": 59,
+        "predicted_ms": 3111.089,
+        "predicted_per_token_ms": 52.730322033898304,
+        "predicted_per_second": 18.964420497131393
+      },
+      "text": "가계부를 꾸준히 쓰는 방법은 단순한 기록을 넘어 재정 건강을 위한 일관된 습관으로 접근해야 하며, 이를 위해 월간 소득과 지출을 세분화하고 핵심 항목을 추적하며, 이를 바탕으로 목표 설정과 수정 계획을 수립하는 과정을 반복적으로 수행해야 합니다."
+    },
+    {
+      "t": 1790249335478,
+      "ev": "phase",
+      "phase": "release:qwen:t8"
+    },
+    {
+      "t": 1790249335725,
+      "ev": "phase",
+      "phase": "idle"
+    },
+    {
+      "t": 1790249335726,
+      "ev": "suite-done"
+    }
+  ],
+  "memPeaks": {
+    "load:qwen:t2": {
+      "pssMB": 1894,
+      "rssMB": 1989
+    },
+    "speed:qwen:t2": {
+      "pssMB": 2692,
+      "rssMB": 2787
+    },
+    "load:qwen:t4": {
+      "pssMB": 2314,
+      "rssMB": 2409
+    },
+    "speed:qwen:t4": {
+      "pssMB": 2688,
+      "rssMB": 2780
+    },
+    "load:qwen:t6": {
+      "pssMB": 2070,
+      "rssMB": 2162
+    },
+    "speed:qwen:t6": {
+      "pssMB": 2690,
+      "rssMB": 2782
+    },
+    "load:qwen:t8": {
+      "pssMB": 2418,
+      "rssMB": 2510
+    },
+    "speed:qwen:t8": {
+      "pssMB": 2692,
+      "rssMB": 2784
+    }
+  },
+  "mem": [
+    {
+      "t": 1790249312452,
+      "phase": "load:qwen:t2",
+      "pssKB": 678446,
+      "rssKB": 777383
+    },
+    {
+      "t": 1790249314191,
+      "phase": "load:qwen:t2",
+      "pssKB": 1939141,
+      "rssKB": 2037009
+    },
+    {
+      "t": 1790249315902,
+      "phase": "speed:qwen:t2",
+      "pssKB": 2756803,
+      "rssKB": 2853349
+    },
+    {
+      "t": 1790249317608,
+      "phase": "speed:qwen:t2",
+      "pssKB": 2756695,
+      "rssKB": 2853705
+    },
+    {
+      "t": 1790249319314,
+      "phase": "speed:qwen:t2",
+      "pssKB": 2756711,
+      "rssKB": 2853721
+    },
+    {
+      "t": 1790249321045,
+      "phase": "load:qwen:t4",
+      "pssKB": 2369097,
+      "rssKB": 2466329
+    },
+    {
+      "t": 1790249322803,
+      "phase": "speed:qwen:t4",
+      "pssKB": 2752449,
+      "rssKB": 2846545
+    },
+    {
+      "t": 1790249324566,
+      "phase": "speed:qwen:t4",
+      "pssKB": 2752856,
+      "rssKB": 2846997
+    },
+    {
+      "t": 1790249326281,
+      "phase": "load:qwen:t6",
+      "pssKB": 2120023,
+      "rssKB": 2214233
+    },
+    {
+      "t": 1790249328039,
+      "phase": "speed:qwen:t6",
+      "pssKB": 2754946,
+      "rssKB": 2849173
+    },
+    {
+      "t": 1790249329802,
+      "phase": "speed:qwen:t6",
+      "pssKB": 2755013,
+      "rssKB": 2849241
+    },
+    {
+      "t": 1790249331538,
+      "phase": "load:qwen:t8",
+      "pssKB": 2476209,
+      "rssKB": 2570445
+    },
+    {
+      "t": 1790249333297,
+      "phase": "speed:qwen:t8",
+      "pssKB": 2756208,
+      "rssKB": 2850453
+    },
+    {
+      "t": 1790249335096,
+      "phase": "speed:qwen:t8",
+      "pssKB": 2756258,
+      "rssKB": 2850509
+    }
+  ]
+}

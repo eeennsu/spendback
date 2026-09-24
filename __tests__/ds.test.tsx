@@ -6,12 +6,13 @@ import { registerGlobalCss, setColorScheme } from '../jest/css';
 import { DsCheckScreen } from '../src/preview/DsCheckScreen';
 
 /**
- * 디자인 시스템(@eeennsu/native 0.2.0) 연동 확인. className이 jest에서도 스타일로 풀려야 한다 —
+ * 디자인 시스템(@eeennsu/native 0.2.0) 연동 확인. className이 jest에서도 스타일로 풀려야 한다.
  * DS 컴포넌트가 react-native-css/components에서 import하기 때문이다(DS 구현 노트 F-11).
- * 기대값은 DS base 브랜드의 토큰을 sRGB로 바꾼 값이다(DS verify-expo 테스트와 같다).
+ * 기대값은 DS base 브랜드의 토큰을 sRGB로 바꾼 값이다(DS verify-expo 테스트와 같다). brand만 앱이
+ * global.css에서 다시 선언한 청록이다(DS 스펙 C-5b, docs/DESIGN.md 2장).
  */
-const BRAND_LIGHT = '#155dfc';
-const BRAND_DARK = '#2b7fff';
+const BRAND_LIGHT = '#107460';
+const BRAND_DARK = '#55c1a3';
 const FG_LIGHT = '#101828';
 const SURFACE_LIGHT = '#fff';
 const SURFACE_DARK = '#101828';

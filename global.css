@@ -1,2 +1,21 @@
 /* 디자인 시스템 연결은 이 import 한 줄이다(DS 스펙 C-3). */
 @import '@eeennsu/native/themes/base.css';
+
+/*
+ * 앱 색(DS 스펙 C-5b). semantic 변수 값만 다시 선언한다. 값과 이유는 docs/DESIGN.md 2장.
+ * RN은 :root와 @media 두 블록이다. 웹의 .dark 블록은 RN에서 적용되지 않는다(DS 알려진 동작 15).
+ */
+:root {
+  --bg-brand: oklch(50% 0.09 175);
+  --bg-brand-hover: oklch(45% 0.08 175);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-brand: oklch(74% 0.11 172);
+    --bg-brand-hover: oklch(80% 0.09 172);
+    /* 밝은 청록과 다크 빨강 위의 흰 글자는 4.5:1이 안 된다. 거의 검은 글자로 바꾼다. */
+    --fg-on-brand: oklch(13% 0.028 261.692);
+    --fg-on-danger: oklch(13% 0.028 261.692);
+  }
+}

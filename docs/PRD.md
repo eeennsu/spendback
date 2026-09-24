@@ -204,7 +204,7 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 
 - llama.rn 0.12.x를 정확한 버전으로 고정한다. npm `latest` 태그가 RC 버전을 가리키고 있어서 `^` 범위 지정을 쓰지 않는다.
 - 대상 기기는 국내판 Galaxy S24+(SM-S926N, Exynos 2400, `ro.soc.model=s5e9945`, RAM 12GB, Android 16)다(2026-09-24 adb 확인). CPU 추론이 전제다. GPU(Xclipse 940)에는 Vulkan 1.3과 OpenCL 드라이버가 있지만, llama.rn 0.12.9의 Android 빌드에는 Vulkan 백엔드가 없다. OpenCL·Hexagon 빌드는 Qualcomm 기기로 판별될 때만 불러오므로, 이 기기에서는 CPU 라이브러리 `rnllama_jni_v8_2_dotprod_i8mm`가 로드된다.
-- 2026-09-24 스파이크에서 세 후보 모델이 모두 로드됐다(`qwen35` 포함). 측정 앱과 결과는 `spike/llm-runtime` 브랜치의 `spike/llm-runtime/README.md`에 있고, 이 브랜치는 main에 합치지 않는다.
+- 2026-09-24 스파이크에서 세 후보 모델이 모두 로드됐다(`qwen35` 포함). 측정 앱과 결과는 `spike/llm-runtime/`(README.md)에 있다. 앱과 독립된 버릴 코드라 앱의 타입 검사·린트·포맷·테스트·번들 대상에서 제외했다.
 - Gemini Nano는 사용자의 S24+에서 쓸 수 없다(사용자 확인).
 
 ### 모델 레지스트리

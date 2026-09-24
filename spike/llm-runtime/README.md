@@ -1,6 +1,6 @@
 # LLM 스파이크 (버릴 코드)
 
-`spike/llm-runtime` 브랜치에만 있다. main에는 합치지 않는다. 검증된 결론만 PRD에 반영한다.
+main에 함께 두지만 앱과 독립된 버릴 코드다. 루트 앱의 타입 검사·린트·포맷·테스트·번들 대상에서 제외돼 있다(루트 `tsconfig.json`, `eslint.config.js`, `.prettierignore`, `jest.config.js`, `metro.config.js`). 검증된 결론만 PRD에 반영한다.
 
 ## 질문과 답 (2026-09-24, Galaxy S24+ SM-S926N, Exynos 2400, Android 16)
 

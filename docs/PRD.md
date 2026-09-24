@@ -1,6 +1,6 @@
 # spendback PRD
 
-> 상태: 초안 v0.5 · 2026-09-24 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증(기기, 모델 파일)과 LLM 스파이크 결과를 반영
+> 상태: 초안 v0.6 · 2026-09-24 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증(기기, 모델 파일), LLM 스파이크, 부트스트랩 결과를 반영
 >
 > 기획의 정본은 이 문서다. 앱의 디자인과 디자인 시스템 연동은 `docs/DESIGN.md`(12장 3번에서 작성)에 따로 둔다. 결정은 사용자와 합의한 것이므로, 바꿀 이유가 보이면 근거를 붙여 제안하고 합의한 뒤 반영한다. 결정의 이유는 13장에 있다.
 
@@ -252,8 +252,8 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 
 | 영역 | 선택 |
 |---|---|
-| 코어 | React Native 0.87.x CLI(New Architecture 전용), TypeScript, Hermes V1, React Compiler 1.0(Babel 플러그인) |
-| 패키지 매니저 | pnpm(`node-linker=hoisted`), Node ^22.13 |
+| 코어 | React Native 0.87.x CLI(New Architecture 전용), TypeScript, Hermes V1(RN 0.87은 항상 켜져 있어 설정하지 않는다), React Compiler 1.0(Babel 플러그인) |
+| 패키지 매니저 | pnpm 10(`node-linker=hoisted`), Node ^22.13(`.nvmrc`는 22.23.3). pnpm은 스파이크에서 검증했고 옆 폴더 프로젝트와 같은 메이저인 10을 쓴다 |
 | DB | op-sqlite + drizzle-orm / drizzle-kit(마이그레이션) |
 | 키-값 저장소 | react-native-mmkv 4(Nitro) |
 | 화면 이동 | React Navigation 7 정적 API |
@@ -262,10 +262,10 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 | 스타일링 | 개인 디자인 시스템 `@eeennsu/native`(NativeWind 5 기반). 0.1.0이 2026-09-24 npm에 배포됐다(RN 컴포넌트 5개: Button, Input, Card, Stack, Text). 다크 모드는 이 테마를 따른다. 연동 방식과 앱 디자인은 `docs/DESIGN.md`에 정의한다 |
 | LLM | llama.rn 0.12.x(정확한 버전 고정) |
 | 검증 | Zod 4(LLM 출력 스키마, 백업 가져오기) |
-| 테스트 | Jest + React Native Testing Library 14, E2E는 Maestro |
-| 도구 | ESLint, Prettier, husky, commitlint |
+| 테스트 | Jest 29 + React Native Testing Library 14, E2E는 Maestro. `@react-native/jest-preset` 0.87이 Jest 29 기준이다. RNTL이 쓰는 `test-renderer`는 1.2.0에 고정한다(1.3.0은 react 19.3 이상을 요구하는데 RN 0.87.1은 react 19.2.3이다) |
+| 도구 | ESLint 9(flat config), Prettier, husky, lint-staged, commitlint. ESLint 9는 지원이 끝났지만 `eslint-plugin-react`와 `eslint-plugin-react-native`가 10을 지원하지 않아 유지한다. 두 플러그인이 10을 지원하면 올린다 |
 
-Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 있다.
+Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 있다. Android 패키지명은 `com.eeennsu.spendback`이고, 64비트 ABI(arm64-v8a, x86_64)만 빌드한다.
 
 **참고할 옆 폴더 프로젝트**
 
@@ -288,7 +288,7 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 | 2B급 모델이 플레이스홀더를 다른 사실의 키에 붙이거나("야식 치킨 지출이 {배달의 증감}"), 단위("20,100원원")와 서술어("늘었어요가 늘었어요")를 중복하고, 조사를 틀린다("54,000원였어요"). 숫자를 지어내는 것만 막힐 뿐 틀린 사실은 만들 수 있다 | 문법으로 insight마다 한 사실 묶음의 키만 쓰게 한다(11장 기본안). 평가 하네스 자동 점검에 키 오용, 단위 중복, 조사를 넣는다 |
 | llama.rn 0.12.9의 `ignore_eos`·`logit_bias`가 SIGSEGV를 낸다 | 쓰지 않고, 버전을 올릴 때 다시 확인(6장) |
 | 연속으로 추론하면 약 4분 만에 열 상태가 3(severe)까지 오른다 | 회고는 기간마다 한 번 생성하므로 영향이 작다. 하네스는 PC에서 돈다 |
-| Windows에서 llama.rn 설치·빌드가 깨진다: SDK CMake 3.22.1의 ninja가 긴 경로를 지원하지 않고(`LongPathsEnabled=1`이어도 260자 제한), pnpm 10이 설치 스크립트를 막고, Git Bash의 GNU tar가 `C:\` 경로를 원격 호스트로 읽는다 | llama.rn의 CMake `buildStagingDirectory`를 짧은 경로로 옮기고, `pnpm.onlyBuiltDependencies`에 `llama.rn`을 넣고, Windows에서는 PowerShell에서 설치한다 |
+| Windows에서 llama.rn 설치·빌드가 깨진다: SDK CMake 3.22.1의 ninja가 긴 경로를 지원하지 않고(`LongPathsEnabled=1`이어도 260자 제한), pnpm 10이 설치 스크립트를 막고, Git Bash의 GNU tar가 `C:\` 경로를 원격 호스트로 읽는다 | llama.rn의 CMake `buildStagingDirectory`를 짧은 경로로 옮기고, `pnpm.onlyBuiltDependencies`에 `llama.rn`을 넣고, Windows에서는 PowerShell에서 설치한다. 앞의 둘은 부트스트랩에서 미리 넣었다(`android/build.gradle`, `package.json`) |
 | node-llama-cpp와 llama.rn에 들어간 llama.cpp 버전이 달라 평가 결과와 기기 결과가 어긋날 수 있음. 2026-09-24 기준 llama.rn 0.12.9는 build 10256(`6c8dcaa`), node-llama-cpp 3.21.1은 v0.4.0(2026-09-12 스냅샷)이라 약 5~6주 차이가 나고, `qwen35`와 sampler 코드가 다르다(grammar는 거의 같다) | 두 버전을 기록하고, 기기에서 표본을 교차 확인 |
 | 디자인 시스템 0.1.0이 NativeWind 5.0.0-preview.4와 react-native-css 3.0.7에 고정돼 있다(2026-09-24 상위 최신은 5.0.0-rc.0과 3.1.0-rc.0). Expo 검증 앱(RN 0.86.3)에서만 확인했고, react-native-css가 `@expo/metro-config`를 peer로 요구해 RN CLI 설정은 확인되지 않았다. 로컬 링크로 개발하면 react 버전이 어긋날 때 "Invalid hook call"이 난다 | 부트스트랩한 앱에서 연동을 확인하고(12장 3번), 결과를 DESIGN.md에 적는다 |
 | GBNF로는 한글 수사를 막을 수 없음 | 사후 검사 + 재생성 + 폴백 |
@@ -317,7 +317,7 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 UI는 디자인 시스템 연동과 DESIGN.md가 준비된 뒤에 만들고, 그 전에는 UI와 무관한 계층을 먼저 만든다. 3번(디자인 시스템 쪽)은 앱의 4·5번과 나란히 진행할 수 있다.
 
 1. **LLM 스파이크**: S24+에서 llama.rn과 후보 모델의 로드 시간, 토큰 속도, 메모리, 플레이스홀더 GBNF 동작을 측정한다. 가장 큰 불확실성이라 가장 먼저 한다. (2026-09-24 완료. 결과는 6장, 10장, 11장, 13장에 반영했다)
-2. **프로젝트 부트스트랩**: RN CLI, pnpm, TypeScript, 린트, Jest
+2. **프로젝트 부트스트랩**: RN CLI, pnpm, TypeScript, 린트, Jest (2026-09-24 완료. 릴리스 빌드까지 확인했고, 기기 실행은 폰이 연결되지 않아 확인하지 못했다)
 3. **디자인 시스템 연동과 DESIGN.md**: 부트스트랩한 앱에 npm의 `@eeennsu/native`를 설치해 Expo 없이 기기에서 띄우고 연동 방식을 정한다. 앱마다 갈리는 축(색, 간격 리듬, 화면 구조)과 필요한 컴포넌트를 `docs/DESIGN.md`에 정의하고, 디자인 시스템에 없는 컴포넌트는 디자인 시스템을 개선해 배포한다
 4. **도메인 계층**: 거래·카테고리·예산 스키마(drizzle), 지표 계산기, 예산 일할, 포맷터(TDD)
 5. **회고 파이프라인**: facts → GBNF 생성 → `narrate` → 사후 검사 → 렌더러, 평가 하네스

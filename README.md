@@ -26,3 +26,4 @@
 
 - 앱에 빨간 화면으로 `Unable to load script`가 뜨면 기기가 Metro에 닿지 못한 것입니다. USB를 다시 연결하면 포트 연결이 풀리므로 `adb reverse tcp:8081 tcp:8081`을 실행하거나 `pnpm android`를 다시 실행합니다.
 - Metro의 첫 번들링은 1분 가까이 걸릴 수 있습니다. 그 뒤로는 캐시를 씁니다.
+- 새로 쓴 `className`이 화면에 안 먹으면 `global.css`를 한 번 저장하거나 Metro를 다시 켭니다. Tailwind 결과가 다른 파일의 클래스에 달려 있는데 Metro는 global.css 내용이 바뀔 때만 다시 변환합니다([docs/DESIGN.md](docs/DESIGN.md) 1.4).

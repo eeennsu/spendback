@@ -8,14 +8,15 @@ on:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    # 러너 이미지가 바뀌는 시점을 직접 정하도록 버전을 고정한다
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # pnpm 버전은 package.json의 packageManager를 따른다
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm

@@ -1,5 +1,16 @@
 {
   "extends": "@react-native/typescript-config",
-  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "paths": {
+      // react-native 조건이 TS 소스를 가리켜 tsc가 그 패키지 내부 타입 오류를 낸다. jest.config.js와 같이
+      // 빌드된 타입으로 돌린다(DS 구현 노트 F-13)
+      "react-native-css/jest": [
+        "./node_modules/react-native-css/dist/typescript/commonjs/src/jest/index.d.ts"
+      ]
+    }
+  },
+  // nativewind-env.d.ts는 glob에도 걸리지만 이름을 직접 적어 둔다. 없으면 Metro를 켤 때
+  // react-native-css가 이 파일을 고쳐 쓴다(metro.config.js의 withNativewind)
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
   "exclude": ["**/node_modules", "**/Pods", "spike"]
 }

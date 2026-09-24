@@ -1,18 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { DsCheckScreen } from './preview/DsCheckScreen';
 
-// 부트스트랩용 임시 화면. UI는 디자인 시스템 연동(PRD 12장 3번) 뒤에 만든다.
+// UI는 12장 6번에서 만든다. 그 전까지는 디자인 시스템 확인 화면을 띄운다.
 export default function App() {
-  return (
-    <View style={styles.root}>
-      <Text>spendback</Text>
-    </View>
-  );
+  return <DsCheckScreen />;
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

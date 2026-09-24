@@ -1,0 +1,1708 @@
+{
+  "meta": {
+    "date": "2026-09-24T11:30:19.497Z",
+    "model": "SM-S926N",
+    "soc": "s5e9945",
+    "android": "16",
+    "thermalBefore": "0",
+    "battery": "72",
+    "thermalAfter": "2"
+  },
+  "params": {
+    "suite": "full",
+    "models": [
+      "qwen",
+      "kanana",
+      "exaone"
+    ],
+    "threads": "6",
+    "runs": "3"
+  },
+  "events": [
+    {
+      "t": 1790249420393,
+      "ev": "suite-start",
+      "suite": "full",
+      "models": [
+        "qwen",
+        "kanana",
+        "exaone"
+      ],
+      "threads": [
+        6
+      ],
+      "runs": 3,
+      "nCtx": 4096
+    },
+    {
+      "t": 1790249420393,
+      "ev": "phase",
+      "phase": "load:qwen:t6"
+    },
+    {
+      "t": 1790249422567,
+      "ev": "loaded",
+      "model": "qwen",
+      "threads": 6,
+      "loadMs": 2174,
+      "androidLib": "rnllama_jni_v8_2_dotprod_i8mm",
+      "gpu": false,
+      "reasonNoGPU": "GPU backend is not available",
+      "devices": [],
+      "systemInfo": "system_info: n_threads = 6 / 10 | CPU : NEON = 1 | ARM_FMA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | REPACK = 1 | ",
+      "desc": "qwen35 2B Q4_K - Medium",
+      "size": 1269873920,
+      "nParams": 1881825088,
+      "jinja": true
+    },
+    {
+      "t": 1790249422567,
+      "ev": "phase",
+      "phase": "speed:qwen:t6"
+    },
+    {
+      "t": 1790249425659,
+      "ev": "speed",
+      "model": "qwen",
+      "threads": 6,
+      "wallMs": 3092,
+      "firstTokenMs": 431,
+      "timings": {
+        "cache_n": 87,
+        "prompt_n": 27,
+        "prompt_ms": 422.68,
+        "prompt_per_token_ms": 15.654814814814815,
+        "prompt_per_second": 63.87811110059619,
+        "predicted_n": 59,
+        "predicted_ms": 2621.3729999999996,
+        "predicted_per_token_ms": 44.43005084745762,
+        "predicted_per_second": 22.50728911909904
+      },
+      "text": "가계부를 꾸준히 쓰는 방법은 단순한 기록을 넘어 재정 건강을 위한 일관된 습관으로 접근해야 하며, 이를 위해 월간 소득과 지출을 세분화하고 핵심 항목을 추적하며, 이를 바탕으로 목표 설정과 수정 계획을 수립하는 과정을 반복적으로 수행해야 합니다."
+    },
+    {
+      "t": 1790249425660,
+      "ev": "phase",
+      "phase": "retro:qwen:t6:gbnf#1"
+    },
+    {
+      "t": 1790249443545,
+      "ev": "retro",
+      "model": "qwen",
+      "threads": 6,
+      "variant": "gbnf#1",
+      "grammar": true,
+      "seed": 1,
+      "wallMs": 17883,
+      "firstTokenMs": 6903,
+      "headlineMs": 8588,
+      "timings": {
+        "cache_n": 945,
+        "prompt_n": 735,
+        "prompt_ms": 6843.627,
+        "prompt_per_token_ms": 9.311057142857143,
+        "prompt_per_second": 107.39919051695833,
+        "predicted_n": 209,
+        "predicted_ms": 10979.871,
+        "predicted_per_token_ms": 52.53526794258373,
+        "predicted_per_second": 19.03483201214295
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": false,
+      "insights": null,
+      "parseError": "SyntaxError: JSON Parse error: Unexpected character: <",
+      "placeholders": 15,
+      "distinctKeys": 9,
+      "unknownKeys": [],
+      "digits": 9,
+      "numerals": [
+        "이번",
+        "한번",
+        "이번"
+      ],
+      "maxSentenceLen": 527,
+      "rendered": [
+        "<think>\n\n</think>\n\n{\"headline\": \"이번 주 회고에서 งบประมาณ 사용률이 ۱۱۲％로超ceeded(초월)했어요.\", \"insights\": [\"가장 큰 지출이 배달로 68,000원원, 36%를 차지했어요.\", \"충동 지출이 충동로 54,000원원이며, 29%로 이어져 29%가 되었습니다.\", \"다시 한번 먹어야 할 야식 치킨는 32,000원원이었습니다.\", \"이번 주 소비 패턴을 분석한 결과, 47,000원원의 아쉬움이 남았습니다.\"], \"suggestion\": \"다음 주에는 배달이나 충동을 줄이고, 야식 치킨을 32,000원원 이상으로 줄여서 47,000원원만큼의 아쉬움을 줄이세요.\"}"
+      ],
+      "text": "{\"headline\": \"이번 주 회고에서 งบประมาณ 사용률이 ۱۱۲％로超ceeded(초월)했어요.\", \"insights\": [\"가장 큰 지출이 {category.c3.name}로 {category.c3.amount}원, {category.c3.share}를 차지했어요.\", \"충동 지출이 {tag.t2.name}로 {tag.t2.amount}원이며, {tag.t2.share}로 이어져 {tag.t2.share}가 되었습니다.\", \"다시 한번 먹어야 할 {max_expense.memo}는 {max_expense.amount}원이었습니다.\", \"이번 주 소비 패턴을 분석한 결과, {regret.amount}원의 아쉬움이 남았습니다.\"], \"suggestion\": \"다음 주에는 {category.c3.name}이나 {tag.t2.name}을 줄이고, {max_expense.memo}을 {max_expense.amount}원 이상으로 줄여서 {regret.amount}원만큼의 아쉬움을 줄이세요.\"}"
+    },
+    {
+      "t": 1790249443546,
+      "ev": "phase",
+      "phase": "retro:qwen:t6:gbnf#2"
+    },
+    {
+      "t": 1790249455086,
+      "ev": "retro",
+      "model": "qwen",
+      "threads": 6,
+      "variant": "gbnf#2",
+      "grammar": true,
+      "seed": 2,
+      "wallMs": 11540,
+      "firstTokenMs": 164,
+      "headlineMs": 1782,
+      "timings": {
+        "cache_n": 947,
+        "prompt_n": 6,
+        "prompt_ms": 124.917,
+        "prompt_per_token_ms": 20.8195,
+        "prompt_per_second": 48.03189317706957,
+        "predicted_n": 211,
+        "predicted_ms": 11327.447999999999,
+        "predicted_per_token_ms": 53.68458767772511,
+        "predicted_per_second": 18.627320116587605
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": false,
+      "insights": null,
+      "parseError": "SyntaxError: JSON Parse error: Unexpected character: <",
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [
+        "\n\"headline\": \"배달 지출이 ㄴ만 늘고, 주말과 충동 지출이 눈에 띄어요.\",\n\"insights\": [\"주말 토요일에 ㄴ만 많은 배달 지출이 발생했어요. (태그: 충동 지출)\", \"식비 지출은 줄어든 ㄴ만이었는데, ㄴ만 감소세는 전체 변동비 중 ㄴ만 작은 비율을 차지하고 있어요.\", \"최대 ㄴ만은 야식 치킨으로 발생했고, 편의점 커피는 ㄴ만 반복되어 지출이 많아진 걸 알 수 있어요.\", \"총 변동비 증가율은 ㄴ만 높게 나와, 예산 사용률이 ㄴ만 높았음을 확인했어요.\"]\n,\n\"suggestion\": \"다음 주에는 주말과 밤늦게 배달 지출을 줄이고, ㄴ만 큰 예산 사용이 반복되지 않도록 주의하세요.\"\n"
+      ],
+      "digits": 0,
+      "numerals": [],
+      "maxSentenceLen": 364,
+      "rendered": [
+        "<think>\n\n</think>\n\n{\n\"headline\": \"배달 지출이 ㄴ만 늘고, 주말과 충동 지출이 눈에 띄어요.\",\n\"insights\": [\"주말 토요일에 ㄴ만 많은 배달 지출이 발생했어요. (태그: 충동 지출)\", \"식비 지출은 줄어든 ㄴ만이었는데, ㄴ만 감소세는 전체 변동비 중 ㄴ만 작은 비율을 차지하고 있어요.\", \"최대 ㄴ만은 야식 치킨으로 발생했고, 편의점 커피는 ㄴ만 반복되어 지출이 많아진 걸 알 수 있어요.\", \"총 변동비 증가율은 ㄴ만 높게 나와, 예산 사용률이 ㄴ만 높았음을 확인했어요.\"]\n,\n\"suggestion\": \"다음 주에는 주말과 밤늦게 배달 지출을 줄이고, ㄴ만 큰 예산 사용이 반복되지 않도록 주의하세요.\"\n}"
+      ],
+      "text": "{\n\"headline\": \"배달 지출이 ㄴ만 늘고, 주말과 충동 지출이 눈에 띄어요.\",\n\"insights\": [\"주말 토요일에 ㄴ만 많은 배달 지출이 발생했어요. (태그: 충동 지출)\", \"식비 지출은 줄어든 ㄴ만이었는데, ㄴ만 감소세는 전체 변동비 중 ㄴ만 작은 비율을 차지하고 있어요.\", \"최대 ㄴ만은 야식 치킨으로 발생했고, 편의점 커피는 ㄴ만 반복되어 지출이 많아진 걸 알 수 있어요.\", \"총 변동비 증가율은 ㄴ만 높게 나와, 예산 사용률이 ㄴ만 높았음을 확인했어요.\"]\n,\n\"suggestion\": \"다음 주에는 주말과 밤늦게 배달 지출을 줄이고, ㄴ만 큰 예산 사용이 반복되지 않도록 주의하세요.\"\n}"
+    },
+    {
+      "t": 1790249455087,
+      "ev": "phase",
+      "phase": "retro:qwen:t6:gbnf#3"
+    },
+    {
+      "t": 1790249475289,
+      "ev": "retro",
+      "model": "qwen",
+      "threads": 6,
+      "variant": "gbnf#3",
+      "grammar": true,
+      "seed": 3,
+      "wallMs": 20202,
+      "firstTokenMs": 161,
+      "headlineMs": 3430,
+      "timings": {
+        "cache_n": 1090,
+        "prompt_n": 6,
+        "prompt_ms": 147.44,
+        "prompt_per_token_ms": 24.573333333333334,
+        "prompt_per_second": 40.69451980466631,
+        "predicted_n": 354,
+        "predicted_ms": 19989.337,
+        "predicted_per_token_ms": 56.46705367231638,
+        "predicted_per_second": 17.709441788889748
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": false,
+      "insights": null,
+      "parseError": "SyntaxError: JSON Parse error: Unexpected character: <",
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [
+        "\n\"headline\": \"전체 지출이 ㄱ만 원으로 늘었으며, ㄱ만 원의 변동비에서 ㄱ만 원의 충동 지출이 가장 컸어요.\",\n\"insights\": [\"전체 지출이 ㄱ만 원으로 늘었으며, ㄱ만 원의 변동비에서 ㄱ만 원의 충동 지출이 가장 컸어요.\", \"토요일에 ㄱ만 원 지출이 가장 많았으며, 주말 지출 비율이 ㄱ만 원으로 높아졌어요.\", \"식비 지출은 ㄱ만 원 줄어들었으나, ㄱ만 원 증가한 충동 지출이 전체 변동비에서 ㄱ만 원으로 크게 늘었어요.\", \"이번 주에는 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로\"]\n,\n\"suggestion\": \"다음 주에는 ㄱ만 원의 ㄱ만 원의 충동 지출을 줄이면서, 식비 지출이 ㄱ만 원으로 줄게요.\"\n"
+      ],
+      "digits": 0,
+      "numerals": [
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "이번",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "만 원"
+      ],
+      "maxSentenceLen": 505,
+      "rendered": [
+        "<think>\n\n</think>\n\n{\n\"headline\": \"전체 지출이 ㄱ만 원으로 늘었으며, ㄱ만 원의 변동비에서 ㄱ만 원의 충동 지출이 가장 컸어요.\",\n\"insights\": [\"전체 지출이 ㄱ만 원으로 늘었으며, ㄱ만 원의 변동비에서 ㄱ만 원의 충동 지출이 가장 컸어요.\", \"토요일에 ㄱ만 원 지출이 가장 많았으며, 주말 지출 비율이 ㄱ만 원으로 높아졌어요.\", \"식비 지출은 ㄱ만 원 줄어들었으나, ㄱ만 원 증가한 충동 지출이 전체 변동비에서 ㄱ만 원으로 크게 늘었어요.\", \"이번 주에는 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로\"]\n,\n\"suggestion\": \"다음 주에는 ㄱ만 원의 ㄱ만 원의 충동 지출을 줄이면서, 식비 지출이 ㄱ만 원으로 줄게요.\"\n}"
+      ],
+      "text": "{\n\"headline\": \"전체 지출이 ㄱ만 원으로 늘었으며, ㄱ만 원의 변동비에서 ㄱ만 원의 충동 지출이 가장 컸어요.\",\n\"insights\": [\"전체 지출이 ㄱ만 원으로 늘었으며, ㄱ만 원의 변동비에서 ㄱ만 원의 충동 지출이 가장 컸어요.\", \"토요일에 ㄱ만 원 지출이 가장 많았으며, 주말 지출 비율이 ㄱ만 원으로 높아졌어요.\", \"식비 지출은 ㄱ만 원 줄어들었으나, ㄱ만 원 증가한 충동 지출이 전체 변동비에서 ㄱ만 원으로 크게 늘었어요.\", \"이번 주에는 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 ㄱ만 원의 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로 인해 총 ㄱ만 원 증가로\"]\n,\n\"suggestion\": \"다음 주에는 ㄱ만 원의 ㄱ만 원의 충동 지출을 줄이면서, 식비 지출이 ㄱ만 원으로 줄게요.\"\n}"
+    },
+    {
+      "t": 1790249475290,
+      "ev": "phase",
+      "phase": "retro:qwen:t6:free#1"
+    },
+    {
+      "t": 1790249494174,
+      "ev": "retro",
+      "model": "qwen",
+      "threads": 6,
+      "variant": "free#1",
+      "grammar": false,
+      "seed": 1,
+      "wallMs": 18882,
+      "firstTokenMs": 151,
+      "headlineMs": 2530,
+      "timings": {
+        "cache_n": 1079,
+        "prompt_n": 6,
+        "prompt_ms": 137.636,
+        "prompt_per_token_ms": 22.939333333333334,
+        "prompt_per_second": 43.59324595309367,
+        "predicted_n": 343,
+        "predicted_ms": 18677.244,
+        "predicted_per_token_ms": 54.45260641399417,
+        "predicted_per_second": 18.364593834079592
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": false,
+      "insights": null,
+      "parseError": "SyntaxError: JSON Parse error: Unexpected character: <",
+      "placeholders": 0,
+      "distinctKeys": 0,
+      "unknownKeys": [],
+      "digits": 35,
+      "numerals": [
+        "천 원",
+        "만 원",
+        "만 원",
+        "한 번",
+        "만 원",
+        "천 원",
+        "만 원",
+        "천 원",
+        "만 원",
+        "만 원",
+        "만 원",
+        "천 원"
+      ],
+      "maxSentenceLen": 610,
+      "rendered": [
+        "<think>\n\n</think>\n\n```json\n{\"headline\": \"9월 셋째 주 회고: 배달 지출이 36% 증가하여 총 지출 41만 2천 원, 20만 원 초과 발생\", \"insights\": [\"다양한 카테고리별 지출이 뚜렷하지만, 배달과 카페·간식 두 카테고리가 47만 원의 충동 지출과 보상 지출을 형성해 주요 소비 요인을 만드는데.\", \"토요일 한 번의 치킨 치식과 편의점 커피의 5 회 반복 소비가 주된 패턴으로, 일주일 내 최대 지출이 야식 치킨 3만 원과 편의점 커피 1만 2천 원에 집중되어 있어.\", \"전체 지출의 21% 증가율과 112%의 사용률, 2 만 원 초과 지출은 월간 예산을 초과하는 경향이 뚜렷하며, 식비 1만 2천 원 감소는 긍정적 변화로 보아.\", \"충동 지출 (54 만 원) 과 재충돌 지출 (38 만 원) 이 합쳐진 92 만 원은 월간 41 만 2 천 원 예산의 2 배 수준으로, 당분간은 예산 초과 관리가 필요한 시점이 될 것 같아.\"], \"suggestion\": \"다음 주에는 배달과 카페·간식 카테고리에서 지출을 줄이는 습관을 들이고, 토요일 치식과 편의점 커피 반복을 중단하여 월간 지출을 정상 범위대로 유지하도록 계획하시길 바랍니다.\"\n```"
+      ],
+      "text": "```json\n{\"headline\": \"9월 셋째 주 회고: 배달 지출이 36% 증가하여 총 지출 41만 2천 원, 20만 원 초과 발생\", \"insights\": [\"다양한 카테고리별 지출이 뚜렷하지만, 배달과 카페·간식 두 카테고리가 47만 원의 충동 지출과 보상 지출을 형성해 주요 소비 요인을 만드는데.\", \"토요일 한 번의 치킨 치식과 편의점 커피의 5 회 반복 소비가 주된 패턴으로, 일주일 내 최대 지출이 야식 치킨 3만 원과 편의점 커피 1만 2천 원에 집중되어 있어.\", \"전체 지출의 21% 증가율과 112%의 사용률, 2 만 원 초과 지출은 월간 예산을 초과하는 경향이 뚜렷하며, 식비 1만 2천 원 감소는 긍정적 변화로 보아.\", \"충동 지출 (54 만 원) 과 재충돌 지출 (38 만 원) 이 합쳐진 92 만 원은 월간 41 만 2 천 원 예산의 2 배 수준으로, 당분간은 예산 초과 관리가 필요한 시점이 될 것 같아.\"], \"suggestion\": \"다음 주에는 배달과 카페·간식 카테고리에서 지출을 줄이는 습관을 들이고, 토요일 치식과 편의점 커피 반복을 중단하여 월간 지출을 정상 범위대로 유지하도록 계획하시길 바랍니다.\"\n```"
+    },
+    {
+      "t": 1790249494175,
+      "ev": "phase",
+      "phase": "release:qwen:t6"
+    },
+    {
+      "t": 1790249494444,
+      "ev": "phase",
+      "phase": "load:kanana:t6"
+    },
+    {
+      "t": 1790249499748,
+      "ev": "loaded",
+      "model": "kanana",
+      "threads": 6,
+      "loadMs": 5304,
+      "androidLib": "rnllama_jni_v8_2_dotprod_i8mm",
+      "gpu": false,
+      "reasonNoGPU": "GPU backend is not available",
+      "devices": [],
+      "systemInfo": "system_info: n_threads = 6 / 10 | CPU : NEON = 1 | ARM_FMA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | REPACK = 1 | ",
+      "desc": "llama 8B Q4_K - Medium",
+      "size": 1514946314,
+      "nParams": 2316824832,
+      "jinja": true
+    },
+    {
+      "t": 1790249499748,
+      "ev": "phase",
+      "phase": "speed:kanana:t6"
+    },
+    {
+      "t": 1790249506661,
+      "ev": "speed",
+      "model": "kanana",
+      "threads": 6,
+      "wallMs": 6913,
+      "firstTokenMs": 659,
+      "timings": {
+        "cache_n": 163,
+        "prompt_n": 36,
+        "prompt_ms": 634.1030000000001,
+        "prompt_per_token_ms": 17.613972222222223,
+        "prompt_per_second": 56.77311099300901,
+        "predicted_n": 127,
+        "predicted_ms": 6256.816,
+        "predicted_per_token_ms": 49.26626771653543,
+        "predicted_per_second": 20.29786396147817
+      },
+      "text": "가계부를 꾸준히 쓰기 위해서는 우선 자신의 수입과 지출을 명확하게 기록하는 습관을 들이는 것이 중요하다. 매일 또는 주 단위로 지출 내역을 기록하고, 고정 지출과 변동 지출을 구분하여 체계적으로 관리하면 불필요한 지출을 줄일 수 있다. 또한, 목표를 세우고 그에 맞는 예산을 설정하면 동기부여가 되어 꾸준히 가계부를 작성할 수 있다. 예를 들어, 한 달에 일정 금액을 저"
+    },
+    {
+      "t": 1790249506662,
+      "ev": "phase",
+      "phase": "retro:kanana:t6:gbnf#1"
+    },
+    {
+      "t": 1790249537742,
+      "ev": "retro",
+      "model": "kanana",
+      "threads": 6,
+      "variant": "gbnf#1",
+      "grammar": true,
+      "seed": 1,
+      "wallMs": 31078,
+      "firstTokenMs": 12580,
+      "headlineMs": 13693,
+      "timings": {
+        "cache_n": 943,
+        "prompt_n": 703,
+        "prompt_ms": 12552.134,
+        "prompt_per_token_ms": 17.85509815078236,
+        "prompt_per_second": 56.0064129334502,
+        "predicted_n": 232,
+        "predicted_ms": 18422.425,
+        "predicted_per_token_ms": 79.40700431034483,
+        "predicted_per_second": 12.593347509896226
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": true,
+      "insights": 4,
+      "parseError": null,
+      "placeholders": 9,
+      "distinctKeys": 9,
+      "unknownKeys": [],
+      "digits": 9,
+      "numerals": [
+        "이번",
+        "이번"
+      ],
+      "maxSentenceLen": 102,
+      "rendered": [
+        "이번 주 가계부 소비 회고",
+        "배달 지출이 μ68,000원에서 μ29,000원 늘었어요로 증가하며 전체 변동비의 μ36%를 차지했어요.",
+        "식비 지출은 μ41,200원에서 μ12,300원 줄었어요로 감소했으며, 절약 실천에 기여했어요.",
+        "카페·간식 지출은 μ23,600원에서 μ4,100원 늘었어요로 늘었는데, 보상·스트레스 해소를 위한 소비로 분석됩니다.",
+        "충동 지출은 μ54,000원에서 μ29%로 비중이 커졌으며, 보완이 필요할 것으로 보입니다.",
+        "이번 주의 충동 지출을 줄이기 위해, 소비 전 계획을 세우고, 보상·스트레스 해소 방법을 다양화하는 방안을 고려해 보세요."
+      ],
+      "text": "{\"headline\": \"이번 주 가계부 소비 회고\",\n\"insights\": [\n\"배달 지출이 μ{category.c3.amount}에서 μ{category.c3.change_phrase}로 증가하며 전체 변동비의 μ{category.c3.share}를 차지했어요.\",\n\"식비 지출은 μ{category.c1.amount}에서 μ{category.c1.change_phrase}로 감소했으며, 절약 실천에 기여했어요.\",\n\"카페·간식 지출은 μ{category.c2.amount}에서 μ{category.c2.change_phrase}로 늘었는데, 보상·스트레스 해소를 위한 소비로 분석됩니다.\",\n\"충동 지출은 μ{tag.t2.amount}에서 μ{tag.t2.share}로 비중이 커졌으며, 보완이 필요할 것으로 보입니다.\"\n],\n\"suggestion\": \"이번 주의 충동 지출을 줄이기 위해, 소비 전 계획을 세우고, 보상·스트레스 해소 방법을 다양화하는 방안을 고려해 보세요.\"}"
+    },
+    {
+      "t": 1790249537742,
+      "ev": "phase",
+      "phase": "retro:kanana:t6:gbnf#2"
+    },
+    {
+      "t": 1790249551951,
+      "ev": "retro",
+      "model": "kanana",
+      "threads": 6,
+      "variant": "gbnf#2",
+      "grammar": true,
+      "seed": 2,
+      "wallMs": 14208,
+      "firstTokenMs": 97,
+      "headlineMs": 1009,
+      "timings": {
+        "cache_n": 887,
+        "prompt_n": 1,
+        "prompt_ms": 0,
+        "prompt_per_token_ms": 0,
+        "prompt_per_second": 0,
+        "predicted_n": 177,
+        "predicted_ms": 14035.537999999999,
+        "predicted_per_token_ms": 79.29682485875705,
+        "predicted_per_second": 12.610845412552052
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": true,
+      "insights": 4,
+      "parseError": null,
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [
+        "\"headline\": \"이번 주 소비 분석 결과\", \"insights\": [\"배달 지출이 ㎡ 늘었고, 전체 변동지출의 ⅔를 차지했어요.\", \"식비는 줄었지만, 카페·간식 지출은 소폭 늘었어요. 충동구매와 보상·스트레스 구매가 많았습니다.\", \"야식 치킨은 최대 지출 항목이었고, 반복 구매가 있었습니다. 충동 지출을 줄이면 좋겠습니다.\", \"이번 주는 ₁일만 소비 없이 보냈으며, 토요일에 큰 지출이 있었습니다.\"], \"suggestion\": \"배달 지출을 관리하고, 충동 구매를 줄이기 위해 계획적인 소비 습관을 기르겠습니다.\""
+      ],
+      "digits": 0,
+      "numerals": [
+        "이번",
+        "이번"
+      ],
+      "maxSentenceLen": 53,
+      "rendered": [
+        "이번 주 소비 분석 결과",
+        "배달 지출이 ㎡ 늘었고, 전체 변동지출의 ⅔를 차지했어요.",
+        "식비는 줄었지만, 카페·간식 지출은 소폭 늘었어요. 충동구매와 보상·스트레스 구매가 많았습니다.",
+        "야식 치킨은 최대 지출 항목이었고, 반복 구매가 있었습니다. 충동 지출을 줄이면 좋겠습니다.",
+        "이번 주는 ₁일만 소비 없이 보냈으며, 토요일에 큰 지출이 있었습니다.",
+        "배달 지출을 관리하고, 충동 구매를 줄이기 위해 계획적인 소비 습관을 기르겠습니다."
+      ],
+      "text": "{\"headline\": \"이번 주 소비 분석 결과\", \"insights\": [\"배달 지출이 ㎡ 늘었고, 전체 변동지출의 ⅔를 차지했어요.\", \"식비는 줄었지만, 카페·간식 지출은 소폭 늘었어요. 충동구매와 보상·스트레스 구매가 많았습니다.\", \"야식 치킨은 최대 지출 항목이었고, 반복 구매가 있었습니다. 충동 지출을 줄이면 좋겠습니다.\", \"이번 주는 ₁일만 소비 없이 보냈으며, 토요일에 큰 지출이 있었습니다.\"], \"suggestion\": \"배달 지출을 관리하고, 충동 구매를 줄이기 위해 계획적인 소비 습관을 기르겠습니다.\"}"
+    },
+    {
+      "t": 1790249551952,
+      "ev": "phase",
+      "phase": "retro:kanana:t6:gbnf#3"
+    },
+    {
+      "t": 1790249564295,
+      "ev": "retro",
+      "model": "kanana",
+      "threads": 6,
+      "variant": "gbnf#3",
+      "grammar": true,
+      "seed": 3,
+      "wallMs": 12342,
+      "firstTokenMs": 96,
+      "headlineMs": 1257,
+      "timings": {
+        "cache_n": 864,
+        "prompt_n": 1,
+        "prompt_ms": 0,
+        "prompt_per_token_ms": 0,
+        "prompt_per_second": 0,
+        "predicted_n": 154,
+        "predicted_ms": 12170.503999999999,
+        "predicted_per_token_ms": 79.02924675324675,
+        "predicted_per_second": 12.653543353668837
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": true,
+      "insights": 4,
+      "parseError": null,
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [
+        "\"headline\": \"이번 주 소비 분석 및 회고\", \"insights\": [\"배달 지출이 단기간에 크게 늘어 전체 변동지출의 ¼을 차지했어요.\", \"식비는 줄었지만 충동구매 비중이 높아졌어요.\", \"카페·간식 지출은 늘었지만 보상·스트레스 관련 지출도 함께 증가했어요.\", \"야식(치킨) 지출이 크게 발생했으며, 반복적으로 구매한 내역도 확인됩니다.\"], \"suggestion\": \"다음 주에는 배달 지출을 점검하고, 충동 구매를 줄이기 위한 계획을 세워야겠어요.\""
+      ],
+      "digits": 0,
+      "numerals": [
+        "이번"
+      ],
+      "maxSentenceLen": 45,
+      "rendered": [
+        "이번 주 소비 분석 및 회고",
+        "배달 지출이 단기간에 크게 늘어 전체 변동지출의 ¼을 차지했어요.",
+        "식비는 줄었지만 충동구매 비중이 높아졌어요.",
+        "카페·간식 지출은 늘었지만 보상·스트레스 관련 지출도 함께 증가했어요.",
+        "야식(치킨) 지출이 크게 발생했으며, 반복적으로 구매한 내역도 확인됩니다.",
+        "다음 주에는 배달 지출을 점검하고, 충동 구매를 줄이기 위한 계획을 세워야겠어요."
+      ],
+      "text": "{\"headline\": \"이번 주 소비 분석 및 회고\", \"insights\": [\"배달 지출이 단기간에 크게 늘어 전체 변동지출의 ¼을 차지했어요.\", \"식비는 줄었지만 충동구매 비중이 높아졌어요.\", \"카페·간식 지출은 늘었지만 보상·스트레스 관련 지출도 함께 증가했어요.\", \"야식(치킨) 지출이 크게 발생했으며, 반복적으로 구매한 내역도 확인됩니다.\"], \"suggestion\": \"다음 주에는 배달 지출을 점검하고, 충동 구매를 줄이기 위한 계획을 세워야겠어요.\"}"
+    },
+    {
+      "t": 1790249564296,
+      "ev": "phase",
+      "phase": "retro:kanana:t6:free#1"
+    },
+    {
+      "t": 1790249572352,
+      "ev": "retro",
+      "model": "kanana",
+      "threads": 6,
+      "variant": "free#1",
+      "grammar": false,
+      "seed": 1,
+      "wallMs": 8055,
+      "firstTokenMs": 97,
+      "headlineMs": 1301,
+      "timings": {
+        "cache_n": 818,
+        "prompt_n": 1,
+        "prompt_ms": 0,
+        "prompt_per_token_ms": 0,
+        "prompt_per_second": 0,
+        "predicted_n": 108,
+        "predicted_ms": 7882.775,
+        "predicted_per_token_ms": 72.9886574074074,
+        "predicted_per_second": 13.700758933243687
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": true,
+      "insights": 2,
+      "parseError": null,
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [
+        "\"headline\": \"9월 셋째 주 가계부 소비 회고\", \n\"insights\": [\n  \"배달 지출이 29,000원 늘어 전체 변동비의 36%를 차지했어요.\",\n  \"식비 지출은 12,300원 줄어, 전주 대비 절감 효과가 있었어요.\"\n], \n\"suggestion\": \"배달 시 신중하게 계획하고, 식비는 합리적인 범위 내에서 관리하겠습니다.\""
+      ],
+      "digits": 14,
+      "numerals": [],
+      "maxSentenceLen": 40,
+      "rendered": [
+        "9월 셋째 주 가계부 소비 회고",
+        "배달 지출이 29,000원 늘어 전체 변동비의 36%를 차지했어요.",
+        "식비 지출은 12,300원 줄어, 전주 대비 절감 효과가 있었어요.",
+        "배달 시 신중하게 계획하고, 식비는 합리적인 범위 내에서 관리하겠습니다."
+      ],
+      "text": "{\"headline\": \"9월 셋째 주 가계부 소비 회고\", \n\"insights\": [\n  \"배달 지출이 29,000원 늘어 전체 변동비의 36%를 차지했어요.\",\n  \"식비 지출은 12,300원 줄어, 전주 대비 절감 효과가 있었어요.\"\n], \n\"suggestion\": \"배달 시 신중하게 계획하고, 식비는 합리적인 범위 내에서 관리하겠습니다.\"}"
+    },
+    {
+      "t": 1790249572352,
+      "ev": "phase",
+      "phase": "release:kanana:t6"
+    },
+    {
+      "t": 1790249572631,
+      "ev": "phase",
+      "phase": "load:exaone:t6"
+    },
+    {
+      "t": 1790249575676,
+      "ev": "loaded",
+      "model": "exaone",
+      "threads": 6,
+      "loadMs": 3045,
+      "androidLib": "rnllama_jni_v8_2_dotprod_i8mm",
+      "gpu": false,
+      "reasonNoGPU": "GPU backend is not available",
+      "devices": [],
+      "systemInfo": "system_info: n_threads = 6 / 10 | CPU : NEON = 1 | ARM_FMA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | REPACK = 1 | ",
+      "desc": "exaone4 1.2B Q4_K - Medium",
+      "size": 808230016,
+      "nParams": 1279391520,
+      "jinja": true
+    },
+    {
+      "t": 1790249575676,
+      "ev": "phase",
+      "phase": "speed:exaone:t6"
+    },
+    {
+      "t": 1790249579842,
+      "ev": "speed",
+      "model": "exaone",
+      "threads": 6,
+      "wallMs": 4165,
+      "firstTokenMs": 402,
+      "timings": {
+        "cache_n": 146,
+        "prompt_n": 28,
+        "prompt_ms": 383.355,
+        "prompt_per_token_ms": 13.69125,
+        "prompt_per_second": 73.03934994978545,
+        "predicted_n": 117,
+        "predicted_ms": 3733.99,
+        "predicted_per_token_ms": 31.91444444444444,
+        "predicted_per_second": 31.333774327194234
+      },
+      "text": "가계부를 꾸준히 쓰려면 매일 또는 주 단위로 간단히 기록하는 습관을 들이는 것이 중요합니다. 수입과 지출을 카테고리별로 분류해 날짜별로 정리하면 시간이 절약되면서도 누락 없이 관리할 수 있어요. 예를 들어, 수입은 월급일이나 정기적인 수입에만 기록하고, 불규칙한 지출은 매일 체크하는 식으로 분할하면 더 효율적입니다. 마지막으로 정기적으로 검토하며 부족한 부분을 보충하거나 목표에 맞춰 조정하면 장기적으로 재정 계획을 세우는 데 큰 도움이 됩니다."
+    },
+    {
+      "t": 1790249579842,
+      "ev": "phase",
+      "phase": "retro:exaone:t6:gbnf#1"
+    },
+    {
+      "t": 1790249609281,
+      "ev": "retro",
+      "model": "exaone",
+      "threads": 6,
+      "variant": "gbnf#1",
+      "grammar": true,
+      "seed": 1,
+      "wallMs": 29436,
+      "firstTokenMs": 5557,
+      "headlineMs": 6210,
+      "timings": {
+        "cache_n": 1053,
+        "prompt_n": 588,
+        "prompt_ms": 5496.081,
+        "prompt_per_token_ms": 9.347076530612245,
+        "prompt_per_second": 106.9853228145655,
+        "predicted_n": 462,
+        "predicted_ms": 23865.468,
+        "predicted_per_token_ms": 51.65685714285714,
+        "predicted_per_second": 19.358514151073845
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": true,
+      "insights": 4,
+      "parseError": null,
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [
+        " \"headline\": \"이번 주 회고 및 지출 분석 JSON\", \"insights\": [ \"주중 근무일은 예상보다 지출이 적어 동기부여가 되었습니다.\", \"식비 지출이 t-category c-category t-tag t-category로 분산되면서 계획과 실행 사이에 차이가 발생했습니다.\", \"Tuesday spent 㲚 ㅇㅊ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ\", \"total_spent_categories_summary_amount_c_category_c_category_c_category_amount_c_category_share_c_category_change_phrase_amount_c_category_change_phrase_amount_c\"] , \"suggestion\": \"다음 주에는 식음료 예산을 미리 분배하고 충동 지출을 줄이는 시간을 확보할 필요가 있습니다.\""
+      ],
+      "digits": 0,
+      "numerals": [
+        "이번"
+      ],
+      "maxSentenceLen": 160,
+      "rendered": [
+        "이번 주 회고 및 지출 분석 JSON",
+        "주중 근무일은 예상보다 지출이 적어 동기부여가 되었습니다.",
+        "식비 지출이 t-category c-category t-tag t-category로 분산되면서 계획과 실행 사이에 차이가 발생했습니다.",
+        "Tuesday spent 㲚 ㅇㅊ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ",
+        "total_spent_categories_summary_amount_c_category_c_category_c_category_amount_c_category_share_c_category_change_phrase_amount_c_category_change_phrase_amount_c",
+        "다음 주에는 식음료 예산을 미리 분배하고 충동 지출을 줄이는 시간을 확보할 필요가 있습니다."
+      ],
+      "text": "{ \"headline\": \"이번 주 회고 및 지출 분석 JSON\", \"insights\": [ \"주중 근무일은 예상보다 지출이 적어 동기부여가 되었습니다.\", \"식비 지출이 t-category c-category t-tag t-category로 분산되면서 계획과 실행 사이에 차이가 발생했습니다.\", \"Tuesday spent 㲚 ㅇㅊ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ ㅇ\", \"total_spent_categories_summary_amount_c_category_c_category_c_category_amount_c_category_share_c_category_change_phrase_amount_c_category_change_phrase_amount_c\"] , \"suggestion\": \"다음 주에는 식음료 예산을 미리 분배하고 충동 지출을 줄이는 시간을 확보할 필요가 있습니다.\"}"
+    },
+    {
+      "t": 1790249609282,
+      "ev": "phase",
+      "phase": "retro:exaone:t6:gbnf#2"
+    },
+    {
+      "t": 1790249619263,
+      "ev": "retro",
+      "model": "exaone",
+      "threads": 6,
+      "variant": "gbnf#2",
+      "grammar": true,
+      "seed": 2,
+      "wallMs": 9979,
+      "firstTokenMs": 90,
+      "headlineMs": 933,
+      "timings": {
+        "cache_n": 785,
+        "prompt_n": 1,
+        "prompt_ms": 0,
+        "prompt_per_token_ms": 0,
+        "prompt_per_second": 0,
+        "predicted_n": 195,
+        "predicted_ms": 9862.655999999999,
+        "predicted_per_token_ms": 50.57772307692307,
+        "predicted_per_second": 19.771550381560505
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": true,
+      "insights": 4,
+      "parseError": null,
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [
+        " \"headline\": \"이번 주 회고 JSON 데이터\" , \"insights\": [ \"총 지출액은 ₩㎤ ۾۹백만으로 안정적이었습니다.\", \"변동비는 전년 대비 ۲۹퍼센트 증가했습니다.\", \"예산 대비 사용률이 ۱۱۲퍼센트로 초과 지출이 있었습니다.\", \"월간 오버액정은 ₩۲천만 원 발생했습니다. 주요 지출 분야별 분류:\" ], \"suggestion\": \"식비(ۦ۲۲퍼센트)와 배달(ۦ۳۶퍼센트) 비중 확대가 필요해 보입니다. 충동 소비(ۦ۲۹퍼센트) 조정을 고려할 만합니다. 반복적인 편의점 커피 지출은 메모로 기록해 향후 방지 대책 마련이 필요합니다.\" "
+      ],
+      "digits": 0,
+      "numerals": [
+        "이번",
+        "천만 원"
+      ],
+      "maxSentenceLen": 111,
+      "rendered": [
+        "이번 주 회고 JSON 데이터",
+        "총 지출액은 ₩㎤ ۾۹백만으로 안정적이었습니다.",
+        "변동비는 전년 대비 ۲۹퍼센트 증가했습니다.",
+        "예산 대비 사용률이 ۱۱۲퍼센트로 초과 지출이 있었습니다.",
+        "월간 오버액정은 ₩۲천만 원 발생했습니다. 주요 지출 분야별 분류:",
+        "식비(ۦ۲۲퍼센트)와 배달(ۦ۳۶퍼센트) 비중 확대가 필요해 보입니다. 충동 소비(ۦ۲۹퍼센트) 조정을 고려할 만합니다. 반복적인 편의점 커피 지출은 메모로 기록해 향후 방지 대책 마련이 필요합니다."
+      ],
+      "text": "{ \"headline\": \"이번 주 회고 JSON 데이터\" , \"insights\": [ \"총 지출액은 ₩㎤ ۾۹백만으로 안정적이었습니다.\", \"변동비는 전년 대비 ۲۹퍼센트 증가했습니다.\", \"예산 대비 사용률이 ۱۱۲퍼센트로 초과 지출이 있었습니다.\", \"월간 오버액정은 ₩۲천만 원 발생했습니다. 주요 지출 분야별 분류:\" ], \"suggestion\": \"식비(ۦ۲۲퍼센트)와 배달(ۦ۳۶퍼센트) 비중 확대가 필요해 보입니다. 충동 소비(ۦ۲۹퍼센트) 조정을 고려할 만합니다. 반복적인 편의점 커피 지출은 메모로 기록해 향후 방지 대책 마련이 필요합니다.\" }"
+    },
+    {
+      "t": 1790249619263,
+      "ev": "phase",
+      "phase": "retro:exaone:t6:gbnf#3"
+    },
+    {
+      "t": 1790249631474,
+      "ev": "retro",
+      "model": "exaone",
+      "threads": 6,
+      "variant": "gbnf#3",
+      "grammar": true,
+      "seed": 3,
+      "wallMs": 12208,
+      "firstTokenMs": 88,
+      "headlineMs": 866,
+      "timings": {
+        "cache_n": 828,
+        "prompt_n": 1,
+        "prompt_ms": 0,
+        "prompt_per_token_ms": 0,
+        "prompt_per_second": 0,
+        "predicted_n": 238,
+        "predicted_ms": 12092.587,
+        "predicted_per_token_ms": 50.80918907563025,
+        "predicted_per_second": 19.68147924013282
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": true,
+      "insights": 4,
+      "parseError": null,
+      "placeholders": 1,
+      "distinctKeys": 1,
+      "unknownKeys": [],
+      "digits": 0,
+      "numerals": [
+        "이번",
+        "만 원",
+        "만 원",
+        "만 원",
+        "백원",
+        "만 원",
+        "이 원"
+      ],
+      "maxSentenceLen": 90,
+      "rendered": [
+        "이번 주 회고 사항",
+        "9월 셋째 주의 셋째 주 지출 내역은 총 ۣ۹ۢ۳만 원으로, 고정비 ۲۲۵,۰۰만 원과 변동비 ۱۸۷,۳۰만 원으로 구분되었습니다.",
+        "변동비 중 ۱۳۸,۶백원은 인상되어 총 ۱۩۹,۳۰만 원으로 증가했으며, 이는 총 지출 대비 ۲۱퍼센트 상승 효과를 가져왔습니다.",
+        "예산 대비 지출은 총 지출 대비 예산을 초과하여 ۲۰,۰۰원을 초과 사용했으며, 특히 Saturday(토요일)과 같은 비정규 주를 선택한 것이 원인으로 보입니다.",
+        "주요 지출 category별 상세 내역:",
+        "다음 주에는 다음과 같은 개선점을 고려해 볼 만합니다:"
+      ],
+      "text": "{ \"headline\": \"이번 주 회고 사항\" , \"insights\": [\n\"{period.label}의 셋째 주 지출 내역은 총 ۣ۹ۢ۳만 원으로, 고정비 ۲۲۵,۰۰만 원과 변동비 ۱۸۷,۳۰만 원으로 구분되었습니다.\",\n\"변동비 중 ۱۳۸,۶백원은 인상되어 총 ۱۩۹,۳۰만 원으로 증가했으며, 이는 총 지출 대비 ۲۱퍼센트 상승 효과를 가져왔습니다.\",\n\"예산 대비 지출은 총 지출 대비 예산을 초과하여 ۲۰,۰۰원을 초과 사용했으며, 특히 Saturday(토요일)과 같은 비정규 주를 선택한 것이 원인으로 보입니다.\",\n\"주요 지출 category별 상세 내역:\"\n]\n, \"suggestion\": \"다음 주에는 다음과 같은 개선점을 고려해 볼 만합니다:\"\n}"
+    },
+    {
+      "t": 1790249631475,
+      "ev": "phase",
+      "phase": "retro:exaone:t6:free#1"
+    },
+    {
+      "t": 1790249656391,
+      "ev": "retro",
+      "model": "exaone",
+      "threads": 6,
+      "variant": "free#1",
+      "grammar": false,
+      "seed": 1,
+      "wallMs": 24914,
+      "firstTokenMs": 65,
+      "headlineMs": null,
+      "timings": {
+        "cache_n": 1099,
+        "prompt_n": 1,
+        "prompt_ms": 0,
+        "prompt_per_token_ms": 0,
+        "prompt_per_second": 0,
+        "predicted_n": 509,
+        "predicted_ms": 24795.079999999998,
+        "predicted_per_token_ms": 48.713320235756385,
+        "predicted_per_second": 20.5282660914988
+      },
+      "stoppedLimit": false,
+      "contextFull": false,
+      "schemaOk": false,
+      "insights": null,
+      "parseError": "SyntaxError: JSON Parse error: Unexpected character: `",
+      "placeholders": 7,
+      "distinctKeys": 7,
+      "unknownKeys": [
+        "\n      \"총 지출\": 412,300원,\n      \"고정 지출\": 225,000원,\n      \"변동 지출\": 187,300원,\n      \"예산 대비 사용률\": 112%,\n      \"예산 초과 금액\": 20,100원\n    ",
+        "\n        \"지출 금액\": 68,000원,\n        \"공유 비율\": 36%,\n        \"변동 금액\": \"+29,000원\"\n      ",
+        "\n        \"지출 금액\": 41,200원,\n        \"공유 비율\": 22%,\n        \"변동 금액\": \"-12,300원\"\n      ",
+        "\n        \"지출 금액\": 23,600원,\n        \"공유 비율\": 13%,\n        \"변동 금액\": \"+4,100원\"\n      ",
+        "\n        \"지출 금액\": 54,000원,\n        \"공유 비율\": 29%,\n        \"변동 금액\": \"+54,000원\"\n      ",
+        "\n        \"지출 금액\": 38,500원,\n        \"공유 비율\": 21%,\n        \"변동 금액\": \"+38,500원\"\n      ",
+        "\n      \"최적 지출 한도\": 32,000원 (membrane: 야식 치킨),\n      \"이번 주 최고 사용 요일\": 토요일 (71,500원),\n      \"재사용 패턴\": 편의점 커피 (m1 tag, 5회 반복) (12,500원)\n    "
+      ],
+      "digits": 119,
+      "numerals": [
+        "이번",
+        "이번"
+      ],
+      "maxSentenceLen": 942,
+      "rendered": [
+        "```json\n{\n  \"이번 주 회고\": {\n    \"종합 정보\": {\n      \"총 지출\": 412,300원,\n      \"고정 지출\": 225,000원,\n      \"변동 지출\": 187,300원,\n      \"예산 대비 사용률\": 112%,\n      \"예산 초과 금액\": 20,100원\n    },\n    \"주요 지출 내역\": {\n      \"배달 (C3)\": {\n        \"지출 금액\": 68,000원,\n        \"공유 비율\": 36%,\n        \"변동 금액\": \"+29,000원\"\n      },\n      \"식비 (C1)\": {\n        \"지출 금액\": 41,200원,\n        \"공유 비율\": 22%,\n        \"변동 금액\": \"-12,300원\"\n      },\n      \"카페·간식 (C2)\": {\n        \"지출 금액\": 23,600원,\n        \"공유 비율\": 13%,\n        \"변동 금액\": \"+4,100원\"\n      },\n      \" 충동 태그 (T2)\": {\n        \"지출 금액\": 54,000원,\n        \"공유 비율\": 29%,\n        \"변동 금액\": \"+54,000원\"\n      },\n      \"보상·스트레스 (T3)\": {\n        \"지출 금액\": 38,500원,\n        \"공유 비율\": 21%,\n        \"변동 금액\": \"+38,500원\"\n      },\n      \" regretted 지출\": 47,000원\n    },\n    \"추가 정보\": {\n      \"최적 지출 한도\": 32,000원 (membrane: 야식 치킨),\n      \"이번 주 최고 사용 요일\": 토요일 (71,500원),\n      \"재사용 패턴\": 편의점 커피 (m1 tag, 5회 반복) (12,500원)\n    },\n    \"결심\": 1일간 지출 없음\n  }\n}\n```"
+      ],
+      "text": "```json\n{\n  \"이번 주 회고\": {\n    \"종합 정보\": {\n      \"총 지출\": 412,300원,\n      \"고정 지출\": 225,000원,\n      \"변동 지출\": 187,300원,\n      \"예산 대비 사용률\": 112%,\n      \"예산 초과 금액\": 20,100원\n    },\n    \"주요 지출 내역\": {\n      \"배달 (C3)\": {\n        \"지출 금액\": 68,000원,\n        \"공유 비율\": 36%,\n        \"변동 금액\": \"+29,000원\"\n      },\n      \"식비 (C1)\": {\n        \"지출 금액\": 41,200원,\n        \"공유 비율\": 22%,\n        \"변동 금액\": \"-12,300원\"\n      },\n      \"카페·간식 (C2)\": {\n        \"지출 금액\": 23,600원,\n        \"공유 비율\": 13%,\n        \"변동 금액\": \"+4,100원\"\n      },\n      \" 충동 태그 (T2)\": {\n        \"지출 금액\": 54,000원,\n        \"공유 비율\": 29%,\n        \"변동 금액\": \"+54,000원\"\n      },\n      \"보상·스트레스 (T3)\": {\n        \"지출 금액\": 38,500원,\n        \"공유 비율\": 21%,\n        \"변동 금액\": \"+38,500원\"\n      },\n      \" regretted 지출\": 47,000원\n    },\n    \"추가 정보\": {\n      \"최적 지출 한도\": 32,000원 (membrane: 야식 치킨),\n      \"이번 주 최고 사용 요일\": 토요일 (71,500원),\n      \"재사용 패턴\": 편의점 커피 (m1 tag, 5회 반복) (12,500원)\n    },\n    \"결심\": 1일간 지출 없음\n  }\n}\n```"
+    },
+    {
+      "t": 1790249656392,
+      "ev": "phase",
+      "phase": "release:exaone:t6"
+    },
+    {
+      "t": 1790249656570,
+      "ev": "phase",
+      "phase": "idle"
+    },
+    {
+      "t": 1790249656570,
+      "ev": "suite-done"
+    }
+  ],
+  "memPeaks": {
+    "load:qwen:t6": {
+      "pssMB": 2215,
+      "rssMB": 2308
+    },
+    "speed:qwen:t6": {
+      "pssMB": 2670,
+      "rssMB": 2762
+    },
+    "retro:qwen:t6:gbnf": {
+      "pssMB": 2911,
+      "rssMB": 3004
+    },
+    "retro:qwen:t6:free": {
+      "pssMB": 2753,
+      "rssMB": 2846
+    },
+    "load:kanana:t6": {
+      "pssMB": 2711,
+      "rssMB": 2803
+    },
+    "speed:kanana:t6": {
+      "pssMB": 3115,
+      "rssMB": 3206
+    },
+    "retro:kanana:t6:gbnf": {
+      "pssMB": 3258,
+      "rssMB": 3349
+    },
+    "retro:kanana:t6:free": {
+      "pssMB": 3183,
+      "rssMB": 3274
+    },
+    "load:exaone:t6": {
+      "pssMB": 1521,
+      "rssMB": 1612
+    },
+    "speed:exaone:t6": {
+      "pssMB": 1936,
+      "rssMB": 2027
+    },
+    "retro:exaone:t6:gbnf": {
+      "pssMB": 2042,
+      "rssMB": 2133
+    },
+    "retro:exaone:t6:free": {
+      "pssMB": 1995,
+      "rssMB": 2087
+    },
+    "release:exaone:t6": {
+      "pssMB": 160,
+      "rssMB": 251
+    }
+  },
+  "mem": [
+    {
+      "t": 1790249421802,
+      "phase": "load:qwen:t6",
+      "pssKB": 2268325,
+      "rssKB": 2362987
+    },
+    {
+      "t": 1790249423552,
+      "phase": "speed:qwen:t6",
+      "pssKB": 2733417,
+      "rssKB": 2827181
+    },
+    {
+      "t": 1790249425300,
+      "phase": "speed:qwen:t6",
+      "pssKB": 2733709,
+      "rssKB": 2827865
+    },
+    {
+      "t": 1790249427007,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2755191,
+      "rssKB": 2850025
+    },
+    {
+      "t": 1790249428707,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2777545,
+      "rssKB": 2872373
+    },
+    {
+      "t": 1790249430438,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2777523,
+      "rssKB": 2872353
+    },
+    {
+      "t": 1790249432135,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2777649,
+      "rssKB": 2872541
+    },
+    {
+      "t": 1790249433876,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2981036,
+      "rssKB": 3075473
+    },
+    {
+      "t": 1790249435632,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2978236,
+      "rssKB": 3072641
+    },
+    {
+      "t": 1790249437383,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2806630,
+      "rssKB": 2900969
+    },
+    {
+      "t": 1790249439143,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2809782,
+      "rssKB": 2904125
+    },
+    {
+      "t": 1790249440907,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2947051,
+      "rssKB": 3041401
+    },
+    {
+      "t": 1790249442660,
+      "phase": "retro:qwen:t6:gbnf#1",
+      "pssKB": 2806746,
+      "rssKB": 2901093
+    },
+    {
+      "t": 1790249444379,
+      "phase": "retro:qwen:t6:gbnf#2",
+      "pssKB": 2860293,
+      "rssKB": 2955089
+    },
+    {
+      "t": 1790249446090,
+      "phase": "retro:qwen:t6:gbnf#2",
+      "pssKB": 2866025,
+      "rssKB": 2960821
+    },
+    {
+      "t": 1790249447882,
+      "phase": "retro:qwen:t6:gbnf#2",
+      "pssKB": 2981194,
+      "rssKB": 3075993
+    },
+    {
+      "t": 1790249449637,
+      "phase": "retro:qwen:t6:gbnf#2",
+      "pssKB": 2816644,
+      "rssKB": 2911445
+    },
+    {
+      "t": 1790249451400,
+      "phase": "retro:qwen:t6:gbnf#2",
+      "pssKB": 2861022,
+      "rssKB": 2955825
+    },
+    {
+      "t": 1790249453251,
+      "phase": "retro:qwen:t6:gbnf#2",
+      "pssKB": 2958141,
+      "rssKB": 3052945
+    },
+    {
+      "t": 1790249454998,
+      "phase": "retro:qwen:t6:gbnf#2",
+      "pssKB": 2816458,
+      "rssKB": 2911269
+    },
+    {
+      "t": 1790249456809,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2949294,
+      "rssKB": 3044109
+    },
+    {
+      "t": 1790249458588,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817159,
+      "rssKB": 2911973
+    },
+    {
+      "t": 1790249460332,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817053,
+      "rssKB": 2911869
+    },
+    {
+      "t": 1790249462106,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817066,
+      "rssKB": 2911885
+    },
+    {
+      "t": 1790249463857,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817154,
+      "rssKB": 2911973
+    },
+    {
+      "t": 1790249465617,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817247,
+      "rssKB": 2912081
+    },
+    {
+      "t": 1790249467369,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817320,
+      "rssKB": 2912153
+    },
+    {
+      "t": 1790249469134,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817414,
+      "rssKB": 2912261
+    },
+    {
+      "t": 1790249470901,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2957538,
+      "rssKB": 3052553
+    },
+    {
+      "t": 1790249472641,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2959382,
+      "rssKB": 3054397
+    },
+    {
+      "t": 1790249474366,
+      "phase": "retro:qwen:t6:gbnf#3",
+      "pssKB": 2817764,
+      "rssKB": 2912781
+    },
+    {
+      "t": 1790249476126,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818054,
+      "rssKB": 2913081
+    },
+    {
+      "t": 1790249477890,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2817950,
+      "rssKB": 2912997
+    },
+    {
+      "t": 1790249479666,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818052,
+      "rssKB": 2913017
+    },
+    {
+      "t": 1790249481423,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818029,
+      "rssKB": 2913061
+    },
+    {
+      "t": 1790249483193,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818127,
+      "rssKB": 2913157
+    },
+    {
+      "t": 1790249484985,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818230,
+      "rssKB": 2913273
+    },
+    {
+      "t": 1790249486789,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818342,
+      "rssKB": 2913385
+    },
+    {
+      "t": 1790249488535,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818496,
+      "rssKB": 2913541
+    },
+    {
+      "t": 1790249490300,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818638,
+      "rssKB": 2913681
+    },
+    {
+      "t": 1790249492058,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818818,
+      "rssKB": 2913957
+    },
+    {
+      "t": 1790249493855,
+      "phase": "retro:qwen:t6:free#1",
+      "pssKB": 2818934,
+      "rssKB": 2914073
+    },
+    {
+      "t": 1790249495577,
+      "phase": "load:kanana:t6",
+      "pssKB": 640734,
+      "rssKB": 735861
+    },
+    {
+      "t": 1790249497329,
+      "phase": "load:kanana:t6",
+      "pssKB": 1586404,
+      "rssKB": 1681537
+    },
+    {
+      "t": 1790249499103,
+      "phase": "load:kanana:t6",
+      "pssKB": 2775716,
+      "rssKB": 2870069
+    },
+    {
+      "t": 1790249500946,
+      "phase": "speed:kanana:t6",
+      "pssKB": 3189730,
+      "rssKB": 3282937
+    },
+    {
+      "t": 1790249502712,
+      "phase": "speed:kanana:t6",
+      "pssKB": 3189735,
+      "rssKB": 3282925
+    },
+    {
+      "t": 1790249504513,
+      "phase": "speed:kanana:t6",
+      "pssKB": 3189699,
+      "rssKB": 3282941
+    },
+    {
+      "t": 1790249506300,
+      "phase": "speed:kanana:t6",
+      "pssKB": 3189666,
+      "rssKB": 3282933
+    },
+    {
+      "t": 1790249508046,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3251100,
+      "rssKB": 3344369
+    },
+    {
+      "t": 1790249509788,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3251020,
+      "rssKB": 3344293
+    },
+    {
+      "t": 1790249511718,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3251004,
+      "rssKB": 3344277
+    },
+    {
+      "t": 1790249513452,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3251004,
+      "rssKB": 3344277
+    },
+    {
+      "t": 1790249515188,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3251004,
+      "rssKB": 3344277
+    },
+    {
+      "t": 1790249516951,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3253806,
+      "rssKB": 3347081
+    },
+    {
+      "t": 1790249518704,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3253796,
+      "rssKB": 3347061
+    },
+    {
+      "t": 1790249520448,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3331584,
+      "rssKB": 3424849
+    },
+    {
+      "t": 1790249522214,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3332112,
+      "rssKB": 3425377
+    },
+    {
+      "t": 1790249523978,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3273480,
+      "rssKB": 3366745
+    },
+    {
+      "t": 1790249525758,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3256804,
+      "rssKB": 3350069
+    },
+    {
+      "t": 1790249527523,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3256804,
+      "rssKB": 3350069
+    },
+    {
+      "t": 1790249529268,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3256800,
+      "rssKB": 3350065
+    },
+    {
+      "t": 1790249531028,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3256796,
+      "rssKB": 3350061
+    },
+    {
+      "t": 1790249532776,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3256844,
+      "rssKB": 3350109
+    },
+    {
+      "t": 1790249534524,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3335832,
+      "rssKB": 3429097
+    },
+    {
+      "t": 1790249536327,
+      "phase": "retro:kanana:t6:gbnf#1",
+      "pssKB": 3257216,
+      "rssKB": 3350481
+    },
+    {
+      "t": 1790249538112,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3281483,
+      "rssKB": 3374753
+    },
+    {
+      "t": 1790249540044,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3333147,
+      "rssKB": 3426417
+    },
+    {
+      "t": 1790249541789,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3333215,
+      "rssKB": 3426485
+    },
+    {
+      "t": 1790249543537,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3259011,
+      "rssKB": 3352281
+    },
+    {
+      "t": 1790249545293,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3258999,
+      "rssKB": 3352269
+    },
+    {
+      "t": 1790249547073,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3332183,
+      "rssKB": 3425453
+    },
+    {
+      "t": 1790249548820,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3258235,
+      "rssKB": 3351505
+    },
+    {
+      "t": 1790249550574,
+      "phase": "retro:kanana:t6:gbnf#2",
+      "pssKB": 3258275,
+      "rssKB": 3351545
+    },
+    {
+      "t": 1790249552327,
+      "phase": "retro:kanana:t6:gbnf#3",
+      "pssKB": 3258127,
+      "rssKB": 3351445
+    },
+    {
+      "t": 1790249554086,
+      "phase": "retro:kanana:t6:gbnf#3",
+      "pssKB": 3258299,
+      "rssKB": 3351621
+    },
+    {
+      "t": 1790249555861,
+      "phase": "retro:kanana:t6:gbnf#3",
+      "pssKB": 3333995,
+      "rssKB": 3427317
+    },
+    {
+      "t": 1790249557646,
+      "phase": "retro:kanana:t6:gbnf#3",
+      "pssKB": 3259974,
+      "rssKB": 3353297
+    },
+    {
+      "t": 1790249559426,
+      "phase": "retro:kanana:t6:gbnf#3",
+      "pssKB": 3259933,
+      "rssKB": 3353305
+    },
+    {
+      "t": 1790249561200,
+      "phase": "retro:kanana:t6:gbnf#3",
+      "pssKB": 3259925,
+      "rssKB": 3353297
+    },
+    {
+      "t": 1790249562956,
+      "phase": "retro:kanana:t6:gbnf#3",
+      "pssKB": 3259957,
+      "rssKB": 3353329
+    },
+    {
+      "t": 1790249564720,
+      "phase": "retro:kanana:t6:free#1",
+      "pssKB": 3259609,
+      "rssKB": 3352993
+    },
+    {
+      "t": 1790249566492,
+      "phase": "retro:kanana:t6:free#1",
+      "pssKB": 3259521,
+      "rssKB": 3352905
+    },
+    {
+      "t": 1790249568288,
+      "phase": "retro:kanana:t6:free#1",
+      "pssKB": 3259541,
+      "rssKB": 3352925
+    },
+    {
+      "t": 1790249570061,
+      "phase": "retro:kanana:t6:free#1",
+      "pssKB": 3259513,
+      "rssKB": 3352897
+    },
+    {
+      "t": 1790249571821,
+      "phase": "retro:kanana:t6:free#1",
+      "pssKB": 3259529,
+      "rssKB": 3352913
+    },
+    {
+      "t": 1790249573534,
+      "phase": "load:exaone:t6",
+      "pssKB": 508857,
+      "rssKB": 602241
+    },
+    {
+      "t": 1790249575246,
+      "phase": "load:exaone:t6",
+      "pssKB": 1557273,
+      "rssKB": 1650657
+    },
+    {
+      "t": 1790249576973,
+      "phase": "speed:exaone:t6",
+      "pssKB": 1982521,
+      "rssKB": 2075905
+    },
+    {
+      "t": 1790249578704,
+      "phase": "speed:exaone:t6",
+      "pssKB": 1982577,
+      "rssKB": 2075961
+    },
+    {
+      "t": 1790249580433,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2011569,
+      "rssKB": 2104953
+    },
+    {
+      "t": 1790249582153,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2011357,
+      "rssKB": 2104741
+    },
+    {
+      "t": 1790249583872,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2011369,
+      "rssKB": 2104753
+    },
+    {
+      "t": 1790249585581,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2033129,
+      "rssKB": 2126513
+    },
+    {
+      "t": 1790249587304,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2036916,
+      "rssKB": 2130301
+    },
+    {
+      "t": 1790249589022,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2084693,
+      "rssKB": 2178077
+    },
+    {
+      "t": 1790249590734,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2087865,
+      "rssKB": 2181249
+    },
+    {
+      "t": 1790249592451,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2015889,
+      "rssKB": 2109273
+    },
+    {
+      "t": 1790249594185,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2015893,
+      "rssKB": 2109277
+    },
+    {
+      "t": 1790249595922,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2015881,
+      "rssKB": 2109265
+    },
+    {
+      "t": 1790249597663,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2015888,
+      "rssKB": 2109273
+    },
+    {
+      "t": 1790249599418,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2015888,
+      "rssKB": 2109273
+    },
+    {
+      "t": 1790249601130,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2015888,
+      "rssKB": 2109273
+    },
+    {
+      "t": 1790249602855,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2015902,
+      "rssKB": 2109289
+    },
+    {
+      "t": 1790249604588,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2070528,
+      "rssKB": 2163929
+    },
+    {
+      "t": 1790249606323,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2083217,
+      "rssKB": 2176681
+    },
+    {
+      "t": 1790249608060,
+      "phase": "retro:exaone:t6:gbnf#1",
+      "pssKB": 2038177,
+      "rssKB": 2131641
+    },
+    {
+      "t": 1790249609810,
+      "phase": "retro:exaone:t6:gbnf#2",
+      "pssKB": 2038713,
+      "rssKB": 2132209
+    },
+    {
+      "t": 1790249611535,
+      "phase": "retro:exaone:t6:gbnf#2",
+      "pssKB": 2091081,
+      "rssKB": 2184577
+    },
+    {
+      "t": 1790249613292,
+      "phase": "retro:exaone:t6:gbnf#2",
+      "pssKB": 2076191,
+      "rssKB": 2169689
+    },
+    {
+      "t": 1790249615030,
+      "phase": "retro:exaone:t6:gbnf#2",
+      "pssKB": 2040250,
+      "rssKB": 2133765
+    },
+    {
+      "t": 1790249616762,
+      "phase": "retro:exaone:t6:gbnf#2",
+      "pssKB": 2035330,
+      "rssKB": 2128845
+    },
+    {
+      "t": 1790249618491,
+      "phase": "retro:exaone:t6:gbnf#2",
+      "pssKB": 2084328,
+      "rssKB": 2177845
+    },
+    {
+      "t": 1790249620232,
+      "phase": "retro:exaone:t6:gbnf#3",
+      "pssKB": 2039634,
+      "rssKB": 2133209
+    },
+    {
+      "t": 1790249622015,
+      "phase": "retro:exaone:t6:gbnf#3",
+      "pssKB": 2072114,
+      "rssKB": 2165745
+    },
+    {
+      "t": 1790249623749,
+      "phase": "retro:exaone:t6:gbnf#3",
+      "pssKB": 2038444,
+      "rssKB": 2132105
+    },
+    {
+      "t": 1790249625468,
+      "phase": "retro:exaone:t6:gbnf#3",
+      "pssKB": 2073836,
+      "rssKB": 2167497
+    },
+    {
+      "t": 1790249627187,
+      "phase": "retro:exaone:t6:gbnf#3",
+      "pssKB": 2077101,
+      "rssKB": 2170769
+    },
+    {
+      "t": 1790249628907,
+      "phase": "retro:exaone:t6:gbnf#3",
+      "pssKB": 2017957,
+      "rssKB": 2111625
+    },
+    {
+      "t": 1790249630655,
+      "phase": "retro:exaone:t6:gbnf#3",
+      "pssKB": 2079314,
+      "rssKB": 2172989
+    },
+    {
+      "t": 1790249632400,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2042934,
+      "rssKB": 2136609
+    },
+    {
+      "t": 1790249634147,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2020986,
+      "rssKB": 2114661
+    },
+    {
+      "t": 1790249635871,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2020990,
+      "rssKB": 2114665
+    },
+    {
+      "t": 1790249637596,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2021006,
+      "rssKB": 2114681
+    },
+    {
+      "t": 1790249639307,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2021089,
+      "rssKB": 2114765
+    },
+    {
+      "t": 1790249641035,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2021169,
+      "rssKB": 2114845
+    },
+    {
+      "t": 1790249642754,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2020133,
+      "rssKB": 2113813
+    },
+    {
+      "t": 1790249644479,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2020029,
+      "rssKB": 2113709
+    },
+    {
+      "t": 1790249646210,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2019733,
+      "rssKB": 2113413
+    },
+    {
+      "t": 1790249647952,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2019741,
+      "rssKB": 2113421
+    },
+    {
+      "t": 1790249649710,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2019885,
+      "rssKB": 2113565
+    },
+    {
+      "t": 1790249651467,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2020013,
+      "rssKB": 2113693
+    },
+    {
+      "t": 1790249653207,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2019833,
+      "rssKB": 2113513
+    },
+    {
+      "t": 1790249654945,
+      "phase": "retro:exaone:t6:free#1",
+      "pssKB": 2019985,
+      "rssKB": 2113665
+    },
+    {
+      "t": 1790249656583,
+      "phase": "release:exaone:t6",
+      "pssKB": 163601,
+      "rssKB": 257281
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { Button, Input, Label, Stack, Text, cn } from '@eeennsu/native';
+import { Button, Chip, Input, Label, Stack, Text, cn } from '@eeennsu/native';
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native-css/components';
 
-import { Chip } from '../ui/Chip';
 import { HomeMock } from './HomeMock';
 import {
   EXPENSE_CATEGORIES,
@@ -114,14 +113,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
             <Text heading='1' size='xl'>
               {expense ? '지출 기록' : '수입 기록'}
             </Text>
-            {/* min-h-12·active:opacity-80은 DS 0.3.0이 Button에 넣으면 지운다(docs/DESIGN.md 5.2) */}
-            <Button
-              label='닫기'
-              icon='x'
-              variant='ghost'
-              size='sm'
-              className='min-h-12 active:opacity-80'
-            />
+            <Button label='닫기' icon='x' variant='ghost' size='sm' />
           </Stack>
 
           <ScrollView
@@ -140,9 +132,8 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                   size='lg'
                   value={withCommas(amount)}
                   onValueChange={text => setAmount(onlyDigits(text))}
-                  // placeholder는 DS 0.2.0에서 플랫폼 기본색(흰 표면 위 약 2.7:1)이라 두지 않는다.
-                  // focus:는 DS 0.3.0이 Input에 넣으면 지운다(docs/DESIGN.md 5.2)
-                  className='flex-1 text-2xl tabular-nums focus:border-border-focus'
+                  // placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(docs/DESIGN.md 4.3)
+                  className='flex-1 text-2xl tabular-nums'
                 />
                 <Text size='lg'>원</Text>
               </Stack>
@@ -199,13 +190,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                 <Stack className='gap-2'>
                   <Stack className='gap-1'>
                     <Label htmlFor='memo'>메모</Label>
-                    <Input
-                      id='memo'
-                      label='메모'
-                      value={memo}
-                      onValueChange={setMemo}
-                      className='focus:border-border-focus'
-                    />
+                    <Input id='memo' label='메모' value={memo} onValueChange={setMemo} />
                   </Stack>
                   <Stack direction='row' wrap className='gap-3'>
                     {memoSuggestions.map(suggestion => (
@@ -276,12 +261,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                 </Text>
               )}
             </View>
-            <Button
-              label='저장'
-              size='lg'
-              disabled={missing !== ''}
-              className='w-full active:opacity-80'
-            />
+            <Button label='저장' size='lg' disabled={missing !== ''} className='w-full' />
           </View>
         </View>
       </KeyboardAvoidingView>

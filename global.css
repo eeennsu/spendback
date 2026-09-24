@@ -14,17 +14,11 @@
   :root {
     --bg-brand: oklch(74% 0.11 172);
     --bg-brand-hover: oklch(80% 0.09 172);
-    /* 밝은 청록과 다크 빨강 위의 흰 글자는 4.5:1이 안 된다. 거의 검은 글자로 바꾼다. */
+    /*
+     * 밝은 청록과 다크 빨강 위의 흰 글자는 4.5:1이 안 되어 거의 검은 글자를 쓴다. DS 0.3.0부터 base 다크 기본값과
+     * 같지만, brand를 다시 선언했으므로 그 위 글자도 짝으로 둔다(DS 스펙 C-5b 짝 대비).
+     */
     --fg-on-brand: oklch(13% 0.028 261.692);
     --fg-on-danger: oklch(13% 0.028 261.692);
   }
-}
-
-/*
- * 임시. react-native-css 3.0.7은 font-variant-numeric을 RN 스타일로 옮기지 않아 tabular-nums가
- * RN에서 아무 일도 하지 않는다. 같은 클래스에 RN 전용 선언을 더한다. DS 0.3.0의 native 래퍼가
- * 같은 선언을 내면 지운다(docs/DESIGN.md 5.2).
- */
-.tabular-nums {
-  -rn-font-variant: tabular-nums;
 }

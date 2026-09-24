@@ -1,6 +1,6 @@
 # spendback DESIGN
 
-> 상태: v0.1 · 2026-09-25 · PRD 12장 3번(디자인 시스템 연동과 DESIGN.md) 결과
+> 상태: v0.2 · 2026-09-25 · PRD 12장 3번(디자인 시스템 연동과 DESIGN.md) 결과. DS 0.3.0으로 올려 임시 컴포넌트를 걷어 냈다
 >
 > 기획의 정본은 [PRD.md](PRD.md)이고, 이 문서는 디자인과 디자인 시스템(DS) 연동의 정본이다. 화면을 만들 때는 이 문서를 먼저 읽는다. 규칙이 부딪히면 PRD·DS 규칙 > mobile-taste-skill > ui-ux-pro-max 순서로 따른다. DS 규칙은 `../design-system`의 스펙(`docs/design-system-spec.md`)이다.
 
@@ -8,11 +8,11 @@
 
 ### 1.1 결과
 
-npm의 `@eeennsu/native` 0.2.0을 Expo 없이 RN CLI 앱(RN 0.87.1)에 붙였다. 2026-09-24에 기기 없이 아래까지 확인했다.
+npm의 `@eeennsu/native`를 Expo 없이 RN CLI 앱(RN 0.87.1)에 붙였다. 2026-09-24에 0.2.0으로 기기 없이 아래까지 확인했고, 2026-09-25에 0.3.0으로 올려 같은 확인을 다시 통과했다(Jest 28개, 릴리스 번들 2.20MB).
 
 | 확인 | 결과 |
 |---|---|
-| `pnpm typecheck` · `lint` · `format:check` · `test` | 통과. Jest 27개 |
+| `pnpm typecheck` · `lint` · `format:check` · `test` | 통과 |
 | Jest에서 DS 컴포넌트의 className이 스타일로 풀리는지(DS 구현 노트 N-14, F-11) | 풀린다. `__tests__/ds.test.tsx`가 Box·Badge·Label·Textarea·Button의 색, 여백, 글자 크기, 다크 값을 본다 |
 | Metro 번들(`react-native bundle --platform android --dev false`)에 토큰 값과 클래스가 들어가는지(DS 구현 노트 F-12) | 들어간다. `StyleCollection.inject`에 DS 클래스(`bg-brand`, `text-fg-muted`, `rounded-full` 등)와 해석된 색(앱 brand `#107460`·`#55c1a3`, DS danger `#e7000b`)이 있다 |
 
@@ -22,7 +22,7 @@ npm의 `@eeennsu/native` 0.2.0을 Expo 없이 RN CLI 앱(RN 0.87.1)에 붙였다
 
 | 패키지 | 버전 | 이유 |
 |---|---|---|
-| `@eeennsu/native` | 0.2.0 | DS. 0.x라 정확한 버전으로 고정한다 |
+| `@eeennsu/native` | 0.3.0 | DS. 0.x라 정확한 버전으로 고정한다 |
 | `nativewind` · `react-native-css` | 5.0.0-preview.4 · 3.0.7 | DS peer가 정확한 버전을 요구한다(DS 스펙 C-19) |
 | `react-native-reanimated` · `react-native-worklets` | 4.7.0 · 0.13.0 | react-native-css가 애니메이션용으로 `require("react-native-reanimated")`를 한다. Metro는 함수 안의 require도 풀어야 하므로 없으면 번들이 깨진다. PRD 8장의 차트도 Reanimated 4를 쓴다 |
 | `react-native-svg` | 15.15.5 | DS 아이콘(lucide-react-native)의 peer |
@@ -36,7 +36,7 @@ react-native-reanimated·worklets·svg는 네이티브 모듈이라 다음 Andro
 
 | 파일 | 내용 |
 |---|---|
-| `global.css` | `@import '@eeennsu/native/themes/base.css';` 한 줄(DS 스펙 C-3)과 앱 색 재선언(2장), `tabular-nums` 임시 선언(3.4). `index.js`가 import한다 |
+| `global.css` | `@import '@eeennsu/native/themes/base.css';` 한 줄(DS 스펙 C-3)과 앱 색 재선언(2장). `index.js`가 import한다 |
 | `metro.config.js` | `withNativewind(...)`로 CSS 확장자와 className 폴리필을 켜고, `transformerPath`를 `metro.transformer.js`로 바꾸고, CSS 결과를 디스크 캐시에 쓰지 않는 캐시 저장소를 둔다 |
 | `metro.transformer.js` | 1.4의 변환기 |
 | `babel.config.js` | React Compiler 다음에 `react-native-worklets/plugin`(Reanimated 4)을 마지막으로 둔다. NativeWind 5는 Babel 프리셋이 없다 |
@@ -76,15 +76,15 @@ react-native-css 3.1.0-rc.0도 같은 peer를 요구하고 변환기 구조가 �
 1. `pnpm android`로 빌드가 되는지. reanimated·worklets·svg가 처음 컴파일된다. Windows에서는 CMake 경로 길이 문제가 다시 날 수 있다(PRD 10장)
 2. 시안 화면(4.5)이 뜨는지. 칩으로 홈 · 홈 초과 · 홈 처음 · 입력 시트 · 입력 시트 펼침 · DS 확인을 오간다
 3. 라이트·다크 전환 때 앱 색(2장)과 DS 색이 모두 바뀌는지. 다크에서 고른 칩·저장 버튼의 글자가 거의 검은색인지
-4. 칩·줄·버튼을 누르는 동안 표면이 진해지는지(`active:`). DS 0.2.0의 Button은 눌림 표시가 없어 시안이 className으로 더했다(5.2)
-5. 숫자가 고정폭(`tabular-nums`)으로 나오는지. 금액이 바뀌어도 자릿수 폭이 흔들리지 않아야 한다. react-native-css 3.0.7이 이 클래스를 옮기지 않아 global.css에 임시 선언을 두었다(3.4)
+4. 칩·줄·버튼을 누르는 동안 눌림이 보이는지. 버튼·칩은 투명도(DS `active:opacity-80`), 줄은 표면색(`active:bg-surface-hover`)이다
+5. 숫자가 고정폭(`tabular-nums`)으로 나오는지. 금액이 바뀌어도 자릿수 폭이 흔들리지 않아야 한다. react-native-css 3.0.7이 이 클래스를 옮기지 않아 DS native 래퍼가 RN 선언을 더한다(3.4)
 6. 입력 시트를 열면 금액 칸에 포커스가 가고 숫자 키패드가 뜨는지, 키패드가 떠도 제목·카테고리·저장이 보이는지. `KeyboardAvoidingView`(behavior padding)는 자기 위치를 부모 기준으로, 키보드는 창 기준으로 재므로 시안은 화면의 창 기준 위치(`measureInWindow`)를 `keyboardVerticalOffset`으로 넘긴다. 펼친 시트에서 메모 칸이 키패드에 가리지 않는지
 7. 고정비 스위치 색. 앱 테마에 colorAccent가 없어 AppCompat 기본 청록(`#008577`)으로 칠해져 brand와 두 청록이 설 수 있다(12장 6번에서 앱 테마를 정할 때 본다)
 8. 예산 게이지의 오늘 세로선과 테두리, FAB 그림자(`shadow-md`)가 보이는지
 9. 글자 크기 1.3배와 최대(Android 14+ 2배)에서 칩 줄 바꿈, 목록, 시트가 깨지지 않는지. 칩 글자는 상한 없이 커진다. 1.3배부터 접힌 시트가 시안 영역보다 커질 수 있다
 10. 상태 바·내비게이션 바 자리. 시안은 안전 영역 라이브러리가 없어 `StatusBar.currentHeight`와 `pb-12`로 근사했다(12장 6번에서 `useSafeAreaInsets`로 바꾼다)
 11. Metro를 켠 채 새 클래스를 더했을 때 반영되는지(1.4의 남는 제약)
-12. 디버그 번들 크기와 첫 번들 시간. DS 0.2.0은 lucide 아이콘 전체를 번들에 넣는다(5.2)
+12. 디버그 번들 크기와 첫 번들 시간. DS 0.3.0은 아이콘을 하나씩 import해 릴리스 번들이 2.20MB다(0.2.0은 3.91MB, 5.2)
 13. TalkBack으로 홈과 시트를 읽을 때 순서와 이름. 저장이 안 되는 이유가 바뀔 때 읽는지(live region, `collapsable={false}`로 평탄화를 막았다), 고정비 줄을 스위치로 읽는지, 가운뎃점(`·`)을 어떻게 읽는지
 14. 앱이 세로로 고정되는지(AndroidManifest `screenOrientation`)
 15. 라이트에서 상태 바 아이콘이 어두운지(3.5). 앱이 켜진 채 라이트·다크를 바꿀 때 상태 바와 내비게이션 바 아이콘이 따라오는지. RN은 내비게이션 바 모양을 앱을 켤 때 한 번만 정한다
@@ -99,14 +99,14 @@ DS는 semantic 색 변수의 값만 앱에서 다시 선언하게 연다(DS 스�
 
 | 변수 | 라이트 | 다크 | 쓰는 곳 |
 |---|---|---|---|
-| `--bg-brand` | `oklch(50% 0.09 175)` `#107460` | `oklch(74% 0.11 172)` `#55c1a3` | 주 버튼, 고른 칩, 예산 게이지, 수입 금액·"기록" 같은 글자(`text-brand`). `--border-focus`도 따라가지만 DS 0.2.0 RN Input은 포커스 표시가 없다(5.2) |
+| `--bg-brand` | `oklch(50% 0.09 175)` `#107460` | `oklch(74% 0.11 172)` `#55c1a3` | 주 버튼, 고른 칩, 예산 게이지, 수입 금액·"기록" 같은 글자(`text-brand`). `--border-focus`도 따라가 입력 칸의 포커스 테두리가 된다 |
 | `--bg-brand-hover` | `oklch(45% 0.08 175)` `#0f6353` | `oklch(80% 0.09 172)` `#7ed1b7` | 눌림(`active:`) |
 | `--fg-on-brand` | DS 값(흰색) | `oklch(13% 0.028 261.692)` `#030712` | brand 위 글자 |
 | `--fg-on-danger` | DS 값(흰색) | `oklch(13% 0.028 261.692)` `#030712` | danger 버튼 글자 |
 
 **brand를 절제된 청록으로 한 이유.** 이 앱에서 brand는 "예산 안", "수입", "저장"처럼 돈의 괜찮은 상태에 붙는다. DS 기본 파랑(`#155dfc`, 채도 0.245)은 템플릿에서 흔히 보는 색이고 "담백한 분석가"(PRD 4.6) 톤에 비해 강하다. 채도를 0.09로 낮춘 청록은 빨강(초과)과 뜻이 갈리고, 흰 글자와 5.7:1이라 주 버튼과 글자색에 함께 쓸 수 있다.
 
-**다크에서 brand 위 글자를 바꾼 이유.** 다크 brand는 밝아서 흰 글자가 2.2:1이다. DS base 다크도 같은 문제가 있다(흰 글자 on blue-500 3.71:1, on red-500 3.82:1). 앱은 두 글자색을 거의 검은색으로 다시 선언했고, DS에는 0.3.0에서 base 값을 고치자고 제안했다(DS 쪽 기록).
+**다크에서 brand 위 글자를 바꾼 이유.** 다크 brand는 밝아서 흰 글자가 2.2:1이다. DS base 다크도 같은 문제가 있다(흰 글자 on blue-500 3.71:1, on red-500 3.82:1). 앱은 두 글자색을 거의 검은색으로 다시 선언했다. DS 0.3.0이 base 다크 값을 같은 색으로 고쳤지만(DS 스펙 R25), 앱은 brand를 따로 선언하므로 그 위 글자도 짝으로 계속 둔다(C-5b 짝 대비).
 
 대비(WCAG 2.1. 컴파일된 sRGB 값 기준):
 
@@ -127,9 +127,9 @@ DS는 semantic 색 변수의 값만 앱에서 다시 선언하게 연다(DS 스�
 | 게이지 채움 대 트랙(라이트 트랙이 `bg-border`일 때) | brand 3.87 · danger 3.24 | - |
 | 입력 칸 테두리 대 surface | 1.47 | 1.72 |
 
-게이지 트랙은 라이트에서 `bg-border`를 쓴다. surface-muted는 흰 canvas와 1.1:1이라 예산 전체 길이가 보이지 않았다. 고르지 않은 칩의 테두리는 3:1이 안 된다. 칩은 글자로 식별되고(WCAG 1.4.11 예외) 고른 상태는 채움 색(5.69:1 이상)으로 구분되므로 DS Input과 같은 `border-border`를 쓴다. 누르는 동안의 muted 글자 3.91(다크 3.96)은 손을 떼면 돌아오는 순간 상태이고, DS 토큰 중 라이트에서 4.5를 지키는 눌림 표면이 없어 그대로 둔다. 입력 칸 테두리(1.47)도 3:1이 안 되지만 라벨로 식별되고 포커스 때 brand 테두리가 된다(DS 0.3.0. 시안은 className으로 먼저 준다). 컨트롤 테두리용 semantic 색은 DS에 제안만 했다(decisions-r25 "열지 않은 것").
+게이지 트랙은 라이트에서 `bg-border`를 쓴다. surface-muted는 흰 canvas와 1.1:1이라 예산 전체 길이가 보이지 않았다. 고르지 않은 칩의 테두리는 3:1이 안 된다. 칩은 글자로 식별되고(WCAG 1.4.11 예외) 고른 상태는 채움 색(5.69:1 이상)으로 구분되므로 DS Input과 같은 `border-border`를 쓴다. 누르는 동안의 muted 글자 3.91(다크 3.96)은 손을 떼면 돌아오는 순간 상태이고, DS 토큰 중 라이트에서 4.5를 지키는 눌림 표면이 없어 그대로 둔다. 입력 칸 테두리(1.47)도 3:1이 안 되지만 라벨로 식별되고 포커스 때 brand 테두리가 된다(DS 0.3.0). 컨트롤 테두리용 semantic 색은 DS에 제안만 했다(decisions-r25 "열지 않은 것").
 
-placeholder는 두지 않는다. DS 0.2.0 Input은 placeholder 색을 정하지 않아 Android 기본 hint 색(흰 표면 위 약 2.7:1)이 나온다. DS 0.3.0이 `fg-muted`(4.84 · 6.82)로 칠하므로 그 뒤에 필요하면 다시 넣는다.
+placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(4.3). DS 0.3.0부터 placeholder는 `fg-muted`(4.84 · 6.82)로 칠해지므로 필요해지면 넣어도 된다(0.2.0까지는 Android 기본 hint 색, 흰 표면 위 약 2.7:1).
 
 **색만으로 뜻을 전하지 않는다.** 초과는 빨강 막대와 함께 "18,000원 초과" 문구를 쓴다. 청록과 빨강은 명도가 비슷해 적록 색각에서는 색만으로 구분이 약하다. 게이지는 스크린 리더 값(`accessibilityValue.text`)을 갖는다.
 
@@ -202,7 +202,7 @@ DS 간격 키(`1`·`2`·`3`·`4`·`6`·`8`·`12`·`16`·`20`·`24` = 4~96px) 안
 | 라벨, 보조 설명, 캡션 | `sm`(14/20/400), 대부분 `tone="muted"` | 식비 · 오늘 |
 
 - 숫자는 모두 `tabular-nums`다. 금액은 어디서나 `32,000원`, 비율은 정수 %다(PRD 4.6). 사용액과 전체를 나란히 쓰는 분수 표기만 단위를 끝에 한 번 붙인다(`212,300 / 300,000원`). 12장 4번 포맷터 테스트에 넣는다
-- react-native-css 3.0.7은 `font-variant-numeric`을 RN 스타일로 옮기지 않아 `tabular-nums`가 RN에서 아무 일도 하지 않는다. global.css가 같은 클래스에 `-rn-font-variant: tabular-nums`를 임시로 더하고(RN은 문자열 `fontVariant`를 배열로 나눠 받는다), DS 0.3.0의 native 래퍼가 같은 선언을 내면 지운다
+- react-native-css 3.0.7은 `font-variant-numeric`을 RN 스타일로 옮기지 않아 `tabular-nums`가 RN에서 아무 일도 하지 않는다. DS 0.3.0의 native 래퍼가 같은 클래스에 `-rn-font-variant: tabular-nums`를 더한다(RN은 문자열 `fontVariant`를 배열로 나눠 받는다, DS 구현 노트 F-21). 0.2.0 동안은 global.css에 같은 선언을 두었다
 - 가장 큰 글자가 24px이다. 더 큰 표시 스텝은 DS의 5단 스케일(C-7a)을 다시 여는 일이라 만들지 않는다
 - 글자 크기는 사용자 설정을 끝까지 따른다. 칩 묶음은 줄을 바꿔 늘어난 글자를 받는다. 1차 검증 뒤 앱 Chip을 1.5배로 묶었다가, DS 0.3.0 재검증(WCAG 1.4.4, DS 버튼과 어긋남)에 맞춰 뺐다(1.6의 9번)
 
@@ -210,9 +210,9 @@ DS 간격 키(`1`·`2`·`3`·`4`·`6`·`8`·`12`·`16`·`20`·`24` = 4~96px) 안
 
 - 모서리: 입력 칸과 버튼 sm·md 8, 버튼 lg 12(DS), 시트 위 모서리 12(`rounded-t-lg`), 칩·FAB·게이지 full
 - 그림자는 떠 있는 요소(FAB)만. 시트는 scrim(`bg-overlay`)으로 분리한다
-- 아이콘은 Button의 `icon`(DS 0.2.0)과 DS 0.3.0의 `Icon`으로만 쓴다. 이모지와 손으로 그린 SVG는 쓰지 않는다
+- 아이콘은 DS Button의 `icon`과 DS `Icon`으로만 쓴다. 이모지와 손으로 그린 SVG는 쓰지 않는다
 - 움직임은 화면 전환·시트(네이티브), 누름 표시(`active:`로 표면 한 단계 진하게)뿐이다. 회고 문장은 필드가 완성될 때마다 나타나고 타자 효과는 없다(PRD 4.6)
-- 누름 표시는 Android 리플이 아니라 클래스다. DS Button·Chip이 `active:opacity-80`이라 눌림 어휘를 하나로 맞춘다. 리플에 색(`android_ripple.color`)을 주면 JS 값이라 앱 색 재선언(C-5b)이 닿지 않고(DS 알려진 동작 11), 색을 빼면 테마의 중립색(`colorControlHighlight`)이라 쓸 수는 있다. 목록 줄에 색 없는 리플을 쓰는 안은 12장 6번에서 기기로 비교한다. 버튼과 칩은 `active:opacity-80`(DS 0.3.0과 같다. 색이 아니라 투명도라 className으로 바꾼 배경도 따라간다), 목록 줄과 접는 줄은 `active:bg-surface-hover`(표면이 한 단계 진해진다)
+- 누름 표시는 Android 리플이 아니라 클래스다. DS Button·Chip이 `active:opacity-80`이라 눌림 어휘를 하나로 맞춘다. 리플에 색(`android_ripple.color`)을 주면 JS 값이라 앱 색 재선언(C-5b)이 닿지 않고(DS 알려진 동작 11), 색을 빼면 테마의 중립색(`colorControlHighlight`)이라 쓸 수는 있다. 목록 줄에 색 없는 리플을 쓰는 안은 12장 6번에서 기기로 비교한다. 버튼과 칩은 DS의 `active:opacity-80`(색이 아니라 투명도라 className으로 바꾼 배경도 따라간다), 목록 줄과 접는 줄은 `active:bg-surface-hover`(표면이 한 단계 진해진다)
 - 햅틱은 쓰지 않는다. 쓰게 되면 저장 성공에만 가벼운 진동을 준다(6장 후보)
 - 상태 바 아이콘은 색 구성표를 따른다(라이트 `dark-content`, 다크 `light-content`). edge-to-edge는 상태 바를 투명하게만 하고 아이콘 색을 테마에 맡기는데, AppCompat 라이트 테마는 밝은 아이콘이라 흰 canvas 위에서 보이지 않는다. 시안은 루트의 `StatusBar`로 정하고 12장 6번에서 내비게이션 루트로 옮긴다. JS가 뜨기 전 첫 프레임까지 맞추는 테마 속성(`android:windowLightStatusBar`, `values-night`)과 다크 창 배경은 12장 6번 앱 테마에서 스위치 색(1.6의 7번)과 함께 정한다
 
@@ -228,7 +228,7 @@ DS 간격 키(`1`·`2`·`3`·`4`·`6`·`8`·`12`·`16`·`20`·`24` = 4~96px) 안
 
 ### 3.7 접근성
 
-- 누름 영역은 48dp 이상이다. 칩은 38 + 세로 hitSlop 5, 목록 줄은 줄 전체다. DS Button sm(30)·md(42)는 모자라 시안은 `min-h-12`를 준다. DS 0.3.0이 RN Button에 hitSlop을 넣으면 지운다(5.2)
+- 누름 영역은 48dp 이상이다. 칩은 38 + 세로 hitSlop 5, 목록 줄은 줄 전체다. DS Button sm(30)·md(42)는 세로 hitSlop(9·3)과 최소 폭 48로 채운다. 세로로 쌓으면 hitSlop이 겹치지 않게 sm은 18, md는 6 이상 띄운다(DS 알려진 동작 18). DS Input은 hitSlop이 없어 md(42)인 메모 칸은 48에 못 미친다. 12장 6번에서 `lg`로 바꿀지 기기에서 본다
 - 저장이 눌리지 않을 때는 이유를 저장 위에 한 줄로 쓰고, live region이라 바뀌면 스크린 리더가 알린다("금액을 입력해 주세요", "카테고리를 골라 주세요")
 - 스위치가 있는 줄은 줄 전체가 스위치다(`accessibilityRole="switch"`, 글자를 눌러도 켜진다)
 - 하나만 고르는 칩 묶음에 라디오 그룹 의미는 없다. DS Chip이 토글이라서다(DS 알려진 동작 19). 칩마다 "선택됨"은 읽힌다
@@ -334,9 +334,9 @@ UI 구현(PRD 12장 6번) 전까지 앱은 시안 모음을 띄운다. 위 칩�
 | `src/App.tsx` | 시안 모음 껍데기(칩 전환, 상태 바 근사와 아이콘 색) |
 | `src/preview/HomeMock.tsx` | 홈(채운 상태, 총예산 초과, 첫 실행) |
 | `src/preview/EntrySheetMock.tsx` | 입력 시트(접힘, 펼침). 뒤에 홈과 scrim |
-| `src/preview/DsCheckScreen.tsx` | DS 0.2.0 확인 화면(1장) |
+| `src/preview/DsCheckScreen.tsx` | DS 연동 확인 화면(1장) |
 | `src/preview/fixtures.ts` | 2026-09-24 기준 가짜 데이터 |
-| `src/ui/Chip.tsx` · `src/ui/Meter.tsx` | 5.2의 앱 컴포넌트 |
+| `src/ui/Meter.tsx` | 5.2의 앱 컴포넌트(사용률 막대) |
 | `__tests__/design.test.tsx` | 앱 색, Chip, Meter, 두 시안의 동작 |
 | `__tests__/App.test.tsx` | 시안 전환, 상태 바 아이콘 색 |
 
@@ -344,38 +344,43 @@ UI 구현(PRD 12장 6번) 전까지 앱은 시안 모음을 띄운다. 위 칩�
 
 ### 5.1 화면별 DS 컴포넌트
 
-| 화면 | DS 0.2.0 | 앱 컴포넌트 | 플랫폼·라이브러리 |
+| 화면 | DS | 앱 컴포넌트 | 플랫폼·라이브러리 |
 |---|---|---|---|
 | 홈 | Text, Stack, Button(FAB, "내역 보기", "예산 정하기") | Meter, 목록 줄 | ScrollView |
-| 입력 시트 | Text, Stack, Label, Input(금액, 메모), Button(저장, 닫기) | Chip | Switch, 날짜 대화상자, formSheet |
-| 내역 | Text, Stack, Badge(고정비), Button | 목록 줄, Chip(필터 요약) | SectionList |
-| 회고 목록 | Text, Stack, Badge(진행 중) | Chip(주간/월간), 목록 줄 | FlatList |
+| 입력 시트 | Text, Stack, Label, Input(금액, 메모), Button(저장, 닫기), Chip | - | Switch, 날짜 대화상자, formSheet |
+| 내역 | Text, Stack, Badge(고정비), Button, Chip(필터 요약) | 목록 줄 | SectionList |
+| 회고 목록 | Text, Stack, Badge(진행 중), Chip(주간/월간) | 목록 줄 | FlatList |
 | 회고 상세 | Text, Stack, Card(폴백 안내), Button | 문장 렌더러(중첩 Text) | victory-native, Skia |
-| 설정 | Text, Stack | 목록 줄 | ScrollView |
-| 설정 하위(예산, 고정비 편집, 카테고리) | Label, Input, Textarea, Button | Chip | - |
+| 설정 | Text, Stack, Icon(꺾쇠) | 목록 줄 | ScrollView |
+| 설정 하위(예산, 고정비 편집, 카테고리) | Label, Input, Textarea, Button, Chip | - | - |
 | 모델 관리 | Text, Stack, Button, Badge(사용 중) | Meter(진행률) | - |
 
-### 5.2 DS 0.2.0에 없는 것
+### 5.2 DS에 없던 것
+
+DS 0.2.0에 없어 시안이 임시로 채운 것은 DS 0.3.0에 넣었다(`../design-system`의 스펙 R25, `docs/decisions-r25.md`, 구현 노트 N-17). 2026-09-25에 0.3.0을 npm에 내고 이 앱을 올려 임시 Chip(`src/ui/Chip.tsx`), 버튼의 `min-h-12`·`active:opacity-80`, 입력 칸의 `focus:border-border-focus`, global.css의 `tabular-nums` 임시 선언을 지웠다.
+
+| 0.2.0에 없던 것 | 시안이 임시로 한 것 | 0.3.0 |
+|---|---|---|
+| **Chip**(고르는 칩) | `src/ui/Chip.tsx` | `Chip`. API가 같아 import만 바꿨다 |
+| **Icon**(단독 아이콘) | 글자로 대신했다("기록", "선택 항목 더 보기") | `Icon`과 이름 4개(home, list, chart-pie, calendar). 탭 바·설정 꺾쇠에 쓴다 |
+| **누름 표시** | className `active:opacity-80` | Button · Chip에 `active:opacity-80` |
+| **48dp 누름 영역** | Button에 `min-h-12` | RN Button 세로 hitSlop과 최소 폭 48 |
+| **Input 포커스 표시** | className `focus:border-border-focus` | Input · Textarea에 같은 클래스 |
+| **placeholder 색** | placeholder를 두지 않았다 | `fg-muted`로 칠한다(앱은 여전히 두지 않는다, 2장) |
+| **`tabular-nums`** | global.css 임시 선언 | native 래퍼가 RN 선언을 낸다 |
+| **번들 크기** | - | 아이콘별 import. 이 앱의 릴리스 번들이 3.91MB에서 2.20MB가 됐다 |
+
+DS에 아직 없는 것:
 
 | 필요한 것 | 쓰는 곳 | 지금 | 다음 |
 |---|---|---|---|
-| **Chip**(고르는 칩) | 입력 시트의 모든 선택, 내역 필터, 회고 주간/월간, 시안 전환 | **임시** `src/ui/Chip.tsx`. DS 0.3.0 `Chip`과 API가 같다(`label`, `selected`, `disabled`, `onPress`, `className`) | DS 0.3.0으로 올리고 import만 바꾼다 |
-| **Icon**(단독 아이콘) | 탭 바, 설정 줄 꺾쇠, 고정비 상태, 날짜 칩 | 없음. 시안은 글자로 대신했다("기록", "선택 항목 더 보기") | DS 0.3.0 `Icon`과 이름 4개(home, list, chart-pie, calendar) |
-| **누름 표시** | DS Button | DS 0.2.0 RN Button은 눌려도 모양이 그대로다. 시안은 FAB·저장·닫기 등에 className으로 `active:opacity-80`을 준다 | DS 0.3.0이 Button · Chip에 같은 `active:opacity-80`을 넣었다. 올리면 className에서 지운다 |
-| **48dp 누름 영역** | Button sm(30)·md(42) | 모자란다. 시안은 `min-h-12`를 준다 | DS 0.3.0이 RN Button에 세로 hitSlop과 최소 폭 48을 넣었다. 올리면 지운다 |
-| **Input 포커스 표시** | 금액·메모 칸 | DS 0.2.0 RN Input은 포커스돼도 테두리가 그대로다(DS 계획 D-9는 `focus:border-border-focus`). 시안은 className으로 먼저 준다 | DS 0.3.0. 올리면 지운다 |
-| **placeholder 색** | 금액·메모 칸 | DS 0.2.0 RN Input은 플랫폼 기본 hint 색(약 2.7:1). 시안은 placeholder를 두지 않는다 | DS 0.3.0이 `fg-muted`로 칠한다 |
-| **`tabular-nums`** | 모든 금액 | react-native-css 3.0.7이 옮기지 않는다. global.css에 임시 선언(3.4) | DS 0.3.0 native 래퍼가 같은 선언을 내면 지운다 |
-| **번들 크기** | 앱 전체 | DS 0.2.0 native Icon이 lucide 목록 파일에서 import해 Metro가 아이콘 3,600여 개를 모두 넣는다. 아이콘별 경로로 바꾸면 이 앱의 릴리스 번들이 3.91MB에서 2.20MB가 된다(node_modules를 잠시 고쳐 잰 값) | DS 0.3.0 |
-| **Meter**(사용률 막대) | 홈 게이지, 카테고리 예산, 모델 다운로드 | 앱 컴포넌트 `src/ui/Meter.tsx`(임시 아님) | DS 계약은 number prop을 금지한다(DS AC-15). 값을 받는 컴포넌트를 DS에 두려면 그 규칙을 먼저 정해야 해 보류했다 |
+| **Meter**(사용률 막대) | 홈 게이지, 카테고리 예산, 모델 다운로드 | 앱 컴포넌트 `src/ui/Meter.tsx` | DS 계약은 number prop을 금지한다(DS AC-15). 값을 받는 컴포넌트를 DS에 두려면 그 규칙을 먼저 정해야 해 보류했다(DS R25 보류) |
 | 목록 줄 | 홈, 내역, 설정 | 화면 안 조합(`HomeMock`의 `Row`) | 세 화면에서 모양이 굳으면 DS 후보로 본다 |
 | 텍스트 줄 수 제한 | 목록의 메모 | RN Text(`react-native-css/components`) + DS 클래스 | `numberOfLines`는 number prop이라 AC-15에 걸린다. 보류 |
 | 문장 안 강조 | 회고 문장 | 앱이 중첩 RN Text로 | DS 알려진 동작 6(v1 범위 밖). 보류 |
 | 바텀 시트 | 입력, 내역 필터 | React Navigation formSheet | RN 오버레이는 DS v2 범위다 |
 | 스위치, 날짜 선택 | 고정비 켜기, 다른 날 | RN Switch, 플랫폼 날짜 대화상자 | 플랫폼 기본을 쓴다 |
 | 차트 | 회고 상세 | victory-native(PRD 8장) | DS 대상 아님 |
-
-DS 0.3.0의 내용과 근거는 `../design-system`(스펙 R25, `docs/decisions-r25.md`, 구현 노트 N-17)에 있다. 0.3.0을 npm에 낸 뒤 spendback에서 버전을 올리고 임시 Chip(`src/ui/Chip.tsx`), 버튼의 `min-h-12`·`active:opacity-80`, 입력 칸의 `focus:border-border-focus`, global.css의 `tabular-nums` 임시 선언을 지운다. 2026-09-25에 DS 브랜치를 타르볼로 이 앱의 버린 사본에 설치해 이 교체를 미리 해 봤다 — 타입 검사·린트·테스트가 통과했고 릴리스 번들이 3.91MB에서 2.20MB가 됐다.
 
 ## 6. 라이브러리 후보(설치하지 않음)
 

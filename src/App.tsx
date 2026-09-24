@@ -1,3 +1,4 @@
+import { Chip } from '@eeennsu/native';
 import { useState } from 'react';
 import { StatusBar, useColorScheme } from 'react-native';
 import { ScrollView, View } from 'react-native-css/components';
@@ -5,7 +6,6 @@ import { ScrollView, View } from 'react-native-css/components';
 import { DsCheckScreen } from './preview/DsCheckScreen';
 import { EntrySheetMock } from './preview/EntrySheetMock';
 import { HomeMock } from './preview/HomeMock';
-import { Chip } from './ui/Chip';
 
 const PREVIEWS = [
   { key: 'home', label: '홈', render: () => <HomeMock /> },

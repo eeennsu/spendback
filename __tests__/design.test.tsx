@@ -1,11 +1,10 @@
-import { Box, Text } from '@eeennsu/native';
+import { Box, Chip, Text } from '@eeennsu/native';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
 import { registerGlobalCss, setColorScheme } from '../jest/css';
 import { EntrySheetMock } from '../src/preview/EntrySheetMock';
 import { HomeMock } from '../src/preview/HomeMock';
-import { Chip } from '../src/ui/Chip';
 import { Meter } from '../src/ui/Meter';
 
 /**
@@ -48,14 +47,14 @@ describe('앱 색(C-5b)', () => {
 });
 
 describe('숫자', () => {
-  test('tabular-nums가 RN fontVariant로 풀린다(global.css의 임시 선언)', async () => {
+  test('tabular-nums가 RN fontVariant로 풀린다(DS native 래퍼의 RN 선언)', async () => {
     await mount(<Text className='tabular-nums'>411,600원</Text>);
     // 문자열로 나오고 RN이 네이티브로 넘길 때 배열로 나눈다(StyleSheet/processFontVariant)
     expect(screen.getByText('411,600원')).toHaveStyle({ fontVariant: 'tabular-nums' });
   });
 });
 
-describe('Chip(임시)', () => {
+describe('Chip', () => {
   test('고른 칩은 brand 표면이고 선택 상태를 알린다', async () => {
     await mount(<Chip label='식비' selected />);
 
@@ -65,7 +64,7 @@ describe('Chip(임시)', () => {
     expect(screen.getByText('식비')).toHaveStyle({ color: '#fff' });
   });
 
-  test('누르는 동안 투명도가 내려가고 배경은 그대로다(DS 0.3.0과 같은 눌림 표시)', async () => {
+  test('누르는 동안 투명도가 내려가고 배경은 그대로다', async () => {
     await mount(<Chip label='식비' selected className='bg-danger' />);
 
     const chip = screen.getByRole('button', { name: '식비' });
@@ -248,7 +247,7 @@ describe('입력 시트 시안', () => {
     expect(node?.props.accessibilityLiveRegion).toBe('polite');
     // 평탄화되면 기기에서 live region이 사라진다(Jest 트리에는 남아 있어 이 단언이 필요하다)
     expect(node?.props.collapsable).toBe(false);
-    // DS 0.2.0 Input의 placeholder는 플랫폼 기본색이라 대비가 모자라다(docs/DESIGN.md 5.2)
+    // placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(docs/DESIGN.md 4.3)
     expect(screen.getByLabelText('금액').props.placeholder).toBeUndefined();
   });
 });

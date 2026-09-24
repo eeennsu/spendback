@@ -26,13 +26,12 @@ export function HomeMock({ variant = 'filled', onRecord }: HomeMockProps) {
         )}
       </ScrollView>
       {/* 기록은 이 앱의 핵심 동작이라 엄지가 닿는 오른쪽 아래에 둔다(docs/DESIGN.md 3장) */}
-      {/* active:opacity-80은 DS 0.3.0이 Button에 같은 눌림 표시를 넣으면 지운다(docs/DESIGN.md 5.2) */}
       <Button
         label='기록'
         icon='plus'
         size='lg'
         onPress={onRecord}
-        className='absolute bottom-4 right-4 rounded-full shadow-md active:opacity-80'
+        className='absolute bottom-4 right-4 rounded-full shadow-md'
       />
     </View>
   );
@@ -135,7 +134,7 @@ function Filled({ data }: { data: typeof budget }) {
             <Text className='tabular-nums'>{item.amount}</Text>
           </Row>
         ))}
-        <Button label='내역 전체 보기' variant='secondary' className='min-h-12 active:opacity-80' />
+        <Button label='내역 전체 보기' variant='secondary' />
       </Section>
     </>
   );
@@ -152,11 +151,7 @@ function FirstRun() {
         <Text size='sm' tone='muted'>
           예산을 정하면 남은 금액과 쓰는 속도를 여기에 보여 줘요
         </Text>
-        <Button
-          label='예산 정하기'
-          variant='secondary'
-          className='min-h-12 self-start active:opacity-80'
-        />
+        <Button label='예산 정하기' variant='secondary' className='self-start' />
       </Stack>
 
       <Section title='최근 지출'>

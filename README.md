@@ -21,3 +21,8 @@
 | `cd android && ./gradlew assembleRelease` | 릴리스 APK를 `android/app/build/outputs/apk/release/`에 만듭니다. Windows PowerShell에서는 `.\gradlew assembleRelease` |
 
 커밋 제목은 `feat` `fix` `refactor` `hotfix` `update` `chore` `docs` 중 하나의 접두어로 시작해야 합니다(commitlint).
+
+## 문제 해결
+
+- 앱에 빨간 화면으로 `Unable to load script`가 뜨면 기기가 Metro에 닿지 못한 것입니다. USB를 다시 연결하면 포트 연결이 풀리므로 `adb reverse tcp:8081 tcp:8081`을 실행하거나 `pnpm android`를 다시 실행합니다.
+- Metro의 첫 번들링은 1분 가까이 걸릴 수 있습니다. 그 뒤로는 캐시를 씁니다.

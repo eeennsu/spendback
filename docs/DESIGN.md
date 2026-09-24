@@ -52,7 +52,7 @@ react-native-css 3.0.7은 `@expo/metro-config`를 peer로 요구한다. 실제�
 
 - pnpm 10은 없는 peer를 자동 설치한다(auto-install-peers). 그대로 두면 `@expo/metro-config`와 `@expo/metro`·`@expo/config` 등 Expo 패키지 약 40개가 들어온다. `pnpm.packageExtensions`로 이 peer를 선택 peer로 표시해 설치되지 않게 했다
 - **CSS 캐시.** Tailwind 결과는 소스 파일의 클래스에 따라 바뀌지만 Metro의 캐시 키는 global.css 내용뿐이다. 그대로 두면 global.css를 고치지 않는 한 새 클래스가 번들(릴리스 포함)에 안 들어간다. 변환기가 CSS 결과에 `skipCache` 표시를 달고, `metro.config.js`의 `CssUncachedFileStore`가 그 결과를 디스크 캐시에 쓰지 않는다. Expo가 같은 문제를 같은 방식(`@expo/metro-config`의 FileStore)으로 푼다
-- **남는 제약(개발 중).** 같은 Metro 세션 안에서는 다른 파일에 새 클래스를 더해도 global.css 모듈이 다시 변환되지 않는다. Expo는 Metro 그래프를 고쳐(`patchMetroGraphToSupportUncachedModules`) 매번 다시 변환하는데, 그 패치는 옮기지 않았다. 새 클래스가 안 먹으면 global.css를 저장하거나 Metro를 다시 켠다. 기기에서 불편하면 그 패치를 옮긴다(1.6)
+- **남는 제약(개발 중).** 같은 Metro 세션 안에서는 다른 파일에 새 클래스를 더해도 global.css 모듈이 다시 변환되지 않는다. Expo는 Metro 그래프를 고쳐(`patchMetroGraphToSupportUncachedModules`) 매번 다시 변환하는데, 그 패치는 옮기지 않았다. 새 클래스가 안 먹으면 Metro를 다시 켠다(CSS 결과는 디스크 캐시에 없어 `--reset-cache` 없이 다시 변환된다). 내용이 같은 채로 global.css만 저장하면 Metro가 같은 모듈로 보고 넘길 수 있다. 기기에서 불편하면 그 패치를 옮긴다(1.6)
 
 버린 대안:
 

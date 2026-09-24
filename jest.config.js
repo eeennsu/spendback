@@ -1,7 +1,7 @@
 module.exports = {
   preset: '@react-native/jest-preset',
-  // spike/는 앱과 독립된 버릴 코드다(PRD 6장)
-  modulePathIgnorePatterns: ['<rootDir>/spike/'],
+  // spike/는 앱과 독립된 버릴 코드다(PRD 6장). .claude/에는 에이전트 워크트리(저장소 사본)가 생긴다
+  modulePathIgnorePatterns: ['<rootDir>/spike/', '<rootDir>/.claude/'],
   // 디자인 시스템(@eeennsu)과 lucide-react-native는 ESM만 배포해 변환 대상에 넣는다(DS 구현 노트 N-14)
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@eeennsu|lucide-react-native)/)',

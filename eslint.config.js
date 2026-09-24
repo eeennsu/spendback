@@ -10,8 +10,8 @@ const reactNativePlugin = require('eslint-plugin-react-native');
 // ../expo-plate의 flat config를 따른다(PRD 8장).
 module.exports = [
   {
-    // spike/는 앱과 독립된 버릴 코드라 검사하지 않는다(PRD 6장)
-    ignores: ['node_modules/**', 'android/**', 'coverage/**', 'spike/**', '**/*.js'],
+    // spike/는 앱과 독립된 버릴 코드라 검사하지 않는다(PRD 6장). .claude/에는 에이전트 워크트리(저장소 사본)가 생긴다
+    ignores: ['node_modules/**', 'android/**', 'coverage/**', 'spike/**', '.claude/**', '**/*.js'],
   },
 
   js.configs.recommended,

@@ -3,5 +3,7 @@ coverage/
 pnpm-lock.yaml
 # spike/는 앱과 독립된 버릴 코드다(PRD 6장)
 spike/
+# 에이전트 워크트리(저장소 사본)가 생긴다
+.claude/
 # 문서는 손으로 정리한다(표 정렬로 diff가 커진다)
 *.md

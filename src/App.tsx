@@ -53,7 +53,10 @@ export default function App() {
           />
         ))}
       </ScrollView>
-      <View className='flex-1'>{preview.render()}</View>
+      {/* 시안마다 새로 그린다. 같은 컴포넌트(입력 시트 접힘·펼침)끼리 바꿀 때 상태가 이어지지 않게 */}
+      <View key={preview.key} className='flex-1'>
+        {preview.render()}
+      </View>
     </View>
   );
 }

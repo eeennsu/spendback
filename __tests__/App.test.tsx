@@ -29,3 +29,14 @@ test('상태 바 아이콘은 색 구성표를 따른다 — 라이트 canvas �
   expect(await lastBarStyle()).toBe('light-content');
   jest.mocked(useColorScheme).mockReturnValue('light');
 });
+
+test('입력 시트에서 펼침 시안으로 바꾸면 새로 그려 선택 항목이 펼쳐진다', async () => {
+  await render(<App />);
+
+  await fireEvent.press(screen.getByRole('button', { name: '입력 시트' }));
+  expect(screen.getByText('선택 항목 더 보기')).toBeOnTheScreen();
+
+  // 같은 컴포넌트라 key가 없으면 접힌 상태가 이어진다
+  await fireEvent.press(screen.getByRole('button', { name: '입력 시트 펼침' }));
+  expect(screen.getByText('선택 항목 접기')).toBeOnTheScreen();
+});

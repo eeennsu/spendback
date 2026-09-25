@@ -25,13 +25,16 @@ export function HomeMock({ variant = 'filled', onRecord }: HomeMockProps) {
           <Filled data={variant === 'over' ? budgetOver : budget} />
         )}
       </ScrollView>
-      {/* 기록은 이 앱의 핵심 동작이라 엄지가 닿는 오른쪽 아래에 둔다(docs/DESIGN.md 3장) */}
+      {/*
+        기록은 이 앱의 핵심 동작이라 엄지가 닿는 오른쪽 아래에 둔다(docs/DESIGN.md 3장).
+        떠 있는 버튼이라 DS 눌림 표시(투명도)를 쓰면 아래 내용이 비친다. 표면색으로 바꾼다(3.5)
+      */}
       <Button
         label='기록'
         icon='plus'
         size='lg'
         onPress={onRecord}
-        className='absolute bottom-4 right-4 rounded-full shadow-md'
+        className='absolute bottom-4 right-4 rounded-full shadow-md active:bg-brand-hover active:opacity-100'
       />
     </View>
   );

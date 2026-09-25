@@ -13,6 +13,7 @@ import { Meter } from '../src/ui/Meter';
  */
 const BRAND_LIGHT = '#107460';
 const BRAND_DARK = '#55c1a3';
+const BRAND_HOVER_LIGHT = '#0f6353';
 const ON_BRAND_DARK = '#030712';
 const DANGER_LIGHT = '#e7000b';
 const SURFACE_LIGHT = '#fff';
@@ -132,6 +133,17 @@ describe('홈 시안', () => {
     });
     // 같은 이름의 버튼이 여럿이면 스크린 리더 사용자가 구분하지 못한다
     expect(screen.getByRole('button', { name: /^휴대폰 요금 기록/ })).toBeOnTheScreen();
+  });
+
+  test('떠 있는 기록 버튼은 누르는 동안 투명해지지 않고 표면색이 진해진다', async () => {
+    await mount(<HomeMock />);
+
+    // 투명도 눌림(DS 기본)은 아래 내용을 비치게 한다(docs/DESIGN.md 3.5)
+    await fireEvent(screen.getByRole('button', { name: '기록' }), 'pressIn');
+    expect(screen.getByRole('button', { name: '기록' })).toHaveStyle({
+      backgroundColor: BRAND_HOVER_LIGHT,
+      opacity: 1,
+    });
   });
 
   test('총예산을 넘으면 금액을 초과액으로 바꾸고 danger로 쓴다', async () => {

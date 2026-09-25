@@ -9,13 +9,11 @@ import { Meter } from '../src/ui/Meter';
 
 /**
  * 앱 색(global.css의 C-5b 재선언)과 시안 화면(docs/DESIGN.md 2·4장).
- * 기대값은 global.css의 oklch 값을 sRGB로 바꾼 것이다.
+ * 기대값은 global.css의 값이다(exp/toss-look 토스풍 실험).
  */
-const BRAND_LIGHT = '#107460';
-const BRAND_DARK = '#55c1a3';
-const BRAND_HOVER_LIGHT = '#0f6353';
-const ON_BRAND_DARK = '#030712';
-const DANGER_LIGHT = '#e7000b';
+const BRAND = '#206fea';
+const BRAND_HOVER = '#1b64da';
+const DANGER = '#dc2a38';
 const SURFACE_LIGHT = '#fff';
 
 async function mount(ui: ReactElement, scheme: 'light' | 'dark' = 'light') {
@@ -31,19 +29,30 @@ function rootStyle() {
 }
 
 describe('앱 색(C-5b)', () => {
-  test('brand는 라이트에서 청록이다', async () => {
+  test('brand는 라이트에서 파랑이다', async () => {
     await mount(<Box className='bg-brand'>{null}</Box>);
-    expect(rootStyle()).toMatchObject({ backgroundColor: BRAND_LIGHT });
+    expect(rootStyle()).toMatchObject({ backgroundColor: BRAND });
   });
 
-  test('brand는 다크에서 밝은 청록이다', async () => {
+  test('brand는 다크에서도 같은 파랑이다', async () => {
     await mount(<Box className='bg-brand'>{null}</Box>, 'dark');
-    expect(rootStyle()).toMatchObject({ backgroundColor: BRAND_DARK });
+    expect(rootStyle()).toMatchObject({ backgroundColor: BRAND });
   });
 
-  test('다시 선언하지 않은 danger는 DS 값 그대로다', async () => {
+  test('danger는 앱이 다시 선언한 빨강이다', async () => {
     await mount(<Box className='bg-danger'>{null}</Box>);
-    expect(rootStyle()).toMatchObject({ backgroundColor: DANGER_LIGHT });
+    expect(rootStyle()).toMatchObject({ backgroundColor: DANGER });
+  });
+});
+
+describe('글자', () => {
+  test('DS Text가 Pretendard와 앱의 글자 스텝으로 풀린다(@theme 덮기)', async () => {
+    await mount(<Text size='2xl'>411,600원</Text>);
+    expect(screen.getByText('411,600원')).toHaveStyle({
+      fontFamily: 'Pretendard',
+      fontSize: 28,
+      fontWeight: 700,
+    });
   });
 });
 
@@ -60,7 +69,7 @@ describe('Chip', () => {
     await mount(<Chip label='식비' selected />);
 
     const chip = screen.getByRole('button', { name: '식비' });
-    expect(chip).toHaveStyle({ backgroundColor: BRAND_LIGHT });
+    expect(chip).toHaveStyle({ backgroundColor: BRAND });
     expect(chip.props.accessibilityState).toMatchObject({ selected: true });
     expect(screen.getByText('식비')).toHaveStyle({ color: '#fff' });
   });
@@ -71,7 +80,7 @@ describe('Chip', () => {
     const chip = screen.getByRole('button', { name: '식비' });
     await fireEvent(chip, 'pressIn');
     expect(screen.getByRole('button', { name: '식비' })).toHaveStyle({
-      backgroundColor: DANGER_LIGHT,
+      backgroundColor: DANGER,
       opacity: 0.8,
     });
   });
@@ -84,13 +93,13 @@ describe('Chip', () => {
     expect(chip).toHaveStyle({ minWidth: 48 });
   });
 
-  test('다크에서 고른 칩의 글자는 거의 검은색이다', async () => {
+  test('다크에서도 고른 칩의 글자는 흰색이다', async () => {
     await mount(<Chip label='식비' selected />, 'dark');
 
     expect(screen.getByRole('button', { name: '식비' })).toHaveStyle({
-      backgroundColor: BRAND_DARK,
+      backgroundColor: BRAND,
     });
-    expect(screen.getByText('식비')).toHaveStyle({ color: ON_BRAND_DARK });
+    expect(screen.getByText('식비')).toHaveStyle({ color: '#fff' });
   });
 
   test('고르지 않은 칩은 surface 표면이다', async () => {
@@ -114,7 +123,7 @@ describe('Meter', () => {
 
     const [fill] = screen.getByRole('progressbar').children;
     if (typeof fill === 'string') throw new Error('막대가 없다');
-    expect(fill).toHaveStyle({ width: '100%', backgroundColor: DANGER_LIGHT });
+    expect(fill).toHaveStyle({ width: '100%', backgroundColor: DANGER });
   });
 });
 
@@ -126,10 +135,10 @@ describe('홈 시안', () => {
     expect(screen.getByRole('progressbar', { name: '9월 예산 사용률' })).toBeOnTheScreen();
     expect(screen.getByText('휴대폰 요금')).toBeOnTheScreen();
     expect(screen.getByText('118,000 / 100,000원 · 18,000원 초과')).toHaveStyle({
-      color: DANGER_LIGHT,
+      color: DANGER,
     });
     expect(screen.getByRole('button', { name: '기록' })).toHaveStyle({
-      backgroundColor: BRAND_LIGHT,
+      backgroundColor: BRAND,
     });
     // 같은 이름의 버튼이 여럿이면 스크린 리더 사용자가 구분하지 못한다
     expect(screen.getByRole('button', { name: /^휴대폰 요금 기록/ })).toBeOnTheScreen();
@@ -141,7 +150,7 @@ describe('홈 시안', () => {
     // 투명도 눌림(DS 기본)은 아래 내용을 비치게 한다(docs/DESIGN.md 3.5)
     await fireEvent(screen.getByRole('button', { name: '기록' }), 'pressIn');
     expect(screen.getByRole('button', { name: '기록' })).toHaveStyle({
-      backgroundColor: BRAND_HOVER_LIGHT,
+      backgroundColor: BRAND_HOVER,
       opacity: 1,
     });
   });
@@ -150,7 +159,7 @@ describe('홈 시안', () => {
     await mount(<HomeMock variant='over' />);
 
     expect(screen.getByText('9월 예산')).toBeOnTheScreen();
-    expect(screen.getByText('18,000원 초과')).toHaveStyle({ color: DANGER_LIGHT });
+    expect(screen.getByText('18,000원 초과')).toHaveStyle({ color: DANGER });
     expect(
       screen.getByRole('progressbar', { name: '9월 예산 사용률' }).props.accessibilityValue,
     ).toEqual({ text: '예산을 18,000원 넘었어요, 기간의 80% 지남' });

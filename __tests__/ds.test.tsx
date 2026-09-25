@@ -8,15 +8,13 @@ import { DsCheckScreen } from '../src/preview/DsCheckScreen';
 /**
  * 디자인 시스템(@eeennsu/native) 연동 확인. className이 jest에서도 스타일로 풀려야 한다.
  * DS 컴포넌트가 react-native-css/components에서 import하기 때문이다(DS 구현 노트 F-11).
- * 기대값은 DS base 브랜드의 토큰을 sRGB로 바꾼 값이다(DS verify-expo 테스트와 같다). brand만 앱이
- * global.css에서 다시 선언한 청록이다(DS 스펙 C-5b, docs/DESIGN.md 2장).
+ * 기대값은 앱이 global.css에서 다시 선언한 토스풍 색이다(DS 스펙 C-5b, exp/toss-look).
  */
-const BRAND_LIGHT = '#107460';
-const BRAND_DARK = '#55c1a3';
-const FG_LIGHT = '#101828';
+const BRAND = '#206fea';
+const FG_LIGHT = '#191f28';
 const SURFACE_LIGHT = '#fff';
-const SURFACE_DARK = '#101828';
-const SURFACE_MUTED_LIGHT = '#f3f4f6';
+const SURFACE_DARK = '#1e1e24';
+const SURFACE_MUTED_LIGHT = '#f2f4f6';
 const ON_BRAND = '#fff';
 
 async function mount(ui: ReactElement, scheme: 'light' | 'dark' = 'light') {
@@ -35,13 +33,13 @@ function rootStyle() {
 test('Box의 className이 스타일로 풀린다', async () => {
   await mount(<Box className='bg-brand p-8'>{null}</Box>);
 
-  expect(rootStyle()).toMatchObject({ backgroundColor: BRAND_LIGHT, padding: 32 });
+  expect(rootStyle()).toMatchObject({ backgroundColor: BRAND, padding: 32 });
 });
 
 test('Badge는 표면과 글자에 variant 색을 나눠 준다', async () => {
   await mount(<Badge variant='primary'>고정비</Badge>);
 
-  expect(rootStyle()).toMatchObject({ backgroundColor: BRAND_LIGHT, borderRadius: 9999 });
+  expect(rootStyle()).toMatchObject({ backgroundColor: BRAND, borderRadius: 9999 });
   expect(screen.getByText('고정비')).toHaveStyle({ color: ON_BRAND, fontSize: 14 });
 });
 
@@ -69,14 +67,14 @@ test('다크 모드는 OS 색 구성표를 따른다', async () => {
   expect(rootStyle()).toMatchObject({ backgroundColor: SURFACE_DARK });
 
   await mount(<Box className='bg-brand'>{null}</Box>, 'dark');
-  expect(rootStyle()).toMatchObject({ backgroundColor: BRAND_DARK });
+  expect(rootStyle()).toMatchObject({ backgroundColor: BRAND });
 });
 
 test('확인 화면이 DS 컴포넌트로 그려지고 누름에 반응한다', async () => {
   await mount(<DsCheckScreen />);
 
   const save = screen.getByRole('button', { name: '저장 0회' });
-  expect(save).toHaveStyle({ backgroundColor: BRAND_LIGHT });
+  expect(save).toHaveStyle({ backgroundColor: BRAND });
   expect(screen.getByRole('button', { name: '취소' })).toHaveStyle({
     backgroundColor: SURFACE_MUTED_LIGHT,
   });

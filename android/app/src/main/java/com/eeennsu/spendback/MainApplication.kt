@@ -5,6 +5,7 @@ import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
+import com.facebook.react.common.assets.ReactFontManager
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 
 class MainApplication : Application(), ReactApplication {
@@ -22,6 +23,8 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    // global.css의 --font-sans(Pretendard)가 이 이름으로 풀린다. 무게는 res/font/pretendard.xml에서 고른다
+    ReactFontManager.getInstance().addCustomFont(this, "Pretendard", R.font.pretendard)
     loadReactNative(this)
   }
 }

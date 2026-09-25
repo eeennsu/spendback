@@ -18,7 +18,7 @@ type HomeMockProps = {
 export function HomeMock({ variant = 'filled', onRecord }: HomeMockProps) {
   return (
     <View className='flex-1 bg-canvas'>
-      <ScrollView className='flex-1' contentContainerClassName='gap-8 px-4 pb-24 pt-4'>
+      <ScrollView className='flex-1' contentContainerClassName='gap-3 px-4 pb-24 pt-3'>
         {variant === 'firstRun' ? (
           <FirstRun />
         ) : (
@@ -40,11 +40,14 @@ export function HomeMock({ variant = 'filled', onRecord }: HomeMockProps) {
   );
 }
 
+/** 회색 canvas 위의 흰 카드 한 장. 카드 사이는 gap-3(12)이다 */
+const card = 'gap-3 rounded-xl bg-surface p-6';
+
 function Filled({ data }: { data: typeof budget }) {
   return (
     <>
       {/* 금액 바로 밑에 할 수 있는 일(소비 속도)을 두고, 게이지와 그 설명은 뒤에 둔다 */}
-      <Stack className='gap-3'>
+      <Stack className={card}>
         <Text size='sm' tone='muted'>
           {data.title}
         </Text>
@@ -75,13 +78,9 @@ function Filled({ data }: { data: typeof budget }) {
         <Text size='sm' tone='muted'>
           결제일이 오늘이거나 지났는데 아직 기록하지 않았어요
         </Text>
-        {fixedCosts.overdue.map((item, index) => (
+        {fixedCosts.overdue.map(item => (
           // 항목을 누르면 입력 시트가 채워진 채로 열린다(PRD 4.4). 줄 전체가 누름 영역이다.
-          <Row
-            key={item.name}
-            last={index === fixedCosts.overdue.length - 1}
-            label={`${item.name} 기록, ${item.detail}`}
-          >
+          <Row key={item.name} label={`${item.name} 기록, ${item.detail}`}>
             <Stack className='flex-1 gap-1'>
               <Text>{item.name}</Text>
               <Text size='sm' tone='muted' className='tabular-nums'>
@@ -96,8 +95,8 @@ function Filled({ data }: { data: typeof budget }) {
       </Section>
 
       <Section title='카테고리 예산'>
-        {categoryBudgets.map((item, index) => (
-          <Row key={item.name} last={index === categoryBudgets.length - 1} column>
+        {categoryBudgets.map(item => (
+          <Row key={item.name} column>
             <Stack direction='row' justify='between' className='gap-3'>
               <Text>{item.name}</Text>
               <Text
@@ -119,15 +118,11 @@ function Filled({ data }: { data: typeof budget }) {
       </Section>
 
       <Section title='최근 지출'>
-        {recentExpenses.map((item, index) => (
+        {recentExpenses.map(item => (
           // 누르면 같은 입력 시트가 수정 모드로 열린다(docs/DESIGN.md 4장)
-          <Row
-            key={item.id}
-            last={index === recentExpenses.length - 1}
-            label={`${item.memo}, ${item.meta}, ${item.amount}`}
-          >
+          <Row key={item.id} label={`${item.memo}, ${item.meta}, ${item.amount}`}>
             <Stack className='flex-1 gap-1'>
-              <RNText numberOfLines={1} className='text-md text-fg'>
+              <RNText numberOfLines={1} className='font-sans text-md text-fg'>
                 {item.memo}
               </RNText>
               <Text size='sm' tone='muted'>
@@ -137,7 +132,7 @@ function Filled({ data }: { data: typeof budget }) {
             <Text className='tabular-nums'>{item.amount}</Text>
           </Row>
         ))}
-        <Button label='내역 전체 보기' variant='secondary' />
+        <Button label='내역 전체 보기' variant='secondary' className='mt-1' />
       </Section>
     </>
   );
@@ -146,7 +141,7 @@ function Filled({ data }: { data: typeof budget }) {
 function FirstRun() {
   return (
     <>
-      <Stack className='gap-3'>
+      <Stack className={card}>
         <Text size='sm' tone='muted'>
           9월 예산
         </Text>
@@ -176,7 +171,7 @@ function Section({
   children: ReactElement | ReactElement[] | (ReactElement | ReactElement[])[];
 }) {
   return (
-    <Stack className='gap-2'>
+    <Stack className={card}>
       <Stack direction='row' align='center' justify='between' className='gap-3'>
         <Text heading='2' size='lg'>
           {title}
@@ -195,28 +190,22 @@ function Section({
 }
 
 /**
- * 목록 한 줄. 줄 사이는 테두리 한 줄로 나누고 카드를 쌓지 않는다(docs/DESIGN.md 3장).
+ * 목록 한 줄. 카드 안에서 구분선 없이 여백으로 나눈다(exp/toss-look).
  * label을 주면 줄 전체가 버튼이 되고 스크린 리더는 label을 읽는다.
  */
 function Row({
-  last,
   column = false,
   label,
   onPress,
   children,
 }: {
-  last: boolean;
   column?: boolean;
   label?: string;
   onPress?: () => void;
   children: ReactElement | ReactElement[];
 }) {
-  // -mx-4 px-4: 눌림 배경과 구분선을 화면 끝까지 늘려 글자가 눌림 사각형 가장자리에 붙지 않게 한다
-  const className = cn(
-    '-mx-4 px-4 py-3',
-    column ? 'gap-2' : 'flex-row items-center gap-3',
-    !last && 'border-b border-border',
-  );
+  // -mx-6 px-6: 눌림 배경을 카드 끝까지 늘려 글자가 눌림 사각형 가장자리에 붙지 않게 한다
+  const className = cn('-mx-6 px-6 py-3', column ? 'gap-2' : 'flex-row items-center gap-3');
 
   if (label === undefined) return <View className={className}>{children}</View>;
 

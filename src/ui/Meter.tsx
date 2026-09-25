@@ -38,7 +38,7 @@ export function Meter({ label, valueText, ratio, marker, size = 'md' }: MeterPro
       {/* 기준선이 막대 위에 올 때도 3:1 넘게 떨어져 보이도록 배경색 테두리를 두른다(docs/DESIGN.md 2장) */}
       {tick && (
         <View
-          className='absolute -bottom-1 -top-1 -ml-1 w-2 rounded-full border-2 border-canvas bg-fg'
+          className='absolute -bottom-1 -top-1 -ml-1 w-2 rounded-full border-2 border-surface bg-fg'
           style={tick}
         />
       )}

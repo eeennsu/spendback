@@ -87,6 +87,9 @@
           }
         }
       }
+    },
+    "patchedDependencies": {
+      "@eeennsu/native@0.3.0": "patches/@eeennsu__native@0.3.0.patch"
     }
   }
 }

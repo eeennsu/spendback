@@ -26,6 +26,10 @@ type EntrySheetMockProps = {
 
 const DATES = ['오늘', '어제', '다른 날'] as const;
 
+// 실험(exp/toss-look): 테두리 대신 회색 채움으로 칸과 칩을 구분한다. 포커스되면 DS의 brand 테두리가 그대로 난다
+const filledField = 'border-transparent bg-surface-muted';
+const quietChip = 'border-transparent bg-surface-muted';
+
 // 시안용 표시 변환. 실제 금액 포맷터는 도메인 계층에서 TDD로 만든다(PRD 12장 4번).
 const onlyDigits = (text: string) => text.replace(/\D/g, '').replace(/^0+/, '');
 const withCommas = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -103,13 +107,13 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
           accessibilityViewIsModal
           className={cn(
             // 다크에서는 시트(gray-900)와 scrim 아래 배경의 대비가 1.2:1이라 테두리로 경계를 긋는다
-            'max-h-full rounded-t-lg bg-surface pt-2 dark:border dark:border-border',
+            'max-h-full rounded-t-xl bg-surface pt-2 dark:border dark:border-border',
             more && 'mt-12 flex-1',
           )}
         >
           <View className='h-1 w-12 self-center rounded-full bg-border' />
 
-          <Stack direction='row' align='center' justify='between' className='gap-3 px-4 pb-2 pt-3'>
+          <Stack direction='row' align='center' justify='between' className='gap-3 px-6 pb-2 pt-3'>
             <Text heading='1' size='xl'>
               {expense ? '지출 기록' : '수입 기록'}
             </Text>
@@ -118,7 +122,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
 
           <ScrollView
             className={more ? 'flex-1' : 'shrink grow-0'}
-            contentContainerClassName='gap-6 px-4 pb-4 pt-2'
+            contentContainerClassName='gap-6 px-6 pb-4 pt-2'
             keyboardShouldPersistTaps='handled'
           >
             <Stack className='gap-1'>
@@ -133,7 +137,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                   value={withCommas(amount)}
                   onValueChange={text => setAmount(onlyDigits(text))}
                   // placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(docs/DESIGN.md 4.3)
-                  className='flex-1 text-2xl tabular-nums'
+                  className={cn('flex-1 text-2xl tabular-nums', filledField)}
                 />
                 <Text size='lg'>원</Text>
               </Stack>
@@ -151,7 +155,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
               accessibilityRole='button'
               accessibilityState={{ expanded: more }}
               onPress={() => setMore(open => !open)}
-              className='-mx-4 gap-1 px-4 py-3 active:bg-surface-hover'
+              className='-mx-6 gap-1 px-6 py-3 active:bg-surface-hover'
             >
               <Text>{more ? '선택 항목 접기' : '선택 항목 더 보기'}</Text>
               <Text size='sm' tone='muted'>
@@ -190,7 +194,13 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                 <Stack className='gap-2'>
                   <Stack className='gap-1'>
                     <Label htmlFor='memo'>메모</Label>
-                    <Input id='memo' label='메모' value={memo} onValueChange={setMemo} />
+                    <Input
+                      id='memo'
+                      label='메모'
+                      value={memo}
+                      onValueChange={setMemo}
+                      className={filledField}
+                    />
                   </Stack>
                   <Stack direction='row' wrap className='gap-3'>
                     {memoSuggestions.map(suggestion => (
@@ -221,7 +231,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                     accessibilityLabel='고정비'
                     accessibilityState={{ checked: fixed }}
                     onPress={() => setFixed(on => !on)}
-                    className='-mx-4 flex-row items-center justify-between gap-3 px-4 py-3 active:bg-surface-hover'
+                    className='-mx-6 flex-row items-center justify-between gap-3 px-6 py-3 active:bg-surface-hover'
                   >
                     <Stack className='flex-1 gap-1'>
                       <Text>고정비</Text>
@@ -249,7 +259,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
             )}
           </ScrollView>
 
-          <View className='gap-2 border-t border-border px-4 pb-4 pt-3'>
+          <View className='gap-2 px-6 pb-4 pt-3'>
             {/*
               저장이 안 되는 이유가 바뀌면 스크린 리더가 조용히 알린다. 접근성 prop만 가진 View는 New Architecture가
               평탄화해 live region이 사라지므로 collapsable={false}로 네이티브 뷰를 남긴다(docs/DESIGN.md 3.7)
@@ -294,6 +304,7 @@ function Choices({
             key={option}
             label={option}
             selected={option === value}
+            className={option === value ? undefined : quietChip}
             onPress={() => onChange(optional && option === value ? '' : option)}
           />
         ))}

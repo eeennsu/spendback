@@ -2,23 +2,70 @@
 @import '@eeennsu/native/themes/base.css';
 
 /*
- * 앱 색(DS 스펙 C-5b). semantic 변수 값만 다시 선언한다. 값과 이유는 docs/DESIGN.md 2장.
+ * 실험(exp/toss-look): 토스풍 인상이 DS 어디를 바꿔야 나오는지 앱에서 먼저 본다. 결과는 DS R26 라운드로 옮긴다.
+ *
+ * 앱 색(DS 스펙 C-5b). semantic 변수 값만 다시 선언한다. 회색 canvas 위에 흰 surface를 올려 층을 만든다.
+ * 토스 파랑 #3182F6은 흰 글자와 3.7:1이라 4.5:1을 넘는 가장 가까운 값(#206FEA, 4.64)을 쓴다. 빨강도 같다.
  * RN은 :root와 @media 두 블록이다. 웹의 .dark 블록은 RN에서 적용되지 않는다(DS 알려진 동작 15).
  */
 :root {
-  --bg-brand: oklch(50% 0.09 175);
-  --bg-brand-hover: oklch(45% 0.08 175);
+  --bg-canvas: #f2f4f6;
+  --bg-surface: #ffffff;
+  --bg-surface-muted: #f2f4f6;
+  --bg-surface-hover: #e5e8eb;
+  --bg-brand: #206fea;
+  --bg-brand-hover: #1b64da;
+  --bg-danger: #dc2a38;
+  --bg-danger-hover: #c21f2d;
+  --fg-default: #191f28;
+  --fg-muted: #6b7684;
+  --border-default: #e5e8eb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-brand: oklch(74% 0.11 172);
-    --bg-brand-hover: oklch(80% 0.09 172);
+    --bg-canvas: #101013;
+    --bg-surface: #1e1e24;
+    --bg-surface-muted: #2c2c35;
+    --bg-surface-hover: #3a3a45;
     /*
-     * 밝은 청록과 다크 빨강 위의 흰 글자는 4.5:1이 안 되어 거의 검은 글자를 쓴다. DS 0.3.0부터 base 다크 기본값과
-     * 같지만, brand를 다시 선언했으므로 그 위 글자도 짝으로 둔다(DS 스펙 C-5b 짝 대비).
+     * 다크도 진한 파랑·빨강 위 흰 글자다(4.64 · 4.74). DS base 다크는 그 위 글자가 검은색이라 흰색으로 다시 선언한다.
+     * 글자 빨강은 fg-danger로 따로 밝힌다(surface 위 5.98). 글자 파랑(text-brand)은 bg-brand와 같은 변수라
+     * surface 위 3.57로 4.5에 못 미친다. 흰 글자 4.5와 어두운 표면 위 4.5를 한 값으로 동시에 맞출 수 없어
+     * DS에 fg-brand가 따로 있어야 한다(R26 후보).
      */
-    --fg-on-brand: oklch(13% 0.028 261.692);
-    --fg-on-danger: oklch(13% 0.028 261.692);
+    --bg-brand: #206fea;
+    --bg-brand-hover: #1b64da;
+    --bg-danger: #dc2a38;
+    --bg-danger-hover: #c21f2d;
+    --fg-default: #ededef;
+    --fg-muted: #9e9ea4;
+    --fg-danger: #ff6b6b;
+    --fg-on-brand: #ffffff;
+    --fg-on-danger: #ffffff;
+    --border-default: #2c2c35;
   }
+}
+
+/*
+ * 계약 밖(DS R22 후보 B): @theme 값 덮기. 모서리·글자·글꼴은 @theme 고정값이라 :root로는 안 바뀐다.
+ * RN line-height는 배수로 쓴다(DS native 래퍼와 같다). rounded-xl은 DS 어휘에 없는 새 클래스다.
+ */
+@theme {
+  --font-sans: Pretendard;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --text-lg: 18px;
+  --text-lg--line-height: 1.4444444444444444;
+  --text-lg--font-weight: 600;
+  --text-xl: 22px;
+  --text-xl--line-height: 1.3636363636363635;
+  --text-xl--font-weight: 700;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 1.2857142857142858;
+  --text-2xl--font-weight: 700;
 }

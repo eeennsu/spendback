@@ -1,4 +1,10 @@
-import { formatPercent, formatWon, formatWonFraction } from '../src/domain/format';
+import {
+  formatDate,
+  formatPercent,
+  formatPeriod,
+  formatWon,
+  formatWonFraction,
+} from '../src/domain/format';
 
 describe('formatWon', () => {
   test.each([
@@ -36,5 +42,23 @@ describe('formatPercent', () => {
 
   test('전체가 0이면 비율을 정할 수 없다', () => {
     expect(() => formatPercent(1, 0)).toThrow(RangeError);
+  });
+});
+
+describe('formatDate', () => {
+  test('월 일 요일로 쓴다(내역 날짜 머리, 회고)', () => {
+    expect(formatDate('2026-09-24')).toBe('9월 24일 목요일');
+    expect(formatDate('2026-10-04')).toBe('10월 4일 일요일');
+  });
+});
+
+describe('formatPeriod', () => {
+  test('주간은 첫날과 끝날, 끝날이 같은 달이면 달을 한 번만 쓴다', () => {
+    expect(formatPeriod('weekly', '2026-09-21')).toBe('9월 21일~27일');
+    expect(formatPeriod('weekly', '2026-09-28')).toBe('9월 28일~10월 4일');
+  });
+
+  test('월간은 달이다', () => {
+    expect(formatPeriod('monthly', '2026-09-01')).toBe('9월');
   });
 });

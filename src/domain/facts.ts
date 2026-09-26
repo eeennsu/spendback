@@ -181,3 +181,5 @@ export function computeFacts({
     incomeRatio: kind === 'monthly' && income > 0 ? { income, expense: sum(expenses) } : undefined,
   };
 }
+
+export type Facts = ReturnType<typeof computeFacts>;

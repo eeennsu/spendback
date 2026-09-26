@@ -1,5 +1,8 @@
 import { sql } from 'drizzle-orm';
-import { check, index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+
+import type { Output } from '../retro/check';
+import type { KeyedFacts } from '../retro/keys';
 
 /**
  * PRD 7장 데이터 모델. 도메인 타입(src/domain/types.ts)은 여기서 추론한다.
@@ -102,3 +105,23 @@ export const budgets = sqliteTable('budgets', {
     .$type<Array<{ categoryId: number; amount: number }>>()
     .notNull(),
 });
+
+/**
+ * 회고(PRD 4.6). (kind, periodStart)마다 1개이고, 재생성에 성공하면 덮어쓴다. 폴백 상태는 저장하지 않는다.
+ * facts는 LLM이 본 키와 값이다. 문장은 이 스냅샷으로 채우므로 나중에 이름을 바꿔도 회고는 그대로다
+ */
+export const retrospectives = sqliteTable(
+  'retrospectives',
+  {
+    id: id(),
+    kind: text('kind', { enum: ['weekly', 'monthly'] }).notNull(),
+    periodStart: text('period_start').notNull(),
+    periodEnd: text('period_end').notNull(),
+    facts: text('facts', { mode: 'json' }).$type<KeyedFacts>().notNull(),
+    output: text('output', { mode: 'json' }).$type<Output>().notNull(),
+    modelId: text('model_id').notNull(),
+    promptVersion: text('prompt_version').notNull(),
+    createdAt: createdAt(),
+  },
+  t => [uniqueIndex('retrospectives_period').on(t.kind, t.periodStart)],
+);

@@ -1,10 +1,13 @@
 import { type DB, open } from '@op-engineering/op-sqlite';
 import type { OPSQLiteDatabase } from 'drizzle-orm/op-sqlite';
 import { migrate } from 'drizzle-orm/op-sqlite/migrator';
-import { drizzle } from 'drizzle-orm/sqlite-proxy';
+import { type SqliteRemoteDatabase, drizzle } from 'drizzle-orm/sqlite-proxy';
 
 import migrations from './migrations/migrations';
 import * as schema from './schema';
+
+/** 저장소 함수는 db를 인자로 받는다. 테스트는 같은 드라이버를 node:sqlite로 잇는다(jest/db.ts) */
+export type Db = SqliteRemoteDatabase<typeof schema>;
 
 let connection: DB | undefined;
 
@@ -23,7 +26,7 @@ function sqlite() {
  * 동작하지 않는다(drizzle-orm 0.45.3, 1.0.0-rc.4 모두). 범용 드라이버 sqlite-proxy로 잇는다.
  * proxy는 run 말고는 행을 값 배열로 받는다. get은 첫 행 하나다.
  */
-export const db = drizzle(
+export const db: Db = drizzle(
   async (query, params, method) => {
     if (method === 'run') {
       await sqlite().execute(query, params);

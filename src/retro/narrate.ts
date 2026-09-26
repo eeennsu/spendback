@@ -40,7 +40,7 @@ export const MIN_RECORDS = 3;
 export const MAX_ATTEMPTS = 3;
 
 /** 지금까지 받은 출력에서 완성된 필드. 문법이 문장에 따옴표를 막으므로 정규식으로 충분하다 */
-function completedFields(text: string): Field[] {
+export function completedFields(text: string): Field[] {
   const fields: Field[] = [];
   const headline = /"headline":\s*"([^"]*)"/.exec(text);
   if (headline) fields.push({ field: 'headline', text: headline[1] });
@@ -58,6 +58,7 @@ export async function narrate({
   names,
   generate,
   signal,
+  seed = Math.floor(Math.random() * 2 ** 31),
   onSentence,
   onRetry,
 }: {
@@ -66,6 +67,8 @@ export async function narrate({
   generate: Generate;
   /** 사용자가 생성을 취소한다 */
   signal?: AbortSignal;
+  /** 시도마다 1씩 더한다. "다시 만들기"가 같은 문장을 내지 않게 기본값은 무작위다 */
+  seed?: number;
   /** 검사를 통과해 값을 채운 문장. 완성된 순서로 온다 */
   onSentence?: (sentence: Sentence) => void;
   /** 화면에 나간 문장을 지우고 "다시 쓰는 중"으로 바꾼다 */
@@ -89,7 +92,7 @@ export async function narrate({
     let failed = false;
     try {
       const raw = await generate(
-        { ...request, seed: attempt },
+        { ...request, seed: seed + attempt - 1 },
         token => {
           if (failed) return;
           text += token;

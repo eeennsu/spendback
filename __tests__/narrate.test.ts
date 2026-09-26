@@ -25,6 +25,7 @@ function run(outputs: Array<string | Error>, facts = sampleFacts, signal?: Abort
     names: sampleNames,
     generate: fake.generate,
     signal,
+    seed: 1,
     onSentence: (s: Sentence) => sentences.push(s.rendered),
     onRetry: attempt => {
       retries.push(attempt);

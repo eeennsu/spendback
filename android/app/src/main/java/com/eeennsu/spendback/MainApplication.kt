@@ -23,7 +23,7 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
-    // global.css의 --font-sans(Pretendard)가 이 이름으로 풀린다. 무게는 res/font/pretendard.xml에서 고른다
+    // DS native 래퍼의 --font-sans(Pretendard, DS 스펙 C-7b R26)가 이 이름으로 풀린다. 무게는 res/font/pretendard.xml에서 고른다
     ReactFontManager.getInstance().addCustomFont(this, "Pretendard", R.font.pretendard)
     loadReactNative(this)
   }

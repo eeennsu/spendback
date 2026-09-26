@@ -19,7 +19,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@eeennsu/native": "0.3.0",
+    "@eeennsu/native": "0.4.0",
     "nativewind": "5.0.0-preview.4",
     "react": "19.2.3",
     "react-native": "0.87.1",
@@ -87,9 +87,6 @@
           }
         }
       }
-    },
-    "patchedDependencies": {
-      "@eeennsu/native@0.3.0": "patches/@eeennsu__native@0.3.0.patch"
     }
   }
 }

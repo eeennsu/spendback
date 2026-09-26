@@ -1,4 +1,4 @@
-import { Button, Stack, Text, cn } from '@eeennsu/native';
+import { Button, Card, Stack, Text, cn } from '@eeennsu/native';
 import type { ReactElement } from 'react';
 import { Pressable, ScrollView, Text as RNText, View } from 'react-native-css/components';
 
@@ -40,14 +40,11 @@ export function HomeMock({ variant = 'filled', onRecord }: HomeMockProps) {
   );
 }
 
-/** 회색 canvas 위의 흰 카드 한 장. 카드 사이는 gap-3(12)이다 */
-const card = 'gap-3 rounded-xl bg-surface p-6';
-
 function Filled({ data }: { data: typeof budget }) {
   return (
     <>
       {/* 금액 바로 밑에 할 수 있는 일(소비 속도)을 두고, 게이지와 그 설명은 뒤에 둔다 */}
-      <Stack className={card}>
+      <Card className='gap-3'>
         <Text size='sm' tone='muted'>
           {data.title}
         </Text>
@@ -72,7 +69,7 @@ function Filled({ data }: { data: typeof budget }) {
         <Text size='sm' tone='muted' className='tabular-nums'>
           {data.today}
         </Text>
-      </Stack>
+      </Card>
 
       <Section title='고정비' aside={fixedCosts.progress}>
         <Text size='sm' tone='muted'>
@@ -87,7 +84,7 @@ function Filled({ data }: { data: typeof budget }) {
                 {item.detail}
               </Text>
             </Stack>
-            <Text size='sm' className='text-brand'>
+            <Text size='sm' className='text-fg-brand'>
               기록
             </Text>
           </Row>
@@ -141,7 +138,7 @@ function Filled({ data }: { data: typeof budget }) {
 function FirstRun() {
   return (
     <>
-      <Stack className={card}>
+      <Card className='gap-3'>
         <Text size='sm' tone='muted'>
           9월 예산
         </Text>
@@ -150,7 +147,7 @@ function FirstRun() {
           예산을 정하면 남은 금액과 쓰는 속도를 여기에 보여 줘요
         </Text>
         <Button label='예산 정하기' variant='secondary' className='self-start' />
-      </Stack>
+      </Card>
 
       <Section title='최근 지출'>
         <Text size='sm' tone='muted'>
@@ -171,7 +168,7 @@ function Section({
   children: ReactElement | ReactElement[] | (ReactElement | ReactElement[])[];
 }) {
   return (
-    <Stack className={card}>
+    <Card className='gap-3'>
       <Stack direction='row' align='center' justify='between' className='gap-3'>
         <Text heading='2' size='lg'>
           {title}
@@ -185,7 +182,7 @@ function Section({
         )}
       </Stack>
       {children}
-    </Stack>
+    </Card>
   );
 }
 

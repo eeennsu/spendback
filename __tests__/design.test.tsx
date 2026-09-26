@@ -8,13 +8,15 @@ import { HomeMock } from '../src/preview/HomeMock';
 import { Meter } from '../src/ui/Meter';
 
 /**
- * 앱 색(global.css의 C-5b 재선언)과 시안 화면(docs/DESIGN.md 2·4장).
- * 기대값은 global.css의 값이다(exp/toss-look 토스풍 실험).
+ * DS base 색과 시안 화면(docs/DESIGN.md 2·4장).
+ * 기대값은 DS 0.4.0 base 값이다. 앱은 색을 재선언하지 않는다(docs/DESIGN.md 2장).
  */
 const BRAND = '#206fea';
 const BRAND_HOVER = '#1b64da';
-const DANGER = '#dc2a38';
-const SURFACE_LIGHT = '#fff';
+const DANGER = '#e7000b';
+/** 글자 빨강은 채움 빨강과 다른 변수다 — 회색 canvas 위에서도 4.5:1(DS 스펙 R26 fg.danger) */
+const FG_DANGER = '#c10007';
+const SURFACE_MUTED = '#e5e7eb';
 
 async function mount(ui: ReactElement, scheme: 'light' | 'dark' = 'light') {
   await registerGlobalCss();
@@ -28,7 +30,7 @@ function rootStyle() {
   return (tree.props as { style?: Record<string, unknown> }).style ?? {};
 }
 
-describe('앱 색(C-5b)', () => {
+describe('DS base 색', () => {
   test('brand는 라이트에서 파랑이다', async () => {
     await mount(<Box className='bg-brand'>{null}</Box>);
     expect(rootStyle()).toMatchObject({ backgroundColor: BRAND });
@@ -39,14 +41,14 @@ describe('앱 색(C-5b)', () => {
     expect(rootStyle()).toMatchObject({ backgroundColor: BRAND });
   });
 
-  test('danger는 앱이 다시 선언한 빨강이다', async () => {
+  test('danger는 DS base 빨강이다', async () => {
     await mount(<Box className='bg-danger'>{null}</Box>);
     expect(rootStyle()).toMatchObject({ backgroundColor: DANGER });
   });
 });
 
 describe('글자', () => {
-  test('DS Text가 Pretendard와 앱의 글자 스텝으로 풀린다(@theme 덮기)', async () => {
+  test('DS Text가 Pretendard와 DS 글자 스텝으로 풀린다(DS 0.4.0 native 래퍼)', async () => {
     await mount(<Text size='2xl'>411,600원</Text>);
     expect(screen.getByText('411,600원')).toHaveStyle({
       fontFamily: 'Pretendard',
@@ -102,10 +104,10 @@ describe('Chip', () => {
     expect(screen.getByText('식비')).toHaveStyle({ color: '#fff' });
   });
 
-  test('고르지 않은 칩은 surface 표면이다', async () => {
+  test('고르지 않은 칩은 테두리 대신 surface-muted 채움이다', async () => {
     await mount(<Chip label='배달' />);
     expect(screen.getByRole('button', { name: '배달' })).toHaveStyle({
-      backgroundColor: SURFACE_LIGHT,
+      backgroundColor: SURFACE_MUTED,
     });
   });
 });
@@ -135,7 +137,7 @@ describe('홈 시안', () => {
     expect(screen.getByRole('progressbar', { name: '9월 예산 사용률' })).toBeOnTheScreen();
     expect(screen.getByText('휴대폰 요금')).toBeOnTheScreen();
     expect(screen.getByText('118,000 / 100,000원 · 18,000원 초과')).toHaveStyle({
-      color: DANGER,
+      color: FG_DANGER,
     });
     expect(screen.getByRole('button', { name: '기록' })).toHaveStyle({
       backgroundColor: BRAND,
@@ -159,7 +161,7 @@ describe('홈 시안', () => {
     await mount(<HomeMock variant='over' />);
 
     expect(screen.getByText('9월 예산')).toBeOnTheScreen();
-    expect(screen.getByText('18,000원 초과')).toHaveStyle({ color: DANGER });
+    expect(screen.getByText('18,000원 초과')).toHaveStyle({ color: FG_DANGER });
     expect(
       screen.getByRole('progressbar', { name: '9월 예산 사용률' }).props.accessibilityValue,
     ).toEqual({ text: '예산을 18,000원 넘었어요, 기간의 80% 지남' });

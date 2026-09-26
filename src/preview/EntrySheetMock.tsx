@@ -26,10 +26,6 @@ type EntrySheetMockProps = {
 
 const DATES = ['오늘', '어제', '다른 날'] as const;
 
-// 실험(exp/toss-look): 테두리 대신 회색 채움으로 칸과 칩을 구분한다. 포커스되면 DS의 brand 테두리가 그대로 난다
-const filledField = 'border-transparent bg-surface-muted';
-const quietChip = 'border-transparent bg-surface-muted';
-
 // 시안용 표시 변환. 실제 금액 포맷터는 도메인 계층에서 TDD로 만든다(PRD 12장 4번).
 const onlyDigits = (text: string) => text.replace(/\D/g, '').replace(/^0+/, '');
 const withCommas = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -137,7 +133,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                   value={withCommas(amount)}
                   onValueChange={text => setAmount(onlyDigits(text))}
                   // placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(docs/DESIGN.md 4.3)
-                  className={cn('flex-1 text-2xl tabular-nums', filledField)}
+                  className='flex-1 text-2xl tabular-nums'
                 />
                 <Text size='lg'>원</Text>
               </Stack>
@@ -194,13 +190,7 @@ export function EntrySheetMock({ expanded = false }: EntrySheetMockProps) {
                 <Stack className='gap-2'>
                   <Stack className='gap-1'>
                     <Label htmlFor='memo'>메모</Label>
-                    <Input
-                      id='memo'
-                      label='메모'
-                      value={memo}
-                      onValueChange={setMemo}
-                      className={filledField}
-                    />
+                    <Input id='memo' label='메모' value={memo} onValueChange={setMemo} />
                   </Stack>
                   <Stack direction='row' wrap className='gap-3'>
                     {memoSuggestions.map(suggestion => (
@@ -304,7 +294,6 @@ function Choices({
             key={option}
             label={option}
             selected={option === value}
-            className={option === value ? undefined : quietChip}
             onPress={() => onChange(optional && option === value ? '' : option)}
           />
         ))}

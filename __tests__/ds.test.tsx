@@ -8,13 +8,12 @@ import { DsCheckScreen } from '../src/preview/DsCheckScreen';
 /**
  * 디자인 시스템(@eeennsu/native) 연동 확인. className이 jest에서도 스타일로 풀려야 한다.
  * DS 컴포넌트가 react-native-css/components에서 import하기 때문이다(DS 구현 노트 F-11).
- * 기대값은 앱이 global.css에서 다시 선언한 토스풍 색이다(DS 스펙 C-5b, exp/toss-look).
+ * 기대값은 DS 0.4.0 base 값을 sRGB로 바꾼 것이다(DS 스펙 R26). 앱은 색을 재선언하지 않는다.
  */
 const BRAND = '#206fea';
-const FG_LIGHT = '#191f28';
-const SURFACE_LIGHT = '#fff';
-const SURFACE_DARK = '#1e1e24';
-const SURFACE_MUTED_LIGHT = '#f2f4f6';
+const FG_LIGHT = '#101828';
+const SURFACE_DARK = '#18181b';
+const SURFACE_MUTED_LIGHT = '#e5e7eb';
 const ON_BRAND = '#fff';
 
 async function mount(ui: ReactElement, scheme: 'light' | 'dark' = 'light') {
@@ -59,7 +58,8 @@ test('Label과 Textarea가 accessibilityLabelledBy로 이어진다', async () =>
   expect(textarea.props.accessibilityLabelledBy).toBe('memo-label');
   expect(textarea.props.multiline).toBe(true);
   expect(textarea.props.numberOfLines).toBe(5);
-  expect(textarea).toHaveStyle({ backgroundColor: SURFACE_LIGHT, fontSize: 16 });
+  // 입력 칸은 테두리 대신 surface-muted 채움이다(DS 알려진 동작 25)
+  expect(textarea).toHaveStyle({ backgroundColor: SURFACE_MUTED_LIGHT, fontSize: 16 });
 });
 
 test('다크 모드는 OS 색 구성표를 따른다', async () => {

@@ -168,11 +168,13 @@ spendback은 온디바이스 LLM이 소비 회고를 써 주는 Android 가계�
 
 **출력 형식**
 
-LLM은 아래 JSON만 출력한다. `insights`는 2~4개다.
+LLM은 아래 JSON만 출력한다. `insights`는 2~4개이고, 각 insight는 먼저 사실 묶음 id(`about`)를 쓰고 문장(`text`)을 쓴다.
 
 ```json
-{ "headline": "...", "insights": ["...", "..."], "suggestion": "..." }
+{ "headline": "...", "insights": [{ "about": "category.3", "text": "..." }, { "about": "tag.2", "text": "..." }], "suggestion": "..." }
 ```
+
+묶음과 키 이름 규칙은 `src/retro/keys.ts`에 있다. 증감과 예산 잔액은 방향까지 코드가 쓴 서술어 값("32,400원 늘었어요")이다.
 
 - 문장 안의 수치, 증감, 카테고리·이유 태그 이름은 플레이스홀더로만 쓴다. 이름 키는 표시 이름이 아니라 id로 만든다(`{category.<id>.name}`). 예를 들어 LLM이 `{category.<id>.name} 지출이 {category.<id>.change_phrase}. 전체 지출의 {category.<id>.share}를 차지했어요.`라고 쓰면, 코드가 `배달 지출이 32,000원 늘었어요. 전체 지출의 18%를 차지했어요.`로 채운다.
 - 증감 방향도 계산 결과이므로 "늘었어요 / 줄었어요 / 같았어요"까지 코드가 채운다.

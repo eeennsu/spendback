@@ -17,7 +17,7 @@ module.exports = [
   js.configs.recommended,
 
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx,mts}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -78,6 +78,12 @@ module.exports = [
       // Prettier
       'prettier/prettier': 'error',
     },
+  },
+
+  // 하네스 같은 PC 스크립트는 터미널에 진행을 찍는다
+  {
+    files: ['scripts/**'],
+    rules: { 'no-console': 'off' },
   },
 
   // Prettier와 겹치는 규칙을 끈다(반드시 마지막)

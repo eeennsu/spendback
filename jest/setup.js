@@ -16,4 +16,10 @@ jest.mock('react-native/Libraries/Utilities/NativeAppearance', () => ({
 }));
 
 // op-sqlite는 불러올 때 네이티브 모듈 상수를 읽는다. DB를 여는 테스트는 없어 open만 둔다(src/db/index.ts는 처음 쿼리할 때 연다)
-jest.mock('@op-engineering/op-sqlite', () => ({ open: jest.fn() }));
+jest.mock('@op-engineering/op-sqlite', () => ({
+  open: jest.fn(),
+  ANDROID_FILES_PATH: '/files',
+}));
+
+// llama.rn도 불러올 때 네이티브 모듈을 찾는다. 모델을 올리는 테스트는 저마다 모킹한다(__tests__/llama.test.ts)
+jest.mock('llama.rn', () => ({ initLlama: jest.fn() }));

@@ -11,6 +11,6 @@
   },
   // nativewind-env.d.ts는 glob에도 걸리지만 이름을 직접 적어 둔다. 없으면 Metro를 켤 때
   // react-native-css가 이 파일을 고쳐 쓴다(metro.config.js의 withNativewind)
-  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.mts", "nativewind-env.d.ts"],
   "exclude": ["**/node_modules", "**/Pods", "spike"]
 }

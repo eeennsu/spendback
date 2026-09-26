@@ -9,3 +9,5 @@ spike/
 *.md
 # drizzle-kit이 만든다
 src/db/migrations/
+# 평가 하네스 결과
+scripts/eval/results/

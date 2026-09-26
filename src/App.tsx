@@ -7,6 +7,7 @@ import { DbCheckScreen } from './preview/DbCheckScreen';
 import { DsCheckScreen } from './preview/DsCheckScreen';
 import { EntrySheetMock } from './preview/EntrySheetMock';
 import { HomeMock } from './preview/HomeMock';
+import { LlmCheckScreen } from './preview/LlmCheckScreen';
 
 const PREVIEWS = [
   { key: 'home', label: '홈', render: () => <HomeMock /> },
@@ -16,6 +17,7 @@ const PREVIEWS = [
   { key: 'entryMore', label: '입력 시트 펼침', render: () => <EntrySheetMock expanded /> },
   { key: 'ds', label: 'DS 확인', render: () => <DsCheckScreen /> },
   { key: 'db', label: 'DB 확인', render: () => <DbCheckScreen /> },
+  { key: 'llm', label: 'LLM 확인', render: () => <LlmCheckScreen /> },
 ] as const;
 
 type PreviewKey = (typeof PREVIEWS)[number]['key'];

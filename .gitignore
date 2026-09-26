@@ -25,3 +25,6 @@ npm-debug.log
 
 # testing
 /coverage
+
+# llama.rn의 Gradle이 빌드할 때마다 복사한다(Qualcomm Hexagon 백엔드)
+android/app/src/main/assets/ggml-hexagon/

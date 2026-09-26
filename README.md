@@ -18,6 +18,7 @@
 | `pnpm start` | Metro 개발 서버 |
 | `pnpm typecheck` · `pnpm lint` · `pnpm test` | 타입 검사, 린트, Jest |
 | `pnpm format` | Prettier 적용(`*.md`는 제외) |
+| `pnpm eval:models` · `pnpm eval` | 회고 문장 평가 하네스. 모델을 받고 facts 스냅샷으로 모델을 비교합니다([scripts/eval/README.md](scripts/eval/README.md)) |
 | `cd android && ./gradlew assembleRelease` | 릴리스 APK를 `android/app/build/outputs/apk/release/`에 만듭니다. Windows PowerShell에서는 `.\gradlew assembleRelease` |
 
 커밋 제목은 `feat` `fix` `refactor` `hotfix` `update` `chore` `docs` 중 하나의 접두어로 시작해야 합니다(commitlint).

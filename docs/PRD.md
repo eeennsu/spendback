@@ -1,6 +1,6 @@
 # spendback PRD
 
-> 상태: 초안 v0.9 · 2026-09-25 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증(기기, 모델 파일), LLM 스파이크, 부트스트랩 결과를 반영하고 고정비 관리를 추가. 디자인 시스템 연동(기기 확인 전)과 DESIGN.md 작성, 디자인 시스템 0.3.0 교체를 반영. 11장 미결 사항을 정했다(탭 3개, 예산 이어 쓰기, 소비 속도와 일할, 비교 기준, 백업, 조사, 하네스 기준). 에뮬레이터 확인을 반영
+> 상태: 초안 v0.9 · 2026-09-25 · 기획 인터뷰로 합의한 초기 기획에 1단계 검증(기기, 모델 파일), LLM 스파이크, 부트스트랩 결과를 반영하고 고정비 관리를 추가. 디자인 시스템 연동(기기 확인 전)과 DESIGN.md 작성, 디자인 시스템 0.3.0 교체를 반영. 11장 미결 사항을 정했다(탭 3개, 예산 이어 쓰기, 소비 속도와 일할, 비교 기준, 백업, 조사, 하네스 기준). 에뮬레이터 확인을 반영. 도메인 계층(12장 4번)을 반영
 >
 > 기획의 정본은 이 문서다. 앱의 디자인과 디자인 시스템 연동은 `docs/DESIGN.md`(12장 3번에서 작성)에 따로 둔다. 결정은 사용자와 합의한 것이므로, 바꿀 이유가 보이면 근거를 붙여 제안하고 합의한 뒤 반영한다. 결정의 이유는 13장에 있다.
 
@@ -281,14 +281,14 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 
 ## 7. 데이터 모델(초안)
 
-금액은 원 단위 정수다. 날짜는 기기 로컬 시간 기준 `YYYY-MM-DD` 문자열이고, 한 주의 시작은 월요일이다.
+금액은 원 단위 정수다. id는 SQLite 정수 자동 증가 키다. 날짜는 기기 로컬 시간 기준 `YYYY-MM-DD` 문자열이고, 한 주의 시작은 월요일이다.
 
 | 엔티티 | 주요 필드 |
 |---|---|
 | Transaction | id, type(expense·income), amount, date, categoryId, reasonTagId?, satisfaction?(regret·neutral·satisfied), memo?, paymentMethod?(card·cash·transfer), isFixed, fixedCostId?(isFixed인 거래만), createdAt, updatedAt |
 | Category | id, type(expense·income), name, sortOrder, hidden, isDefault |
 | ReasonTag | id, name, sortOrder, hidden, isDefault |
-| Budget | effectiveFrom(`YYYY-MM`), total, categoryBudgets(categoryId → amount). 한 달의 예산은 effectiveFrom이 그 달 이하인 것 중 가장 늦은 것이다. 예산을 바꾸면 그 달을 effectiveFrom으로 저장한다(4.3) |
+| Budget | effectiveFrom(`YYYY-MM`), total, categoryBudgets(`[{ categoryId, amount }]`, 예산을 정한 카테고리만, JSON 열). 한 달의 예산은 effectiveFrom이 그 달 이하인 것 중 가장 늦은 것이다. 예산을 바꾸면 그 달을 effectiveFrom으로 저장한다(4.3) |
 | FixedCost | id, name, amount(예상 금액), categoryId(지출), dayOfMonth(1~31), paymentMethod?, sortOrder, hidden, createdAt, updatedAt |
 | Retrospective | id, kind(weekly·monthly), periodStart, periodEnd, facts, output, modelId, promptVersion, createdAt. (kind, periodStart)마다 1개 |
 | Model(앱에 내장한 레지스트리) | id, repo, commit, fileName, sizeBytes, sha256, license. 값은 6장 레지스트리 표를 따른다 |
@@ -302,7 +302,7 @@ JSON 내보내기·가져오기. 파일은 Android 공유 시트로 주고받는
 |---|---|
 | 코어 | React Native 0.87.x CLI(New Architecture 전용), TypeScript, Hermes V1(RN 0.87은 항상 켜져 있어 설정하지 않는다), React Compiler 1.0(Babel 플러그인) |
 | 패키지 매니저 | pnpm 10(`node-linker=hoisted`), Node ^22.13(`.nvmrc`는 22.23.3). pnpm은 스파이크에서 검증했고 옆 폴더 프로젝트와 같은 메이저인 10을 쓴다 |
-| DB | op-sqlite + drizzle-orm / drizzle-kit(마이그레이션) |
+| DB | op-sqlite 18 + drizzle-orm 0.45 / drizzle-kit 0.31(마이그레이션). drizzle의 op-sqlite 드라이버가 op-sqlite 18과 맞지 않아 범용 드라이버 sqlite-proxy로 잇는다(13장). 스키마의 정본은 `src/db/schema.ts`이고 도메인 타입도 여기서 추론한다. 기본 카테고리와 이유 태그는 마이그레이션(`0001_seed.sql`)으로 넣는다 |
 | 키-값 저장소 | react-native-mmkv 4(Nitro) |
 | 화면 이동 | React Navigation 7 정적 API |
 | 상태 | Zustand(UI 상태만 관리하고, 데이터의 기준은 DB) |
@@ -323,7 +323,7 @@ Android만 대상이므로 Windows와 macOS 양쪽에서 개발·빌드할 수 �
 
 ## 9. 테스트 전략
 
-- **단위(Jest)**: 지표 계산기, 예산 일할과 이어 쓰기, 홈 소비 속도, 고정비 체크리스트 판정(말일, 등록일 경계), 날짜와 주 경계, 금액 포맷터, 플레이스홀더 렌더러(조사 고르기 포함), GBNF 생성기, 한글 수사 검사기, 백업 스키마. 핵심 원칙을 지키는 부분이라 TDD로 만든다.
+- **단위(Jest)**: 지표 계산기, 예산 일할과 이어 쓰기, 홈 소비 속도, 고정비 체크리스트 판정(말일, 등록일 경계), 날짜와 주 경계, 금액 포맷터, 플레이스홀더 렌더러(조사 고르기 포함), GBNF 생성기, 한글 수사 검사기, 백업 스키마. 핵심 원칙을 지키는 부분이라 TDD로 만든다. 마이그레이션 SQL은 Node 내장 SQLite(Node 22.13 이상)로 적용해 기본값을 확인한다.
 - **컴포넌트(RNTL 14)**: 입력 폼의 3번 탭 흐름, 회고 화면의 상태(생성 중 / 완료 / 폴백 / 기록 부족 / 고정비 미기록 알림)
 - **E2E(Maestro)**: 입력 → 내역 → 회고 열람
 - **LLM**: 평가 하네스(6장)
@@ -358,7 +358,7 @@ UI는 디자인 시스템 연동과 DESIGN.md가 준비된 뒤에 만들고, 그
 1. **LLM 스파이크**: S24+에서 llama.rn과 후보 모델의 로드 시간, 토큰 속도, 메모리, 플레이스홀더 GBNF 동작을 측정한다. 가장 큰 불확실성이라 가장 먼저 한다. (2026-09-24 완료. 결과는 6장, 10장, 11장, 13장에 반영했다)
 2. **프로젝트 부트스트랩**: RN CLI, pnpm, TypeScript, 린트, Jest (2026-09-24 완료. 릴리스 빌드와 S24+에서 디버그 빌드 실행(Metro 연결)까지 확인했다)
 3. **디자인 시스템 연동과 DESIGN.md**: 부트스트랩한 앱에 npm의 `@eeennsu/native`를 설치해 Expo 없이 기기에서 띄우고 연동 방식을 정한다. 앱마다 갈리는 축(색, 간격 리듬, 화면 구조)과 필요한 컴포넌트를 `docs/DESIGN.md`에 정의하고, 디자인 시스템에 없는 컴포넌트는 디자인 시스템을 개선해 배포한다 (2026-09-25 소스 작업 완료. 0.2.0을 연동해 Jest와 Metro 번들로 확인했고, DESIGN.md와 홈·입력 시트 시안을 만들었다. DS에 없던 것은 0.3.0으로 만들어 publish했고, spendback을 올려 임시 컴포넌트를 걷어 냈다. 2026-09-25 에뮬레이터(Android 16, S24+ 해상도)에서 확인했다. 남은 일: 실기기 확인(DESIGN.md 1.6))
-4. **도메인 계층**: 거래·카테고리·예산·고정비 스키마(drizzle), 지표 계산기, 예산 일할, 고정비 체크리스트 판정, 포맷터(TDD)
+4. **도메인 계층**: 거래·카테고리·예산·고정비 스키마(drizzle), 지표 계산기, 예산 일할, 고정비 체크리스트 판정, 포맷터(TDD) (2026-09-26 완료. `src/domain`의 계산은 단위 테스트로, op-sqlite 연동은 에뮬레이터에서 마이그레이션과 기본값을 읽어 확인했다. 확인 화면 `src/preview/DbCheckScreen.tsx`는 6번에서 지운다. 회고 테이블은 5번에서 더한다)
 5. **회고 파이프라인**: facts → GBNF 생성 → `narrate` → 사후 검사 → 렌더러, 평가 하네스
 6. **UI**(3번이 끝난 뒤): 입력 폼, 홈, 내역, 회고, 설정
 7. **마무리**: 모델 관리, 백업, E2E
@@ -390,4 +390,6 @@ UI는 디자인 시스템 연동과 DESIGN.md가 준비된 뒤에 만들고, 그
 | 백업 가져오기는 전체 교체하고, 교체 직전 데이터를 한 벌 보관한다 | 병합하려면 같은 거래를 판별할 기준이 필요한데 id가 기기마다 달라 중복이 생긴다. 잘못 고른 파일로 몇 달치 기록이 사라지지 않게 한 번 되돌릴 수 있게 한다 |
 | 기본 모델은 Qwen3.5-2B로 두고 평가 하네스로 확인한다 | 스파이크에서 세 후보가 모두 로드됐다. Qwen은 속도가 EXAONE 다음이고 라이선스가 Apache-2.0이다. 한국어 자연스러움은 Kanana가 나았으므로 하네스에서 비교한다 |
 | facts 키는 표시 이름이 아니라 id로 만든다 | 사용자가 이름을 바꾸거나 이름에 숫자를 넣어도 키가 흔들리지 않는다(2장). 키 이름 규칙 표는 회고 파이프라인을 만들 때 코드와 함께 둔다 |
+| id는 SQLite 정수 자동 증가 키로 둔다 | SQLite 기본이라 id를 만들 라이브러리가 필요 없다. 백업 가져오기는 전체 교체라 기기 사이에 id가 섞이지 않는다. facts 키(`{category.<id>.name}`)도 짧아진다 |
+| drizzle은 sqlite-proxy 드라이버로 op-sqlite에 잇는다 | drizzle-orm의 op-sqlite 드라이버는 op-sqlite 옛 API(`executeAsync`, `rows._array`)를 불러 op-sqlite 18에서 동작하지 않는다(0.45.3과 1.0.0-rc.4 모두, 2026-09-26 확인). sqlite-proxy는 drizzle의 공개 드라이버라 콜백 하나로 잇고, drizzle 마이그레이터는 드라이버와 상관없이 동작한다. drizzle이 op-sqlite 새 API를 지원하면 공식 드라이버로 바꾼다 |
 | 비율은 사사오입한다 | 가장 익숙한 반올림이라 사용자가 머릿속으로 계산한 값과 어긋나지 않는다. 표시 오차가 0.5%p 안이다. 예산 초과 여부는 비율이 아니라 금액(남은 예산 < 0)으로 정하므로, 99.6%가 100%로 보여도 초과로 잘못 표시되지 않는다 |

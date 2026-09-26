@@ -3,15 +3,26 @@ import type { Budget } from '../src/domain/types';
 
 type Tx = FactsInput['transactions'][number];
 
+/** 카테고리와 이유 태그 id */
+const FOOD = 1;
+const CAFE = 2;
+const DELIVERY = 3;
+const TRANSPORT = 4;
+const RENT = 5;
+const SALARY = 6;
+const SIDE = 7;
+const NEED = 1;
+const IMPULSE = 2;
+
 let seq = 0;
 function tx(date: string, amount: number, overrides: Partial<Tx> = {}): Tx {
   seq += 1;
   return {
-    id: `t${seq}`,
+    id: seq,
     type: 'expense',
     amount,
     date,
-    categoryId: 'food',
+    categoryId: FOOD,
     reasonTagId: null,
     satisfaction: null,
     memo: null,
@@ -21,10 +32,10 @@ function tx(date: string, amount: number, overrides: Partial<Tx> = {}): Tx {
 }
 
 const categories = [
-  { id: 'food', sortOrder: 0 },
-  { id: 'cafe', sortOrder: 1 },
-  { id: 'delivery', sortOrder: 2 },
-  { id: 'transport', sortOrder: 3 },
+  { id: FOOD, sortOrder: 0 },
+  { id: CAFE, sortOrder: 1 },
+  { id: DELIVERY, sortOrder: 2 },
+  { id: TRANSPORT, sortOrder: 3 },
 ];
 
 /** 2026-09-21(월) ~ 27(일). 직전 주는 14 ~ 20일 */
@@ -65,9 +76,9 @@ describe('기간', () => {
 describe('총지출', () => {
   const transactions = [
     tx('2026-09-21', 10000),
-    tx('2026-09-22', 20000, { categoryId: 'cafe' }),
-    tx('2026-09-25', 500000, { isFixed: true, categoryId: 'rent' }),
-    tx('2026-09-23', 3000000, { type: 'income', categoryId: 'salary' }),
+    tx('2026-09-22', 20000, { categoryId: CAFE }),
+    tx('2026-09-25', 500000, { isFixed: true, categoryId: RENT }),
+    tx('2026-09-23', 3000000, { type: 'income', categoryId: SALARY }),
     tx('2026-09-28', 99999), // 다음 주
   ];
 
@@ -118,16 +129,16 @@ describe('카테고리', () => {
   test('합계를 큰 순서로, 같으면 카테고리 순서로 낸다. 비중의 분모는 변동비 합계다', () => {
     const f = facts({
       transactions: [
-        tx('2026-09-21', 5000, { categoryId: 'delivery' }),
-        tx('2026-09-22', 5000, { categoryId: 'cafe' }),
+        tx('2026-09-21', 5000, { categoryId: DELIVERY }),
+        tx('2026-09-22', 5000, { categoryId: CAFE }),
         tx('2026-09-23', 9000),
-        tx('2026-09-23', 50000, { categoryId: 'transport', isFixed: true }),
+        tx('2026-09-23', 50000, { categoryId: TRANSPORT, isFixed: true }),
       ],
     });
     expect(f.categories).toEqual([
-      { categoryId: 'food', amount: 9000 },
-      { categoryId: 'cafe', amount: 5000 },
-      { categoryId: 'delivery', amount: 5000 },
+      { categoryId: FOOD, amount: 9000 },
+      { categoryId: CAFE, amount: 5000 },
+      { categoryId: DELIVERY, amount: 5000 },
     ]);
   });
 
@@ -135,31 +146,31 @@ describe('카테고리', () => {
     const transactions = [
       // 직전 주
       tx('2026-09-14', 10000),
-      tx('2026-09-14', 30000, { categoryId: 'cafe' }),
-      tx('2026-09-15', 8000, { categoryId: 'transport' }),
+      tx('2026-09-14', 30000, { categoryId: CAFE }),
+      tx('2026-09-15', 8000, { categoryId: TRANSPORT }),
       // 이번 주
       tx('2026-09-21', 30000), // food +20,000
-      tx('2026-09-22', 20000, { categoryId: 'delivery' }), // delivery +20,000(이번 금액이 작다)
-      tx('2026-09-23', 8000, { categoryId: 'transport' }), // transport 0
+      tx('2026-09-22', 20000, { categoryId: DELIVERY }), // delivery +20,000(이번 금액이 작다)
+      tx('2026-09-23', 8000, { categoryId: TRANSPORT }), // transport 0
       // cafe -30,000(이번 주에 없다)
     ];
 
     test('증감액 절댓값 순, 같으면 이번 금액 큰 순. 증감 0은 넣지 않는다', () => {
       expect(facts({ transactions }).topCategoryChanges).toEqual([
-        { categoryId: 'cafe', current: 0, previous: 30000, change: -30000 },
-        { categoryId: 'food', current: 30000, previous: 10000, change: 20000 },
-        { categoryId: 'delivery', current: 20000, previous: 0, change: 20000 },
+        { categoryId: CAFE, current: 0, previous: 30000, change: -30000 },
+        { categoryId: FOOD, current: 30000, previous: 10000, change: 20000 },
+        { categoryId: DELIVERY, current: 20000, previous: 0, change: 20000 },
       ]);
     });
 
     test('금액까지 같으면 카테고리 순서다', () => {
       const f = facts({
         transactions: [
-          tx('2026-09-21', 5000, { categoryId: 'delivery' }),
-          tx('2026-09-21', 5000, { categoryId: 'cafe' }),
+          tx('2026-09-21', 5000, { categoryId: DELIVERY }),
+          tx('2026-09-21', 5000, { categoryId: CAFE }),
         ],
       });
-      expect(f.topCategoryChanges?.map(c => c.categoryId)).toEqual(['cafe', 'delivery']);
+      expect(f.topCategoryChanges?.map(c => c.categoryId)).toEqual([CAFE, DELIVERY]);
     });
 
     test('3개까지다', () => {
@@ -181,11 +192,15 @@ describe('카테고리', () => {
 
 describe('예산 대비(변동비)', () => {
   const budgets: Budget[] = [
-    { effectiveFrom: '2026-08', total: 1240000, categoryBudgets: { food: 310000 } },
+    {
+      effectiveFrom: '2026-08',
+      total: 1240000,
+      categoryBudgets: [{ categoryId: FOOD, amount: 310000 }],
+    },
   ];
   const transactions = [
     tx('2026-08-03', 200000),
-    tx('2026-08-04', 50000, { categoryId: 'cafe' }),
+    tx('2026-08-04', 50000, { categoryId: CAFE }),
     tx('2026-08-05', 600000, { isFixed: true }),
   ];
 
@@ -193,7 +208,7 @@ describe('예산 대비(변동비)', () => {
     expect(facts({ period: AUGUST, budgets, transactions }).budget).toEqual({
       budget: 1240000,
       spent: 250000,
-      categories: [{ categoryId: 'food', budget: 310000, spent: 200000 }],
+      categories: [{ categoryId: FOOD, budget: 310000, spent: 200000 }],
     });
   });
 
@@ -201,7 +216,7 @@ describe('예산 대비(변동비)', () => {
     // 2026-08-03(월) 주: 1,240,000 ÷ 31 × 7
     const f = facts({ period: { kind: 'weekly', start: '2026-08-03' }, budgets, transactions });
     expect(f.budget).toMatchObject({ budget: 280000, spent: 250000 });
-    expect(f.budget?.categories).toEqual([{ categoryId: 'food', budget: 70000, spent: 200000 }]);
+    expect(f.budget?.categories).toEqual([{ categoryId: FOOD, budget: 70000, spent: 200000 }]);
   });
 
   test('예산이 없으면 없다', () => {
@@ -211,17 +226,17 @@ describe('예산 대비(변동비)', () => {
 
 describe('이유 태그와 후회', () => {
   const transactions = [
-    tx('2026-09-21', 12000, { reasonTagId: 'impulse', satisfaction: 'regret' }),
-    tx('2026-09-22', 8000, { reasonTagId: 'impulse' }),
-    tx('2026-09-22', 30000, { reasonTagId: 'need', satisfaction: 'regret' }),
+    tx('2026-09-21', 12000, { reasonTagId: IMPULSE, satisfaction: 'regret' }),
+    tx('2026-09-22', 8000, { reasonTagId: IMPULSE }),
+    tx('2026-09-22', 30000, { reasonTagId: NEED, satisfaction: 'regret' }),
     tx('2026-09-23', 5000),
-    tx('2026-09-24', 90000, { reasonTagId: 'need', satisfaction: 'regret', isFixed: true }),
+    tx('2026-09-24', 90000, { reasonTagId: NEED, satisfaction: 'regret', isFixed: true }),
   ];
 
   test('태그별 합계를 큰 순서로 낸다. 태그 없는 지출과 고정비는 뺀다', () => {
     expect(facts({ transactions }).reasonTags).toEqual([
-      { reasonTagId: 'need', amount: 30000 },
-      { reasonTagId: 'impulse', amount: 20000 },
+      { reasonTagId: NEED, amount: 30000 },
+      { reasonTagId: IMPULSE, amount: 20000 },
     ]);
   });
 
@@ -329,8 +344,8 @@ describe('같은 메모가 반복된 지출(변동비, 메모 완전 일치)', (
 
 describe('수입 대비 지출률(월간, 수입 기록이 있을 때만)', () => {
   const transactions = [
-    tx('2026-08-10', 2000000, { type: 'income', categoryId: 'salary' }),
-    tx('2026-08-20', 500000, { type: 'income', categoryId: 'side' }),
+    tx('2026-08-10', 2000000, { type: 'income', categoryId: SALARY }),
+    tx('2026-08-20', 500000, { type: 'income', categoryId: SIDE }),
     tx('2026-08-05', 600000, { isFixed: true }),
     tx('2026-08-06', 400000),
   ];

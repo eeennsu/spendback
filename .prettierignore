@@ -7,3 +7,5 @@ spike/
 .claude/
 # 문서는 손으로 정리한다(표 정렬로 diff가 커진다)
 *.md
+# drizzle-kit이 만든다
+src/db/migrations/

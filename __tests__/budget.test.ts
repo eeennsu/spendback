@@ -3,11 +3,22 @@ import type { Budget, Transaction } from '../src/domain/types';
 
 type Tx = Pick<Transaction, 'type' | 'isFixed' | 'amount' | 'date' | 'categoryId'>;
 
-function expense(date: string, amount: number, categoryId = 'food', isFixed = false): Tx {
+/** 카테고리 id */
+const FOOD = 1;
+const CAFE = 2;
+const DELIVERY = 3;
+const RENT = 5;
+const SALARY = 6;
+
+function expense(date: string, amount: number, categoryId = FOOD, isFixed = false): Tx {
   return { type: 'expense', isFixed, amount, date, categoryId };
 }
 
-function budget(effectiveFrom: string, total: number, categoryBudgets = {}): Budget {
+function budget(
+  effectiveFrom: string,
+  total: number,
+  categoryBudgets: Budget['categoryBudgets'] = [],
+): Budget {
   return { effectiveFrom, total, categoryBudgets };
 }
 
@@ -56,32 +67,42 @@ describe('weeklyBudget: 날마다 그 달 예산 ÷ 그 달 일수를 더한다'
 
   test('카테고리 예산은 그 주의 모든 날에 있을 때만 넣는다', () => {
     const budgets = [
-      budget('2026-09', 1200000, { food: 300000, cafe: 60000 }),
-      budget('2026-10', 1200000, { food: 310000 }),
+      budget('2026-09', 1200000, [
+        { categoryId: FOOD, amount: 300000 },
+        { categoryId: CAFE, amount: 60000 },
+      ]),
+      budget('2026-10', 1200000, [{ categoryId: FOOD, amount: 310000 }]),
     ];
     // food: 9월 3일 × 10,000 + 10월 4일 × 10,000. cafe는 10월에 없다
-    expect(weeklyBudget(budgets, '2026-09-28')?.categoryBudgets).toEqual({ food: 70000 });
+    expect(weeklyBudget(budgets, '2026-09-28')?.categoryBudgets).toEqual([
+      { categoryId: FOOD, amount: 70000 },
+    ]);
   });
 });
 
 describe('monthStatus: 홈 예산과 소비 속도(PRD 4.3)', () => {
-  const budgets = [budget('2026-09', 1200000, { food: 300000, delivery: 100000 })];
+  const budgets = [
+    budget('2026-09', 1200000, [
+      { categoryId: FOOD, amount: 300000 },
+      { categoryId: DELIVERY, amount: 100000 },
+    ]),
+  ];
 
   test('사용액은 이번 달 1일부터 오늘까지의 변동비다', () => {
     const status = monthStatus(
       budgets,
       [
         expense('2026-09-01', 700000),
-        expense('2026-09-24', 88400, 'delivery'),
+        expense('2026-09-24', 88400, DELIVERY),
         expense('2026-08-31', 50000), // 지난달
         expense('2026-09-25', 50000), // 내일
-        expense('2026-09-05', 500000, 'rent', true), // 고정비
+        expense('2026-09-05', 500000, RENT, true), // 고정비
         {
           type: 'income',
           isFixed: false,
           amount: 3000000,
           date: '2026-09-10',
-          categoryId: 'salary',
+          categoryId: SALARY,
         },
       ],
       '2026-09-24',
@@ -97,8 +118,8 @@ describe('monthStatus: 홈 예산과 소비 속도(PRD 4.3)', () => {
       fast: false,
     });
     expect(status?.categories).toEqual([
-      { categoryId: 'food', budget: 300000, spent: 700000 },
-      { categoryId: 'delivery', budget: 100000, spent: 88400 },
+      { categoryId: FOOD, budget: 300000, spent: 700000 },
+      { categoryId: DELIVERY, budget: 100000, spent: 88400 },
     ]);
   });
 

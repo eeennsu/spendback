@@ -46,12 +46,14 @@ export function weeklyBudget(budgets: Budget[], start: string): PeriodBudget | u
     return Math.floor(numerator / denominator);
   };
 
-  const categoryBudgets: Record<string, number> = {};
-  for (const categoryId of Object.keys(slices[0].budget.categoryBudgets)) {
-    if (slices.every(s => categoryId in s.budget.categoryBudgets)) {
-      categoryBudgets[categoryId] = prorate(b => b.categoryBudgets[categoryId]);
-    }
-  }
+  const amountFor = (budget: Budget, categoryId: number) =>
+    budget.categoryBudgets.find(c => c.categoryId === categoryId)?.amount;
+  const categoryBudgets = slices[0].budget.categoryBudgets
+    .filter(({ categoryId }) => slices.every(s => amountFor(s.budget, categoryId) !== undefined))
+    .map(({ categoryId }) => ({
+      categoryId,
+      amount: prorate(b => amountFor(b, categoryId) ?? 0),
+    }));
   return { total: prorate(b => b.total), categoryBudgets };
 }
 
@@ -64,7 +66,7 @@ export function monthStatus(budgets: Budget[], transactions: Spending[], today: 
   const budget = budgetForMonth(budgets, month);
   if (!budget) return undefined;
 
-  const spentBy = (categoryId?: string) =>
+  const spentBy = (categoryId?: number) =>
     transactions
       .filter(
         tx =>
@@ -95,7 +97,7 @@ export function monthStatus(budgets: Budget[], transactions: Spending[], today: 
     monthDays,
     /** 사용률(spent ÷ total)이 지난 비율보다 크다. 양변에 분모를 곱해 정수로 비교한다 */
     fast: spent * monthDays > dayOfMonth * budget.total,
-    categories: Object.entries(budget.categoryBudgets).map(([categoryId, amount]) => ({
+    categories: budget.categoryBudgets.map(({ categoryId, amount }) => ({
       categoryId,
       budget: amount,
       spent: spentBy(categoryId),

@@ -83,7 +83,7 @@ export function computeFacts({
   const previousVariable = between(prevStart, addDays(start, -1)).filter(isVariableExpense);
 
   const sortOrder = new Map(categories.map(c => [c.id, c.sortOrder]));
-  const orderOf = (categoryId: string) => sortOrder.get(categoryId) ?? Infinity;
+  const orderOf = (categoryId: number) => sortOrder.get(categoryId) ?? Infinity;
 
   const categoryTotals = totalsBy(variable, tx => tx.categoryId);
   const previousCategoryTotals = totalsBy(previousVariable, tx => tx.categoryId);
@@ -113,7 +113,7 @@ export function computeFacts({
   const busiestWeekday =
     kind === 'monthly' ? largestEntry(totalsBy(variable, tx => weekday(tx.date))) : undefined;
   const largest: Tx | undefined = [...variable].sort(
-    (a, b) => b.amount - a.amount || a.date.localeCompare(b.date) || a.id.localeCompare(b.id),
+    (a, b) => b.amount - a.amount || a.date.localeCompare(b.date) || a.id - b.id,
   )[0];
   const income = sum(current.filter(tx => tx.type === 'income'));
 
@@ -155,7 +155,7 @@ export function computeFacts({
     budget: periodBudget && {
       budget: periodBudget.total,
       spent: variableTotal,
-      categories: Object.entries(periodBudget.categoryBudgets).map(([categoryId, amount]) => ({
+      categories: periodBudget.categoryBudgets.map(({ categoryId, amount }) => ({
         categoryId,
         budget: amount,
         spent: categoryTotals.get(categoryId) ?? 0,
@@ -164,7 +164,7 @@ export function computeFacts({
     /** 합계 큰 순. 태그 없는 지출은 뺀다. 비중의 분모는 variable이다 */
     reasonTags: [...totalsBy(variable, tx => tx.reasonTagId)]
       .map(([reasonTagId, amount]) => ({ reasonTagId, amount }))
-      .sort((a, b) => b.amount - a.amount || (a.reasonTagId < b.reasonTagId ? -1 : 1)),
+      .sort((a, b) => b.amount - a.amount || a.reasonTagId - b.reasonTagId),
     regret: sum(variable.filter(tx => tx.satisfaction === 'regret')),
     /** 같은 금액이면 이른 날 */
     largest,

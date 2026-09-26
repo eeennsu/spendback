@@ -25,6 +25,8 @@ class CssUncachedFileStore extends FileStore {
 const config = {
   resolver: {
     blockList: [new RegExp(`^${spikeDir}[\\\\/]`)],
+    // drizzle-kit 마이그레이션. 내용은 babel inline-import가 넣고, Metro는 .sql을 소스로 알아야 바뀐 것을 본다
+    sourceExts: [...getDefaultConfig(__dirname).resolver.sourceExts, 'sql'],
   },
   cacheStores: [new CssUncachedFileStore({ root: path.join(os.tmpdir(), 'metro-cache') })],
 };

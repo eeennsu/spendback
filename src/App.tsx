@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StatusBar, useColorScheme } from 'react-native';
 import { ScrollView, View } from 'react-native-css/components';
 
+import { DbCheckScreen } from './preview/DbCheckScreen';
 import { DsCheckScreen } from './preview/DsCheckScreen';
 import { EntrySheetMock } from './preview/EntrySheetMock';
 import { HomeMock } from './preview/HomeMock';
@@ -14,6 +15,7 @@ const PREVIEWS = [
   { key: 'entry', label: '입력 시트', render: () => <EntrySheetMock /> },
   { key: 'entryMore', label: '입력 시트 펼침', render: () => <EntrySheetMock expanded /> },
   { key: 'ds', label: 'DS 확인', render: () => <DsCheckScreen /> },
+  { key: 'db', label: 'DB 확인', render: () => <DbCheckScreen /> },
 ] as const;
 
 type PreviewKey = (typeof PREVIEWS)[number]['key'];

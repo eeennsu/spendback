@@ -1,8 +1,9 @@
 import type { Facts } from '../domain/facts';
-import { type Field, type Output, checkField, fieldsOf, parseOutput } from './check';
-import { buildGrammar } from './grammar';
+import { type Field, type Output, type Problem, checkField, fieldsOf, parseOutput } from './check';
+import { buildFrames, frameFormat, headlineFrames, nameKeys } from './frames';
+import { buildFrameGrammar, buildGrammar } from './grammar';
 import { type KeyedFacts, type Names, factValues, keyFacts } from './keys';
-import { type Message, buildMessages } from './prompt';
+import { type Message, PROMPT_VERSION, type PromptVersion, buildMessages } from './prompt';
 import { render } from './render';
 
 /**
@@ -53,12 +54,48 @@ export function completedFields(text: string): Field[] {
   return fields;
 }
 
+/** 프롬프트 버전마다 요청, 스트림의 필드 읽기, 최종 출력 읽기, 필드 검사가 다르다. v3는 틀 id를 문장으로 펼친다 */
+type Format = {
+  request: { messages: Message[]; grammar: string };
+  fields: (text: string) => Field[];
+  parse: (raw: string) => Output | undefined;
+  check: (field: Field) => Problem[];
+};
+
+export function formatFor(keyed: KeyedFacts, version: PromptVersion): Format {
+  const frames = buildFrames(keyed);
+  if (version !== 'v3') {
+    return {
+      request: { messages: buildMessages(keyed, version, frames), grammar: buildGrammar(keyed) },
+      fields: completedFields,
+      parse: parseOutput,
+      check: field => checkField(keyed, field),
+    };
+  }
+  const values = factValues(keyed);
+  const names = nameKeys(keyed);
+  const headlines = headlineFrames(frames, text => render(text, values));
+  const format = frameFormat(keyed, frames);
+  return {
+    request: {
+      messages: buildMessages(keyed, version, frames, names),
+      grammar: buildFrameGrammar(
+        (headlines.length ? headlines : frames).map(f => f.id),
+        frames.map(f => f.id),
+        names,
+      ),
+    },
+    ...format,
+  };
+}
+
 export async function narrate({
   facts,
   names,
   generate,
   signal,
   seed = Math.floor(Math.random() * 2 ** 31),
+  version = PROMPT_VERSION,
   onSentence,
   onRetry,
 }: {
@@ -69,6 +106,8 @@ export async function narrate({
   signal?: AbortSignal;
   /** 시도마다 1씩 더한다. "다시 만들기"가 같은 문장을 내지 않게 기본값은 무작위다 */
   seed?: number;
+  /** 하네스가 버전을 비교할 때 준다 */
+  version?: PromptVersion;
   /** 검사를 통과해 값을 채운 문장. 완성된 순서로 온다 */
   onSentence?: (sentence: Sentence) => void;
   /** 화면에 나간 문장을 지우고 "다시 쓰는 중"으로 바꾼다 */
@@ -78,7 +117,8 @@ export async function narrate({
 
   const keyed = keyFacts(facts, names);
   const values = factValues(keyed);
-  const request = { messages: buildMessages(keyed), grammar: buildGrammar(keyed) };
+  const format = formatFor(keyed, version);
+  const request = format.request;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     if (signal?.aborted) return { status: 'cancelled' };
@@ -96,10 +136,10 @@ export async function narrate({
         token => {
           if (failed) return;
           text += token;
-          const fields = completedFields(text);
+          const fields = format.fields(text);
           for (const field of fields.slice(emitted)) {
             emitted += 1;
-            if (checkField(keyed, field).length) {
+            if (format.check(field).length) {
               failed = true;
               controller.abort();
               return;
@@ -111,9 +151,9 @@ export async function narrate({
       );
       if (signal?.aborted) return { status: 'cancelled' };
       if (failed) continue;
-      const output = parseOutput(raw);
+      const output = format.parse(raw);
       // 끊긴 출력, 스트림에서 못 본 필드(insight 개수 등)를 여기서 거른다
-      if (output && fieldsOf(output).every(f => checkField(keyed, f).length === 0)) {
+      if (output && fieldsOf(output).every(f => format.check(f).length === 0)) {
         return { status: 'done', keyed, output, attempts: attempt };
       }
     } catch (error) {

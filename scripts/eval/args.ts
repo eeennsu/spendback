@@ -2,10 +2,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import { MODELS } from '../../src/retro/models';
+import { PROMPT_VERSION, PROMPT_VERSIONS, type PromptVersion } from '../../src/retro/prompt';
 
 /**
  * 하네스 명령의 인자. 모델 id(없으면 전부), --dir <폴더>, --runs <횟수>, --only <스냅샷 id,…>,
- * 샘플링 비교용 --temp <온도>, --repeat <반복 벌점>
+ * 샘플링 비교용 --temp <온도>, --repeat <반복 벌점>, 프롬프트 비교용 --prompt <v1|v2|v3>
  */
 export function parseArgs(argv: string[]) {
   const option = (name: string) => {
@@ -13,7 +14,7 @@ export function parseArgs(argv: string[]) {
     return i < 0 ? undefined : argv[i + 1];
   };
   const optionValues = new Set(
-    ['dir', 'runs', 'only', 'temp', 'repeat']
+    ['dir', 'runs', 'only', 'temp', 'repeat', 'prompt']
       .map(option)
       .filter((v): v is string => v !== undefined),
   );
@@ -24,7 +25,12 @@ export function parseArgs(argv: string[]) {
       `모르는 모델: ${unknown.join(', ')}. 있는 것: ${MODELS.map(m => m.id).join(', ')}`,
     );
   }
+  const prompt = (option('prompt') ?? PROMPT_VERSION) as PromptVersion;
+  if (!PROMPT_VERSIONS.includes(prompt)) {
+    throw new Error(`모르는 프롬프트: ${prompt}. 있는 것: ${PROMPT_VERSIONS.join(', ')}`);
+  }
   return {
+    prompt,
     models: ids.length ? ids : MODELS.map(m => m.id),
     dir: option('dir'),
     runs: Number(option('runs') ?? 1),

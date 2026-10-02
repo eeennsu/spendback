@@ -42,7 +42,7 @@ test('필드가 완성될 때마다 틀을 펼쳐 값을 채운 문장을 순서
     '충동 태그가 붙은 지출은 54,000원으로 변동비의 29%였어요.',
     '다음 주에는 배달 지출 전에 꼭 필요한지 생각해 보세요.',
   ]);
-  expect(calls[0].grammar).toContain('frame ::=');
+  expect(calls[0].grammar).toContain('ins-0 ::=');
   expect(calls[0].messages[1].content).toContain('{category.3.name} = 배달');
 });
 

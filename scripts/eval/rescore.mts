@@ -68,7 +68,7 @@ const rescored = runs.map(r => {
   });
   const base = { ...r, promptTokens, attempts };
   if (!r.output || !r.rendered) return base;
-  return { ...base, auto: autoCheck(r.output, r.rendered, keyed) };
+  return { ...base, auto: autoCheck(r.output, r.rendered, keyed, snapshot.salient) };
 });
 const rescoredMeta = { ...meta, rescored: new Date().toISOString() };
 const out = file.replace(/\.json$/, '.rescored');

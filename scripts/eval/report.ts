@@ -81,6 +81,7 @@ export function summarize(runs: Run[]) {
     return s ? [s] : [];
   });
   const sentences = done.reduce((n, r) => n + 2 + (r.output?.insights.length ?? 0), 0);
+  const covered = auto.flatMap(a => (a.salient ? [a.salient] : []));
   return {
     runs: runs.length,
     done: done.length,
@@ -115,6 +116,10 @@ export function summarize(runs: Run[]) {
     banned: auto.reduce((n, a) => n + a.banned.length, 0),
     repeatedGroups: auto.reduce((n, a) => n + a.repeatedGroups, 0),
     misattributed: auto.reduce((n, a) => n + (a.misattributed?.length ?? 0), 0),
+    /** 눈에 띄는 사실이 정해진 스냅샷의 완료 회고 수, 그중 하나라도 놓친 회고, 첫 사실을 headline으로 고른 회고 */
+    salientRuns: covered.length,
+    missedSalient: covered.filter(c => c.missed.length > 0).length,
+    salientHeadline: covered.filter(c => c.headline).length,
     quality: Object.fromEntries(
       (Object.keys(QUALITY) as QualityName[]).map(name => [
         name,
@@ -137,7 +142,7 @@ export function markdown(runs: Run[], meta: Record<string, string>) {
   const qualityNames = Object.keys(QUALITY) as QualityName[];
   const qualityRows = stats.map(
     ({ model, s }) =>
-      `| ${model} | ${s.clean}/${s.runs} | ${s.sentences} | ${s.misattributed} | ${qualityNames.map(n => s.quality[n]).join(' | ')} |`,
+      `| ${model} | ${s.clean}/${s.runs} | ${s.sentences} | ${s.missedSalient}/${s.salientRuns} | ${s.salientHeadline}/${s.salientRuns} | ${s.misattributed} | ${qualityNames.map(n => s.quality[n]).join(' | ')} |`,
   );
   const speedRows = stats.map(
     ({ model, s }) =>
@@ -183,11 +188,11 @@ export function markdown(runs: Run[], meta: Record<string, string>) {
     '',
     '## 문장 품질 휴리스틱',
     '',
-    `| 모델 | 걸린 데 없는 회고 | 문장 | 다른 사실에 이름 | ${qualityNames.map(n => QUALITY_LABELS[n]).join(' | ')} |`,
-    `|---|---|---|---|${qualityNames.map(() => '---').join('|')}|`,
+    `| 모델 | 걸린 데 없는 회고 | 문장 | 놓친 사실 | headline 적중 | 다른 사실에 이름 | ${qualityNames.map(n => QUALITY_LABELS[n]).join(' | ')} |`,
+    `|---|---|---|---|---|---|${qualityNames.map(() => '---').join('|')}|`,
     ...qualityRows,
     '',
-    '완료한 회고의 문장 수다. "걸린 데 없는 회고"는 길이·문장 수·금지어·같은 묶음과 이 표의 항목에 하나도 걸리지 않은 회고다(scripts/eval/checks.ts).',
+    '완료한 회고의 문장 수다. "걸린 데 없는 회고"는 길이·문장 수·금지어·같은 묶음과 이 표의 문장 항목에 하나도 걸리지 않은 회고다(scripts/eval/checks.ts). "놓친 사실"은 꼭 말해야 할 사실이 정해진 스냅샷(snapshots.ts salient)에서 그 사실을 headline·insight에 쓰지 않은 회고, "headline 적중"은 첫 사실을 headline으로 고른 회고다.',
     '',
     '## 폰 시간 추정',
     '',

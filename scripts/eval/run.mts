@@ -136,7 +136,7 @@ async function runOnce(
     ...base,
     output: result.output,
     rendered,
-    auto: autoCheck(result.output, rendered, result.keyed),
+    auto: autoCheck(result.output, rendered, result.keyed, snapshot.salient),
   };
 }
 

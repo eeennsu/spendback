@@ -27,7 +27,9 @@ describe('총지출과 증감', () => {
       'total.change_phrase': '32,400원 늘었어요',
       'total.change_rate_phrase': '21% 늘었어요',
     });
-    const phrase = keyed.groups[0].facts.find(f => f.key === 'total.change_phrase');
+    const phrase = keyed.groups
+      .find(g => g.id === 'total')
+      ?.facts.find(f => f.key === 'total.change_phrase');
     expect(phrase?.kind).toBe('predicate');
   });
 
@@ -95,10 +97,10 @@ describe('카테고리', () => {
       .groups.filter(g => g.id.startsWith('category.'))
       .map(g => g.id);
     // 6번(생활)은 6위라 빠지고, 7번(문화·여가)은 증감 상위라 들어간다
-    expect(ids).toEqual([
-      'category.3',
+    expect(ids.sort()).toEqual([
       'category.1',
       'category.2',
+      'category.3',
       'category.4',
       'category.5',
       'category.7',
@@ -121,7 +123,7 @@ describe('나머지 묶음', () => {
       'largest.category': '배달',
       'largest.memo': '야식 치킨',
       'largest.date': '9월 24일 목요일',
-      'no_spend.days': '1일',
+      'no_spend.days': '하루',
       'busiest.day': '9월 26일 토요일',
       'memo.1.text': '편의점 커피',
       'memo.1.count': '5번',
@@ -154,6 +156,54 @@ describe('나머지 묶음', () => {
       'busiest.weekday': '토요일',
       'income.amount': '3,200,000원',
       'income.expense_rate': '85%',
+      'income.balance_phrase': '480,000원 남았어요',
     });
+  });
+
+  test('수입보다 많이 쓰면 더 쓴 금액을 쓴다', () => {
+    const v = values({
+      ...base,
+      kind: 'monthly',
+      incomeRatio: { income: 1750000, expense: 1964000 },
+    });
+    expect(v['income.balance_phrase']).toBe('214,000원 더 썼어요');
+  });
+
+  test('날수가 하루면 "하루", 그 밖은 "N일"이다', () => {
+    expect(values({ ...base, noSpendDays: 5 })['no_spend.days']).toBe('5일');
+  });
+});
+
+describe('눈에 띄는 순서', () => {
+  const order = (facts: Facts) => keyFacts(facts, names).groups.map(g => g.id);
+
+  test('증감이 큰 카테고리, 총지출, 후회 순이다(문화·여가는 30,000원에서 0원)', () => {
+    expect(order(base).slice(0, 4)).toEqual(['category.3', 'category.7', 'total', 'regret']);
+  });
+
+  test('예산을 넘으면 예산이 맨 앞이다', () => {
+    const over = { ...base, budget: { budget: 150000, spent: 187300, categories: [] } };
+    expect(order(over)[0]).toBe('budget');
+  });
+
+  test('수입보다 많이 쓰면 수입이 맨 앞이다', () => {
+    const deficit = {
+      ...base,
+      kind: 'monthly' as const,
+      incomeRatio: { income: 1750000, expense: 1964000 },
+    };
+    expect(order(deficit)[0]).toBe('income');
+  });
+
+  test('카테고리 예산을 넘으면 그 카테고리가 앞에 온다', () => {
+    const over = {
+      ...base,
+      budget: {
+        budget: 280000,
+        spent: 187300,
+        categories: [{ categoryId: 2, budget: 10000, spent: 23600 }],
+      },
+    };
+    expect(order(over)[0]).toBe('category.2');
   });
 });

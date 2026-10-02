@@ -43,12 +43,48 @@ describe('buildFrames', () => {
     expect(texts).toEqual(['예산을 33,600원 넘었어요.', '예산의 112%를 써서 33,600원 넘었어요.']);
   });
 
-  test('headline 후보는 채운 뒤 30자 안의 한 문장이다', () => {
+  test('headline 후보는 채운 뒤 30자 안의 한 문장이고, 눈에 띄는 앞 묶음 셋에서만 고른다', () => {
     const keyed = keyFacts(sampleFacts, sampleNames);
     const values = factValues(keyed);
-    const ids = headlineFrames(buildFrames(keyed), t => render(t, values)).map(f => f.id);
+    const ids = headlineFrames(keyed, buildFrames(keyed), t => render(t, values)).map(f => f.id);
     expect(ids).toContain('total.change');
     expect(ids).not.toContain('category.3.change_share');
+    expect([...new Set(ids.map(id => id.split('.').slice(0, -1).join('.')))]).toEqual([
+      'category.3',
+      'category.7',
+      'total',
+    ]);
+  });
+
+  test.each([
+    ['week-base', 'budget.balance', '예산이 92,700원 남았어요.'],
+    ['week-base', 'no_spend.days', '지출이 없는 날이 하루 있었어요.'],
+    ['week-no-spend', 'no_spend.days', '지출이 없는 날이 5일 있었어요.'],
+    ['week-base', 'busiest.day_amount', '9월 26일 토요일에 71,500원으로 가장 많이 썼어요.'],
+    ['month-base', 'income.balance', '수입에서 1,236,000원 남았어요.'],
+    ['month-base', 'income.rate', '수입 3,200,000원 중 61%를 썼어요.'],
+    ['month-deficit', 'income.balance', '수입보다 214,000원 더 썼어요.'],
+    ['month-deficit', 'income.rate', '지출이 수입 1,750,000원의 112%였어요.'],
+  ])('%s %s: %s', (id, frameId, text) => {
+    const snapshot = SNAPSHOTS.find(s => s.id === id);
+    if (!snapshot) throw new Error(id);
+    const keyed = keyedOf(snapshot);
+    const frame = buildFrames(keyed).find(f => f.id === frameId);
+    expect(render(frame?.text ?? '', factValues(keyed))).toBe(text);
+  });
+
+  test.each([
+    ['week-over', 'budget'],
+    ['week-category-over', 'category.3'],
+    ['month-deficit', 'income'],
+    ['month-no-income', 'budget'],
+  ])('%s: 눈에 띄는 사실(%s)이 headline 후보의 맨 앞이다', (id, group) => {
+    const snapshot = SNAPSHOTS.find(s => s.id === id);
+    if (!snapshot) throw new Error(id);
+    const keyed = keyedOf(snapshot);
+    const values = factValues(keyed);
+    const [first] = headlineFrames(keyed, buildFrames(keyed), t => render(t, values));
+    expect(first.group).toBe(group);
   });
 });
 
@@ -124,4 +160,45 @@ describe('frameFormat', () => {
       format.check({ field: 'suggestion', text: '다음 주에는 {category.3.amount}만 써 보세요.' }),
     ).toEqual(['unknown-key']);
   });
+});
+
+describe('headline 후보의 초점', () => {
+  const candidates = (id: string) => {
+    const snapshot = SNAPSHOTS.find(s => s.id === id);
+    if (!snapshot) throw new Error(id);
+    const keyed = keyedOf(snapshot);
+    const values = factValues(keyed);
+    return headlineFrames(keyed, buildFrames(keyed), t => render(t, values)).map(f => f.id);
+  };
+
+  test('카테고리 예산을 넘으면 그 카테고리는 예산 틀만 headline 후보다', () => {
+    const ids = candidates('week-category-over');
+    expect(ids).toContain('category.3.budget');
+    expect(ids).not.toContain('category.3.change');
+  });
+
+  test('고정비가 큰 주는 고정비 틀이 headline 후보다', () => {
+    expect(candidates('week-fixed-heavy')).toContain('total.fixed');
+  });
+
+  test('무지출일이 많은 주는 무지출일이 headline 후보다', () => {
+    expect(candidates('week-no-spend')).toContain('no_spend.days');
+  });
+});
+
+test('제안이 채운 뒤 45자를 넘으면 걸린다', () => {
+  const keyed = keyFacts(sampleFacts, sampleNames);
+  const format = frameFormat(keyed, buildFrames(keyed));
+  expect(
+    format.check({
+      field: 'suggestion',
+      text: '다음 주에는 {category.3.name} 지출을 줄이면서 편의점 커피도 줄이고 다른 습관을 만들어 꾸준히 이어 가 보세요.',
+    }),
+  ).toEqual(['too-long']);
+  expect(
+    format.check({
+      field: 'suggestion',
+      text: '다음 주에는 {category.3.name} 지출을 줄여 보세요.',
+    }),
+  ).toEqual([]);
 });

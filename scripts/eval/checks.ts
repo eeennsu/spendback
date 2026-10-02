@@ -98,7 +98,26 @@ const sentenceCount = (text: string) => Math.max(1, (text.match(/[.?!](?=\s|$)/g
 
 export type Rendered = { headline: string; insights: string[]; suggestion: string };
 
-export function autoCheck(output: Output, rendered: Rendered, keyed?: KeyedFacts) {
+/**
+ * 눈에 띄는 사실을 다뤘는가(PRD 11장 사실 고르기). salient는 그 스냅샷이 꼭 말해야 할 키의 앞부분이다
+ * (snapshots.ts). headline·insight가 그 키를 쓰면 다룬 것이다. hit은 첫 사실을 headline으로 골랐는가다
+ */
+function coverage(output: Output, salient: string[] | undefined) {
+  if (!salient?.length) return undefined;
+  const mentions = (raw: string, prefix: string) => raw.includes(`{${prefix}`);
+  const said = [output.headline, ...output.insights.map(i => i.text)];
+  return {
+    missed: salient.filter(prefix => !said.some(raw => mentions(raw, prefix))),
+    headline: mentions(output.headline, salient[0]),
+  };
+}
+
+export function autoCheck(
+  output: Output,
+  rendered: Rendered,
+  keyed?: KeyedFacts,
+  salient?: string[],
+) {
   const lines = [
     { field: 'headline' as const, raw: output.headline, text: rendered.headline },
     ...output.insights.map((insight, i) => ({
@@ -132,6 +151,7 @@ export function autoCheck(output: Output, rendered: Rendered, keyed?: KeyedFacts
       )
       .map(l => l.text),
     quality,
+    salient: coverage(output, salient),
   };
 }
 

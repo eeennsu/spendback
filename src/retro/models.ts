@@ -12,6 +12,7 @@ export const MODELS = [
     sizeBytes: 1_280_835_840,
     sha256: 'aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223',
     license: 'Apache-2.0',
+    inApp: true,
   },
   {
     id: 'kanana-1.5-2.1b',
@@ -22,6 +23,7 @@ export const MODELS = [
     sizeBytes: 1_522_796_768,
     sha256: '24d3db59d0af2c85c0afc0bbc99da1174b73ef6728bce2650bd91bec28ad1c81',
     license: 'Apache-2.0',
+    inApp: true,
   },
   {
     id: 'exaone-4.0-1.2b',
@@ -32,10 +34,15 @@ export const MODELS = [
     sizeBytes: 812_437_792,
     sha256: '7b5e753540183ae4d56e6febd9b48cdd944de53386e6faa8f51c8f98cb2b47df',
     license: 'EXAONE AI Model License Agreement 1.2 - NC',
+    // 하네스에서 제안을 쓰지 못해(완료 14/40, scripts/eval/README.md) 앱 후보에서 뺐다. 비교용으로 하네스에만 남긴다
+    inApp: false,
   },
 ] as const;
 
 export type Model = (typeof MODELS)[number];
+
+/** 앱의 모델 관리에서 받고 고를 수 있는 모델 */
+export const APP_MODELS = MODELS.filter(m => m.inApp);
 export type ModelId = Model['id'];
 
 /** 잠정 기본값. 평가 하네스로 확인한다(PRD 6장) */

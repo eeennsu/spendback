@@ -32,6 +32,8 @@ for (const file of process.argv.slice(2)) {
         q.wordRepeat + q.glued,
         q.numeralLeak + s.numeral,
         s.repeatedGroups,
+        s.salientRuns ? `${s.missedSalient}/${s.salientRuns}` : '-',
+        s.salientRuns ? `${s.salientHeadline}/${s.salientRuns}` : '-',
         num(s.promptTokens, 0),
         num(s.generatedTokens, 0),
         `${num(s.phoneFirst)} / ${num(s.phoneTotal)}`,
@@ -42,8 +44,8 @@ for (const file of process.argv.slice(2)) {
 }
 console.log(
   [
-    '| 모델 | 버전 | 완료 | 첫 시도 통과 | 걸린 데 없는 회고 | 길이 초과 | 증감 낱말 깨뜨리기·동의어 | 다른 사실에 이름 | 해요체 아님·다짐·질문 | 되풀이·뭉친 낱말 | 수사(누출+검사) | 같은 묶음 | 프롬프트 토큰 | 생성 토큰 | 폰 추정 첫 문장 / 전체(초) | 결과 |',
-    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
+    '| 모델 | 버전 | 완료 | 첫 시도 통과 | 걸린 데 없는 회고 | 길이 초과 | 증감 낱말 깨뜨리기·동의어 | 다른 사실에 이름 | 해요체 아님·다짐·질문 | 되풀이·뭉친 낱말 | 수사(누출+검사) | 같은 묶음 | 놓친 사실 | headline 적중 | 프롬프트 토큰 | 생성 토큰 | 폰 추정 첫 문장 / 전체(초) | 결과 |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
     ...rows.map(r => `| ${r} |`),
   ].join('\n'),
 );

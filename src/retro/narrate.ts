@@ -51,19 +51,16 @@ type Format = {
 /** 하네스로 프롬프트를 비교할 때 버전을 더한다(scripts/eval --prompt) */
 const FORMATS: Record<PromptVersion, (keyed: KeyedFacts) => Format> = {
   /** 문장 틀. LLM은 틀 id를 고르고 제안만 쓴다. 코드가 id를 문장으로 펼친다(frames.ts) */
-  v3: keyed => {
+  v4: keyed => {
     const frames = buildFrames(keyed);
     const values = factValues(keyed);
     const names = nameKeys(keyed);
-    const headlines = headlineFrames(frames, text => render(text, values));
+    const fit = headlineFrames(keyed, frames, text => render(text, values));
+    const headlines = fit.length ? fit : frames;
     return {
       request: {
-        messages: buildMessages(keyed, frames, names),
-        grammar: buildGrammar(
-          (headlines.length ? headlines : frames).map(f => f.id),
-          frames.map(f => f.id),
-          names,
-        ),
+        messages: buildMessages(keyed, frames, headlines, names),
+        grammar: buildGrammar(headlines, frames, names, keyed.kind),
       },
       ...frameFormat(keyed, frames),
     };

@@ -30,7 +30,8 @@ export type Problem =
   | 'numeral'
   | 'dangling-unit'
   | 'direction'
-  | 'repetition';
+  | 'repetition'
+  | 'too-long';
 
 const PLACEHOLDER = /\{([^{}]+)\}/g;
 /** 플레이스홀더를 뺀 문장 문자. GBNF와 같다(grammar.ts). 숫자와 다른 문자 체계, 자모("ㄴ만"), 문장부호 더미를 잡는다 */

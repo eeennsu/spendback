@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 import { type Field, type Output, type Problem, checkField, checkSentence } from './check';
-import type { FactGroup, KeyedFacts } from './keys';
+import { type FactGroup, type KeyedFacts, factValues } from './keys';
+import { render } from './render';
 
 /**
  * 문장 틀(PRD 4.6). 회고의 사실 문장은 묶음마다 코드가 써 둔 이 틀이고, LLM은 id만 고른다. 값은 플레이스홀더와
@@ -42,13 +43,14 @@ function framesOf(g: FactGroup, kind: KeyedFacts['kind']): Frame[] {
         'expense',
         'fixed',
       ]);
+      add('fixed', `고정비로 ${k('fixed')}{이/가} 나갔어요.`, ['fixed']);
       if (value('change_phrase') === undefined) {
         add('variable', `${period} 변동비는 ${k('variable')}{이었어요/였어요}.`, ['variable']);
       }
       break;
     case 'budget': {
       const phrase = value('balance_phrase');
-      add('balance', `${balanceLead(phrase, '예산에서', '예산을')} ${k('balance_phrase')}.`, [
+      add('balance', `${balanceLead(phrase, '예산이', '예산을')} ${k('balance_phrase')}.`, [
         'balance_phrase',
       ]);
       if (phrase === '다 썼어요') add('usage', `예산의 ${k('usage')}{을/를} 썼어요.`, ['usage']);
@@ -121,15 +123,18 @@ function framesOf(g: FactGroup, kind: KeyedFacts['kind']): Frame[] {
       ]);
       break;
     case 'no_spend':
-      add('days', `무지출일이 ${k('days')} 있었어요.`, ['days']);
+      add('days', `지출이 없는 날이 ${k('days')} 있었어요.`, ['days']);
       break;
     case 'busiest':
       add('day', `가장 많이 쓴 날은 ${k('day')}{이었어요/였어요}.`, ['day']);
-      add('day_amount', `${k('day')}에 가장 많은 ${k('amount')}{을/를} 썼어요.`, ['day', 'amount']);
+      add('day_amount', `${k('day')}에 ${k('amount')}{으로/로} 가장 많이 썼어요.`, [
+        'day',
+        'amount',
+      ]);
       add('weekday', `가장 많이 쓴 요일은 ${k('weekday')}{이었어요/였어요}.`, ['weekday']);
       add(
         'weekday_amount',
-        `요일별로는 ${k('weekday')}에 가장 많은 ${k('amount')}{을/를} 썼어요.`,
+        `요일별로는 ${k('weekday')}에 ${k('amount')}{으로/로} 가장 많이 썼어요.`,
         ['weekday', 'amount'],
       );
       break;
@@ -140,12 +145,26 @@ function framesOf(g: FactGroup, kind: KeyedFacts['kind']): Frame[] {
         ['text', 'count', 'amount'],
       );
       break;
-    case 'income':
-      add('rate', `수입 ${k('amount')} 중 ${k('expense_rate')}{을/를} 썼어요.`, [
-        'amount',
-        'expense_rate',
-      ]);
+    case 'income': {
+      // 수입보다 많이 쓰면 "수입 1,750,000원 중 112%"가 말이 안 되어 앞뒤를 바꾼다
+      const phrase = value('balance_phrase');
+      if (phrase?.endsWith('더 썼어요')) {
+        add('balance', `수입보다 ${k('balance_phrase')}.`, ['balance_phrase']);
+        add('rate', `지출이 수입 ${k('amount')}의 ${k('expense_rate')}{이었어요/였어요}.`, [
+          'amount',
+          'expense_rate',
+        ]);
+      } else {
+        add('balance', `${balanceLead(phrase, '수입에서', '수입을')} ${k('balance_phrase')}.`, [
+          'balance_phrase',
+        ]);
+        add('rate', `수입 ${k('amount')} 중 ${k('expense_rate')}{을/를} 썼어요.`, [
+          'amount',
+          'expense_rate',
+        ]);
+      }
       break;
+    }
   }
   return frames;
 }
@@ -156,11 +175,33 @@ export function buildFrames(keyed: KeyedFacts): Frame[] {
 
 /** headline 후보. 채운 뒤 30자 안의 한 문장이다(PRD 6장 길이 한도) */
 export const HEADLINE_LIMIT = 30;
+/** 제안은 채운 뒤 45자까지다. 넘으면 사후 검사가 다시 쓰게 한다(PRD 6장 길이 한도) */
+export const SUGGESTION_LIMIT = 45;
+/** headline 후보를 고르는 묶음 수. 묶음은 눈에 띄는 순서다(keys.ts salience) */
+export const HEADLINE_GROUPS = 3;
 
-export function headlineFrames(frames: Frame[], render: (text: string) => string) {
-  return frames.filter(f => {
+/**
+ * 앞 묶음부터 headline에 맞는 틀을 모아, 틀이 있는 묶음 HEADLINE_GROUPS개까지 쓴다. 묶음마다 눈에 띄는 까닭의 키
+ * (FactGroup.focus)를 쓴 틀만 남기고, 그런 틀이 headline에 맞지 않으면 그 묶음의 다른 틀을 쓴다. insight는
+ * headline과 다른 묶음에서 고르므로(grammar.ts) headline이 그 묶음의 까닭을 말하지 않으면 회고가 그 까닭을 놓친다
+ */
+export function headlineFrames(
+  keyed: KeyedFacts,
+  frames: Frame[],
+  render: (text: string) => string,
+) {
+  const fit = frames.filter(f => {
     const text = render(f.text);
     return text.length <= HEADLINE_LIMIT && (text.match(/[.?]/g) ?? []).length === 1;
+  });
+  const focusOf = new Map(keyed.groups.map(g => [g.id, g.focus]));
+  const usesFocus = (f: Frame) =>
+    focusOf.get(f.group)?.some(name => f.text.includes(`{${f.group}.${name}}`)) ?? true;
+  const groups = [...new Set(fit.map(f => f.group))].slice(0, HEADLINE_GROUPS);
+  return groups.flatMap(group => {
+    const mine = fit.filter(f => f.group === group);
+    const focused = mine.filter(usesFocus);
+    return focused.length ? focused : mine;
   });
 }
 
@@ -190,6 +231,7 @@ const RawOutputSchema = z.object({
 export function frameFormat(keyed: KeyedFacts, frames: Frame[]) {
   const byId = new Map(frames.map(f => [f.id, f]));
   const names = new Set(nameKeys(keyed));
+  const values = factValues(keyed);
 
   /**
    * 한 묶음의 틀은 회고에 하나만 쓴다. 같은 묶음의 틀은 같은 값을 되풀이하므로("예산에서 92,700원 남았어요." 뒤에
@@ -251,7 +293,12 @@ export function frameFormat(keyed: KeyedFacts, frames: Frame[]) {
       return { headline: fields[0].text, insights, suggestion };
     },
     check(field: Field): Problem[] {
-      if (field.field === 'suggestion') return checkSentence(field.text, names, false);
+      if (field.field === 'suggestion') {
+        const problems = checkSentence(field.text, names, false);
+        // 문법은 낱말 수를 넉넉히 열어 두므로(grammar.ts) 길이는 채운 뒤에 잰다
+        if (render(field.text, values).length > SUGGESTION_LIMIT) problems.push('too-long');
+        return problems;
+      }
       if (field.text === '') return ['unknown-key'];
       return checkField(keyed, field);
     },

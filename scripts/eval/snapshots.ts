@@ -5,7 +5,17 @@ import type { Names } from '../../src/retro/keys';
  * 평가 하네스 입력(PRD 6장). 고정된 facts 스냅샷 20개로, 직전 기간 없음·기록 적음·예산 초과·고정비 비중이 큼 같은
  * 경계 사례를 담는다. 카테고리·태그 id는 기본값 마이그레이션(0001_seed.sql)의 순서다.
  */
-export type Snapshot = { id: string; note: string; facts: Facts; names: Names };
+export type Snapshot = {
+  id: string;
+  note: string;
+  facts: Facts;
+  names: Names;
+  /**
+   * 회고가 꼭 말해야 할 사실. facts 키의 앞부분이고, 첫 것은 headline감이다. 하네스가 "놓친 사실"과
+   * "headline 적중"을 센다(PRD 11장 사실 고르기)
+   */
+  salient?: string[];
+};
 
 const names: Names = {
   categories: new Map([
@@ -138,12 +148,28 @@ const month: Facts = {
   incomeRatio: { income: 3200000, expense: 1964000 },
 };
 
-const snapshot = (id: string, note: string, facts: Facts, override?: Partial<Names>) => ({
+const snapshot = (id: string, note: string, facts: Facts, override?: Partial<Names>): Snapshot => ({
   id,
   note,
   facts,
   names: { ...names, ...override },
+  salient: SALIENT[id],
 });
+
+/** 스냅샷마다 꼭 말해야 할 사실(Snapshot.salient) */
+const SALIENT: Record<string, string[]> = {
+  'week-base': ['category.3.change'],
+  'week-over': ['budget.'],
+  'week-fixed-heavy': ['total.fixed'],
+  'week-down': ['total.change'],
+  'week-dominant': ['category.3.'],
+  'week-regret': ['regret.'],
+  'week-no-spend': ['no_spend.'],
+  'week-category-over': ['category.3.budget'],
+  'month-base': ['category.1.budget'],
+  'month-deficit': ['income.'],
+  'month-no-income': ['budget.'],
+};
 
 export const SNAPSHOTS: Snapshot[] = [
   snapshot('week-base', '스파이크와 같은 한 주. 배달 증가, 예산 여유', week),

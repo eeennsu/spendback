@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "jest",
+    "e2e": "maestro test .maestro",
     "prepare": "husky",
     "eval:models": "tsx scripts/eval/download.mts",
     "eval": "tsx scripts/eval/run.mts"

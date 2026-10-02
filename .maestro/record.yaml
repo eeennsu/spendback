@@ -1,0 +1,42 @@
+# 입력 → 내역(PRD 9장). 빈 앱에서 지출 하나를 기록하고, 내역에서 고친 뒤 지운다
+appId: com.eeennsu.spendback
+name: 입력 → 내역
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: '아직 예산이 없어요'
+    timeout: 60000
+
+# 입력: 금액 → 카테고리 → 저장, 세 번에 끝난다. 시트가 열리면 금액 칸에 포커스가 간다
+- tapOn: '기록'
+- assertVisible: '지출 기록'
+- inputText: '9500'
+- tapOn: '식비'
+- tapOn: '저장'
+- assertNotVisible: '지출 기록'
+- assertVisible: '9,500원'
+
+# 내역: 기간 합계와 날짜 묶음에 방금 기록이 있다
+- tapOn: '내역'
+- assertVisible: '.*지출 9,500원'
+- tapOn: '식비, 지출 9,500원'
+
+# 수정: 금액을 바꿔 저장하면 내역이 바뀐다
+- assertVisible: '지출 수정'
+- tapOn: '9,500'
+- eraseText: 10
+- inputText: '12000'
+- tapOn: '저장'
+- assertVisible: '.*지출 12,000원'
+
+# 삭제: 선택 항목을 펼쳐 지운다
+- tapOn: '식비, 지출 12,000원'
+- tapOn: '선택 항목 더 보기'
+- scrollUntilVisible:
+    element: '삭제'
+    direction: DOWN
+- tapOn: '삭제'
+- assertVisible: '이 기록을 지울까요?'
+- tapOn: '삭제'
+- assertVisible: '아직 기록이 없어요'

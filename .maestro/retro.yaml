@@ -1,0 +1,43 @@
+# 회고 열람(PRD 9장). 개발 빌드의 샘플 데이터로 끝난 주를 만들고 회고 상세를 연다. 새로 설치한 앱에는 모델이 없어
+# "모델 없음" 폴백(지표와 차트만)과 모델 관리로 가는 길을 본다. 모델을 받은 기기의 생성은 수동으로 본다(DESIGN.md 1.8)
+appId: com.eeennsu.spendback
+name: 회고 열람
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: '아직 예산이 없어요'
+    timeout: 60000
+
+# 샘플 데이터: 설정 → 개발 → 샘플 데이터 넣기
+- tapOn: '설정'
+- scrollUntilVisible:
+    element: '샘플 데이터 넣기.*'
+    direction: DOWN
+- tapOn: '샘플 데이터 넣기.*'
+- assertVisible: '샘플 데이터를 넣을까요?'
+- tapOn: '넣기'
+- tapOn: '뒤로'
+- assertVisible: '남은 예산'
+
+# 회고 목록: 맨 위는 진행 중인 주다. 아직 만들지 않은 끝난 주 중 가장 최근 주를 연다
+- tapOn: '회고'
+- assertVisible: '진행 중'
+- tapOn:
+    text: '아직 만들지 않았어요'
+    index: 0
+
+# 회고 상세: 지표와 차트는 코드가 그리고, 모델이 없으면 문장 대신 안내와 이동 버튼이 나온다
+- assertVisible: '총지출'
+- assertVisible: '모델을 받으면 회고 문장을 만들 수 있어요'
+- scrollUntilVisible:
+    element: '날마다 쓴 돈'
+    direction: DOWN
+- assertVisible: '카테고리'
+- scrollUntilVisible:
+    element: '모델 관리로 이동'
+    direction: UP
+- tapOn: '모델 관리로 이동'
+- assertVisible: '모델 관리'
+- assertVisible: 'Qwen3.5-2B'
+- assertVisible: '받기'

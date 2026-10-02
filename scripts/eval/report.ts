@@ -124,7 +124,8 @@ export function summarize(runs: Run[]) {
   };
 }
 
-const num = (n: number, digits = 1) => (n ? n.toFixed(digits) : '-');
+/** 값이 없으면(예전 결과의 프롬프트 토큰 등) - */
+export const num = (n: number, digits = 1) => (n ? n.toFixed(digits) : '-');
 
 export function markdown(runs: Run[], meta: Record<string, string>) {
   const models = [...new Set(runs.map(r => r.model))];

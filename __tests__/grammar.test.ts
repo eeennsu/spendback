@@ -1,42 +1,19 @@
+import { sampleFacts, sampleNames } from '../jest/facts';
+import { buildFrames, nameKeys } from '../src/retro/frames';
 import { buildGrammar } from '../src/retro/grammar';
-import type { KeyedFacts } from '../src/retro/keys';
+import { keyFacts } from '../src/retro/keys';
 import { buildMessages } from '../src/retro/prompt';
 
-const keyed: KeyedFacts = {
-  kind: 'weekly',
-  period: '9월 21일~27일',
-  groups: [
-    {
-      id: 'total',
-      title: '총지출',
-      facts: [
-        { key: 'total.variable', value: '187,300원', kind: 'noun', note: '변동비' },
-        {
-          key: 'total.change_phrase',
-          value: '32,400원 늘었어요',
-          kind: 'predicate',
-          note: '지난주보다',
-        },
-      ],
-    },
-    {
-      id: 'category.3',
-      title: '카테고리',
-      facts: [
-        { key: 'category.3.name', value: '배달', kind: 'noun', note: '이름' },
-        { key: 'category.3.share', value: '36%', kind: 'noun', note: '비중' },
-      ],
-    },
-  ],
-};
-
-const grammar = buildGrammar(keyed);
-const rule = (name: string) =>
-  grammar
+const grammar = buildGrammar(
+  ['total.change'],
+  ['total.change', 'category.3.change_share', 'tag.2.amount_share'],
+  ['category.3.name', 'tag.2.name'],
+);
+const rule = (name: string, text = grammar) =>
+  text
     .split('\n')
     .find(line => line.startsWith(`${name} ::=`))
     ?.slice(name.length + 5) ?? '';
-const keysIn = (text: string) => [...text.matchAll(/"([a-z_]+(?:\.[a-z0-9_]+)+)"/g)].map(m => m[1]);
 /** 문자 집합 규칙이 그 글자를 받는가 */
 const accepts = (charClass: string, ch: string) => {
   const code = ch.charCodeAt(0);
@@ -46,29 +23,33 @@ const accepts = (charClass: string, ch: string) => {
 };
 
 describe('buildGrammar', () => {
-  test('insight는 about에 쓴 묶음의 키만 쓸 수 있다', () => {
-    expect(rule('ins-1')).toContain('"\\"category.3\\""');
-    expect(rule('ins-1')).toContain('s-1');
-    expect(keysIn(rule('ph-1'))).toEqual(['category.3.name', 'category.3.share']);
-    expect(keysIn(rule('ph-0'))).toEqual(['total.variable', 'total.change_phrase']);
+  test('headline은 headline 후보에서, insight는 모든 틀에서 id만 고른다', () => {
+    expect(rule('headline')).toBe('"\\"total.change\\""');
+    expect(rule('frame')).toBe(
+      '"\\"total.change\\"" | "\\"category.3.change_share\\"" | "\\"tag.2.amount_share\\""',
+    );
   });
 
-  test('headline과 suggestion도 묶음 하나의 문장이다', () => {
-    expect(rule('headline')).toBe('s-0 | s-1');
-    expect(rule('suggestion')).toBe('seg end | s-0 | s-1');
+  test('insights는 2~4개다', () => {
+    expect(rule('root')).toContain('frame (ws "," ws frame){1,3}');
   });
 
-  test('플레이스홀더는 1~3개이고 앞뒤에 공백·쉼표가 온다', () => {
-    expect(rule('s-0')).toBe('(seg " ")? ph-0 (gap after " " ph-0){0,2} (gap after end)?');
+  test('제안은 이름 키만 2개까지 쓸 수 있다', () => {
+    expect(rule('suggestion')).toBe(
+      'seg end | (seg " ")? nph (gap after " " nph)? (gap after end)?',
+    );
+    expect(rule('nph')).toBe('"{" ("category.3.name" | "tag.2.name") "}" (josa | particle)? end?');
+  });
+
+  test('이름 키가 없으면 제안은 낱말로만 쓴다', () => {
+    const plain = buildGrammar(['total.change'], ['total.change'], []);
+    expect(rule('suggestion', plain)).toBe('seg end');
+    expect(plain).not.toContain('nph');
+  });
+
+  test('낱말은 공백·쉼표로 잇고 마침표·물음표로 끝낸다', () => {
     expect(rule('gap')).toBe('" " | ", "');
     expect(rule('end')).toBe('[.?]');
-  });
-
-  test('서술어 뒤에는 조사를 붙일 수 없고 마침표가 온다', () => {
-    const [noun, predicate] = rule('ph-0').split(' | "{"');
-    expect(noun).toContain('(josa | particle)?');
-    expect(predicate).not.toContain('josa');
-    expect(predicate.endsWith('"}" "."')).toBe(true);
   });
 
   test('플레이스홀더 다음 낱말은 단위 글자로 시작할 수 없다', () => {
@@ -94,24 +75,27 @@ describe('buildGrammar', () => {
       '"{이/가}" | "{을/를}" | "{은/는}" | "{와/과}" | "{으로/로}" | "{이에요/예요}" | "{이었어요/였어요}"',
     );
   });
-
-  test('insights는 2~4개다', () => {
-    expect(rule('root')).toContain('ins (ws "," ws ins){1,3}');
-  });
 });
 
 describe('buildMessages', () => {
-  test('facts를 묶음 id와 함께 쓰고 서술어를 표시한다', () => {
-    const [, user] = buildMessages(keyed);
-    expect(user.content).toContain('[category.3] 카테고리\n{category.3.name} = 배달 // 이름');
-    expect(user.content).toContain(
-      '{total.change_phrase} = 32,400원 늘었어요 // 서술어. 지난주보다',
-    );
-    expect(user.content).toContain('기간: 9월 21일~27일');
+  const keyed = keyFacts(sampleFacts, sampleNames);
+  const frames = buildFrames(keyed);
+
+  test('채운 문장을 묶음별로 id와 함께 쓰고, headline 후보와 이름 키를 적는다', () => {
+    const [, user] = buildMessages(keyed, frames, nameKeys(keyed));
+    expect(user.content).toContain('category.3.change: 배달 지출이 지난주보다 29,000원 늘었어요.');
+    expect(user.content).toMatch(/headline 후보: [^\n]*total\.change/);
+    expect(user.content).toContain('{category.3.name} = 배달');
+    // 문장은 값을 채워 보여 준다. 플레이스홀더는 이름 키 줄에만 있다
+    const sentences = user.content
+      .split('\n')
+      .filter(line => /^[a-z_]+(?:\.\d+)?\.[a-z_]+: /.test(line));
+    expect(sentences).toHaveLength(frames.length);
+    for (const line of sentences) expect(line).not.toContain('{');
   });
 
   test('월간은 한 달을 말한다', () => {
-    const [system] = buildMessages({ ...keyed, kind: 'monthly', period: '9월' });
+    const [system] = buildMessages({ ...keyed, kind: 'monthly' }, frames, []);
     expect(system.content).toContain('한 달의 소비 회고');
     expect(system.content).toContain('다음 달');
   });

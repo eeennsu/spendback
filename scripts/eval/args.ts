@@ -6,7 +6,7 @@ import { PROMPT_VERSION, PROMPT_VERSIONS, type PromptVersion } from '../../src/r
 
 /**
  * 하네스 명령의 인자. 모델 id(없으면 전부), --dir <폴더>, --runs <횟수>, --only <스냅샷 id,…>,
- * 샘플링 비교용 --temp <온도>, --repeat <반복 벌점>, 프롬프트 비교용 --prompt <v1|v2|v3>
+ * 샘플링 비교용 --temp <온도>, --repeat <반복 벌점>, 프롬프트 비교용 --prompt <버전>(src/retro/prompt.ts PROMPT_VERSIONS)
  */
 export function parseArgs(argv: string[]) {
   const option = (name: string) => {

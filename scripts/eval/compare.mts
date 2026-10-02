@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
-import { type Run, summarize } from './report';
+import { type Run, num, summarize } from './report';
 
 const rows: string[] = [];
 for (const file of process.argv.slice(2)) {
@@ -32,9 +32,9 @@ for (const file of process.argv.slice(2)) {
         q.wordRepeat + q.glued,
         q.numeralLeak + s.numeral,
         s.repeatedGroups,
-        s.promptTokens.toFixed(0),
-        s.generatedTokens.toFixed(0),
-        `${s.phoneFirst.toFixed(1)} / ${s.phoneTotal.toFixed(1)}`,
+        num(s.promptTokens, 0),
+        num(s.generatedTokens, 0),
+        `${num(s.phoneFirst)} / ${num(s.phoneTotal)}`,
         basename(file),
       ].join(' | '),
     );

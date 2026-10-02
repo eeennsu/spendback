@@ -1,13 +1,9 @@
 import { sampleFacts, sampleNames } from '../jest/facts';
 import { SNAPSHOTS } from '../scripts/eval/snapshots';
 import { checkSentence } from '../src/retro/check';
-import { fakeGenerate } from '../src/retro/fake';
-import { buildFrames, frameFormat, headlineFrames, nameKeys } from '../src/retro/frames';
-import { buildFrameGrammar } from '../src/retro/grammar';
+import { buildFrames, frameFormat, headlineFrames } from '../src/retro/frames';
 import { factValues, keyFacts } from '../src/retro/keys';
-import { type Sentence, narrate } from '../src/retro/narrate';
-import { buildMessages } from '../src/retro/prompt';
-import { JOSA_PAIRS, render } from '../src/retro/render';
+import { render } from '../src/retro/render';
 
 const keyedOf = (s: (typeof SNAPSHOTS)[number]) => keyFacts(s.facts, s.names);
 
@@ -27,23 +23,6 @@ describe('buildFrames', () => {
       }
     },
   );
-
-  test('v1 문법 안에서도 쓸 수 있다: 플레이스홀더 사이에 낱말, 다음 낱말은 단위 글자로 시작하지 않는다', () => {
-    const josa = new RegExp(
-      `\\{(?:${JOSA_PAIRS.map(p => p.replace('/', '\\/')).join('|')})\\}`,
-      'g',
-    );
-    for (const snapshot of SNAPSHOTS) {
-      for (const frame of buildFrames(keyedOf(snapshot))) {
-        const text = frame.text.replace(josa, '');
-        expect([
-          frame.id,
-          /\}(?:[가-힣]*)?\s*\{/.test(text.replace(/\}(?:의|도|만|에|에서)/g, '}')),
-        ]).toEqual([frame.id, false]);
-        expect([frame.id, /\}\s+[개건배번원일퍼회]/.test(text)]).toEqual([frame.id, false]);
-      }
-    }
-  });
 
   test('증감이 0이면 "지난주와 같았어요"로 쓴다', () => {
     const same = SNAPSHOTS.find(s => s.id === 'week-same');
@@ -73,38 +52,20 @@ describe('buildFrames', () => {
   });
 });
 
-describe('v3 문장 틀', () => {
+describe('frameFormat', () => {
   const keyed = keyFacts(sampleFacts, sampleNames);
-  const frames = buildFrames(keyed);
-
-  test('문법은 headline·insight에 틀 id만, 제안에는 이름 키만 연다', () => {
-    const grammar = buildFrameGrammar(
-      ['total.change'],
-      ['total.change', 'tag.2.amount_share'],
-      nameKeys(keyed),
-    );
-    expect(grammar).toContain('headline ::= "\\"total.change\\""');
-    expect(grammar).toContain('"category.3.name"');
-    expect(grammar).not.toContain('"category.3.share"');
-  });
-
-  test('프롬프트는 채운 문장과 id를 보여 준다', () => {
-    const [, user] = buildMessages(keyed, 'v3', frames, nameKeys(keyed));
-    expect(user.content).toContain('category.3.change: 배달 지출이 지난주보다 29,000원 늘었어요.');
-    expect(user.content).toContain('{category.3.name} = 배달');
-  });
+  const format = frameFormat(keyed, buildFrames(keyed));
+  const json = (headline: string, insights: string[]) =>
+    JSON.stringify({ headline, insights, suggestion: '다음 주에는 꼭 확인해 보세요.' });
 
   test('headline이나 앞 insight와 같은 묶음의 틀은 버린다', () => {
-    const format = frameFormat(keyed, frames);
-    const parse = (headline: string, insights: string[]) =>
-      format
-        .parse(JSON.stringify({ headline, insights, suggestion: '다음 주에는 꼭 확인해 보세요.' }))
-        ?.insights.map(i => i.about);
+    const abouts = (headline: string, insights: string[]) =>
+      format.parse(json(headline, insights))?.insights.map(i => i.about);
     expect(
-      parse('total.change', ['total.change', 'category.3.amount_share', 'tag.2.amount_share']),
+      abouts('total.change', ['total.change', 'category.3.amount_share', 'tag.2.amount_share']),
     ).toEqual(['category.3', 'tag.2']);
     expect(
-      parse('budget.balance', [
+      abouts('budget.balance', [
         'budget.usage_balance',
         'category.3.change',
         'category.3.amount_share',
@@ -112,40 +73,55 @@ describe('v3 문장 틀', () => {
       ]),
     ).toEqual(['category.3', 'tag.2']);
     // 버리고 남은 insight가 2개보다 적으면 읽기 실패다
-    expect(parse('budget.balance', ['budget.usage_balance', 'category.3.change'])).toBeUndefined();
+    expect(abouts('budget.balance', ['budget.usage_balance', 'category.3.change'])).toBeUndefined();
+  });
+
+  test('id를 플레이스홀더 문장으로 펼친다', () => {
+    expect(format.parse(json('total.change', ['category.3.change', 'tag.2.amount_share']))).toEqual(
+      {
+        headline: '변동비가 지난주보다 {total.change_phrase}.',
+        insights: [
+          {
+            about: 'category.3',
+            text: '{category.3.name} 지출이 지난주보다 {category.3.change_phrase}.',
+          },
+          {
+            about: 'tag.2',
+            text: '{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}.',
+          },
+        ],
+        suggestion: '다음 주에는 꼭 확인해 보세요.',
+      },
+    );
+  });
+
+  test('Qwen의 빈 think 블록을 떼고 읽는다', () => {
+    const raw = `<think>\n\n</think>\n\n${json('total.change', ['category.3.change', 'tag.2.amount_share'])}`;
+    expect(format.parse(raw)?.headline).toBe('변동비가 지난주보다 {total.change_phrase}.');
+  });
+
+  test('모양이 틀리거나 끊긴 출력은 읽지 않는다', () => {
+    const good = json('total.change', ['category.3.change', 'tag.2.amount_share']);
+    expect(format.parse(good.slice(0, -5))).toBeUndefined();
+    expect(format.parse('null')).toBeUndefined();
+    expect(
+      format.parse(
+        JSON.stringify({ headline: 'total.change', insights: [1, 2], suggestion: '좋아요.' }),
+      ),
+    ).toBeUndefined();
+  });
+
+  test('모르는 틀 id는 빈 문장으로 펼치고 검사에서 걸린다', () => {
+    const output = format.parse(json('total.change', ['category.3.change', 'tag.2.nope']));
+    expect(output?.insights[1]).toEqual({ about: 'tag.2.nope', text: '' });
+    expect(format.check({ field: 'insight', index: 1, about: 'tag.2.nope', text: '' })).toEqual([
+      'unknown-key',
+    ]);
   });
 
   test('제안에 값 키를 쓰면 걸린다', () => {
-    const format = frameFormat(keyed, frames);
     expect(
       format.check({ field: 'suggestion', text: '다음 주에는 {category.3.amount}만 써 보세요.' }),
     ).toEqual(['unknown-key']);
-  });
-
-  test('narrate가 id를 문장으로 펼쳐 내보낸다', async () => {
-    const fake = fakeGenerate([
-      JSON.stringify({
-        headline: 'total.change',
-        insights: ['category.3.change_share', 'tag.2.amount_share'],
-        suggestion: '다음 주에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.',
-      }),
-    ]);
-    const sentences: string[] = [];
-    const result = await narrate({
-      facts: sampleFacts,
-      names: sampleNames,
-      generate: fake.generate,
-      seed: 1,
-      version: 'v3',
-      onSentence: (s: Sentence) => sentences.push(s.rendered),
-    });
-    expect(result).toMatchObject({ status: 'done', attempts: 1 });
-    expect(sentences).toEqual([
-      '변동비가 지난주보다 32,400원 늘었어요.',
-      '배달 지출이 지난주보다 29,000원 늘었어요. 변동비의 36%를 차지했어요.',
-      '충동 태그가 붙은 지출은 54,000원으로 변동비의 29%였어요.',
-      '다음 주에는 배달 지출 전에 꼭 필요한지 생각해 보세요.',
-    ]);
-    expect(fake.calls[0].grammar).toContain('frame ::=');
   });
 });

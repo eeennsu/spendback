@@ -1,17 +1,18 @@
+import { z } from 'zod';
+
 import { type Field, type Output, type Problem, checkField, checkSentence } from './check';
 import type { FactGroup, KeyedFacts } from './keys';
 
 /**
- * 문장 틀(PRD 11장 "회고 문장 품질" 비교). 묶음마다 코드가 쓴 문장 후보이고, 값은 플레이스홀더와 조사 쌍으로 둔다.
- * v2(묶음별 예시)는 이 문장을 프롬프트에 예시로 보여 주고, v3(문장 틀)는 LLM이 id만 고르면 코드가 그대로 쓴다.
+ * 문장 틀(PRD 4.6). 회고의 사실 문장은 묶음마다 코드가 써 둔 이 틀이고, LLM은 id만 고른다. 값은 플레이스홀더와
+ * 조사 쌍으로 두고 렌더러가 채운다. 증감 방향과 잔액은 서술어 값이 쓴다.
  *
- * 틀은 v1 문법 안에서도 쓸 수 있게 만든다. 플레이스홀더 사이에 낱말이 있고, 플레이스홀더 다음 낱말이 단위 글자로
- * 시작하지 않고, 증감을 직접 쓰는 낱말이 없다(grammar.ts). 증감 방향과 잔액은 서술어 값이 쓴다.
+ * 틀도 사후 검사(check.ts)를 통과해야 한다. 증감을 직접 쓰는 낱말이 없고, 그 묶음의 키만 쓴다.
  */
 export type Frame = { id: string; group: string; text: string };
 
 /** 같은 종류의 묶음(category.3, category.1 …)을 한 종류로 본다 */
-export const groupKind = (id: string) => id.split('.')[0];
+const groupKind = (id: string) => id.split('.')[0];
 
 function framesOf(g: FactGroup, kind: KeyedFacts['kind']): Frame[] {
   const before = kind === 'weekly' ? '지난주보다' : '지난달보다';
@@ -163,7 +164,7 @@ export function headlineFrames(frames: Frame[], render: (text: string) => string
   });
 }
 
-/** v3 제안에 쓸 수 있는 키. 값(금액·비율)은 쓰지 않고 이름만 쓴다 */
+/** 제안에 쓸 수 있는 키. 값(금액·비율)은 쓰지 않고 이름만 쓴다 */
 export function nameKeys(keyed: KeyedFacts) {
   return keyed.groups.flatMap(g =>
     g.facts
@@ -174,9 +175,15 @@ export function nameKeys(keyed: KeyedFacts) {
   );
 }
 
+/** LLM이 쓰는 JSON. 문법이 모양을 강제하지만 끊긴 출력과 하네스가 저장한 원문을 위해 다시 검증한다 */
+const RawOutputSchema = z.object({
+  headline: z.string(),
+  insights: z.array(z.string()),
+  suggestion: z.string(),
+});
+
 /**
- * v3 출력. LLM은 문장 id와 제안만 쓴다. 코드가 id를 문장 틀로 펼쳐 v1과 같은 모양(Output)으로 만들어,
- * 저장·렌더링·화면은 그대로 쓴다.
+ * LLM 출력 읽기. LLM은 문장 id와 제안만 쓴다. 코드가 id를 문장 틀로 펼쳐 저장하는 모양(Output)으로 만든다.
  *
  *   {"headline": "<틀 id>", "insights": ["<틀 id>", …(2~4개)], "suggestion": "…"}
  */
@@ -225,29 +232,23 @@ export function frameFormat(keyed: KeyedFacts, frames: Frame[]) {
       const suggestion = /"suggestion":\s*"([^"]*)"/.exec(text)?.[1];
       return expand(headline, ids, suggestion);
     },
+    /** Qwen3.5는 추론 모드를 꺼도 앞에 빈 think 블록을 붙이므로 뗀다(PRD 6장). 읽을 수 없으면 undefined */
     parse(raw: string): Output | undefined {
       const body = raw.replace(/^\s*<think>[\s\S]*?<\/think>\s*/, '');
-      let parsed: unknown;
+      let parsed;
       try {
-        parsed = JSON.parse(body);
+        parsed = RawOutputSchema.safeParse(JSON.parse(body));
       } catch {
         return undefined;
       }
-      const o = parsed as { headline?: unknown; insights?: unknown; suggestion?: unknown };
-      if (
-        typeof o.headline !== 'string' ||
-        typeof o.suggestion !== 'string' ||
-        !Array.isArray(o.insights) ||
-        !o.insights.every(i => typeof i === 'string')
-      ) {
-        return undefined;
-      }
-      const fields = expand(o.headline, o.insights as string[], o.suggestion);
+      if (!parsed.success) return undefined;
+      const { headline, insights: ids, suggestion } = parsed.data;
+      const fields = expand(headline, ids, suggestion);
       const insights = fields.flatMap(f =>
         f.field === 'insight' ? [{ about: f.about, text: f.text }] : [],
       );
       if (insights.length < 2 || insights.length > 4) return undefined;
-      return { headline: fields[0].text, insights, suggestion: o.suggestion };
+      return { headline: fields[0].text, insights, suggestion };
     },
     check(field: Field): Problem[] {
       if (field.field === 'suggestion') return checkSentence(field.text, names, false);

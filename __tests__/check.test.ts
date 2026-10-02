@@ -1,4 +1,4 @@
-import { checkField, checkSentence, parseOutput } from '../src/retro/check';
+import { checkField, checkSentence } from '../src/retro/check';
 import type { KeyedFacts } from '../src/retro/keys';
 
 const keys = new Set(['category.3.name', 'category.3.amount']);
@@ -118,23 +118,5 @@ describe('checkField', () => {
       'no-placeholder',
     ]);
     expect(checkField(keyed, { field: 'suggestion', text: '천천히 써 보세요.' })).toEqual([]);
-  });
-});
-
-describe('parseOutput', () => {
-  const json =
-    '{"headline": "h", "insights": [{"about": "a", "text": "t"}, {"about": "b", "text": "u"}], "suggestion": "s"}';
-
-  test('Qwen의 빈 think 블록을 떼고 읽는다', () => {
-    expect(parseOutput(`<think>\n\n</think>\n\n${json}`)?.headline).toBe('h');
-  });
-
-  test('모양이 틀리거나 끊긴 출력은 읽지 않는다', () => {
-    expect(parseOutput(json.slice(0, -5))).toBeUndefined();
-    expect(
-      parseOutput(
-        '{"headline": "h", "insights": [{"about": "a", "text": "t"}], "suggestion": "s"}',
-      ),
-    ).toBeUndefined();
   });
 });

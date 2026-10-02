@@ -2,19 +2,17 @@ import { sampleFacts, sampleNames } from '../jest/facts';
 import { fakeGenerate } from '../src/retro/fake';
 import { NarratorError, type Sentence, narrate, renderOutput } from '../src/retro/narrate';
 
-const output = (insight: string) =>
+/** LLM은 틀 id를 고르고 제안만 쓴다(PRD 4.6) */
+const output = (suggestion: string) =>
   JSON.stringify({
-    headline: '{category.3.name} 지출이 {category.3.change_phrase}.',
-    insights: [
-      { about: 'category.3', text: insight },
-      { about: 'tag.2', text: '{tag.2.name} 태그 지출은 {tag.2.amount}{이었어요/였어요}.' },
-    ],
-    suggestion: '다음 주에는 배달 전에 꼭 필요한지 생각해 보세요.',
+    headline: 'total.change',
+    insights: ['category.3.change_share', 'tag.2.amount_share'],
+    suggestion,
   });
 
-const GOOD = output('{category.3.name}{이/가} 변동비의 {category.3.share}{을/를} 차지했어요.');
+const GOOD = output('다음 주에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.');
 /** 문법으로 막을 수 없는 한글 수사 */
-const NUMERAL = output('{category.3.name} 지출이 두 배로 늘었어요.');
+const NUMERAL = output('다음 주에는 {category.3.name}{을/를} 두 번만 시켜 보세요.');
 
 function run(outputs: Array<string | Error>, facts = sampleFacts, signal?: AbortSignal) {
   const fake = fakeGenerate(outputs);
@@ -35,16 +33,16 @@ function run(outputs: Array<string | Error>, facts = sampleFacts, signal?: Abort
   return { result, sentences, retries, calls: fake.calls };
 }
 
-test('필드가 완성될 때마다 값을 채운 문장을 순서대로 내보낸다', async () => {
+test('필드가 완성될 때마다 틀을 펼쳐 값을 채운 문장을 순서대로 내보낸다', async () => {
   const { result, sentences, calls } = run([GOOD]);
   expect(await result).toMatchObject({ status: 'done', attempts: 1 });
   expect(sentences).toEqual([
-    '배달 지출이 29,000원 늘었어요.',
-    '배달이 변동비의 36%를 차지했어요.',
-    '충동 태그 지출은 54,000원이었어요.',
-    '다음 주에는 배달 전에 꼭 필요한지 생각해 보세요.',
+    '변동비가 지난주보다 32,400원 늘었어요.',
+    '배달 지출이 지난주보다 29,000원 늘었어요. 변동비의 36%를 차지했어요.',
+    '충동 태그가 붙은 지출은 54,000원으로 변동비의 29%였어요.',
+    '다음 주에는 배달 지출 전에 꼭 필요한지 생각해 보세요.',
   ]);
-  expect(calls[0].grammar).toContain('ins-0');
+  expect(calls[0].grammar).toContain('frame ::=');
   expect(calls[0].messages[1].content).toContain('{category.3.name} = 배달');
 });
 
@@ -65,6 +63,16 @@ test('재시도 2회까지 실패하면 폴백이다', async () => {
 
 test('끊긴 출력은 다시 만든다', async () => {
   const { result } = run([GOOD.slice(0, -20), GOOD]);
+  expect(await result).toMatchObject({ status: 'done', attempts: 2 });
+});
+
+test('같은 묶음을 거르고 insight가 2개보다 적으면 다시 만든다', async () => {
+  const sameGroup = JSON.stringify({
+    headline: 'total.change',
+    insights: ['total.split', 'category.3.change_share'],
+    suggestion: '다음 주에는 꼭 필요한지 생각해 보세요.',
+  });
+  const { result } = run([sameGroup, GOOD]);
   expect(await result).toMatchObject({ status: 'done', attempts: 2 });
 });
 
@@ -96,7 +104,11 @@ test('변동비 지출이 3건 미만이면 LLM을 부르지 않는다', async (
 test('저장한 회고는 facts 스냅샷으로 채운다', async () => {
   const done = await run([GOOD]).result;
   if (done.status !== 'done') throw new Error(done.status);
+  expect(done.output.insights[0]).toEqual({
+    about: 'category.3',
+    text: '{category.3.name} 지출이 지난주보다 {category.3.change_phrase}. 변동비의 {category.3.share}{을/를} 차지했어요.',
+  });
   expect(renderOutput(done.keyed, done.output).insights[0]).toBe(
-    '배달이 변동비의 36%를 차지했어요.',
+    '배달 지출이 지난주보다 29,000원 늘었어요. 변동비의 36%를 차지했어요.',
   );
 });

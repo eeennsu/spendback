@@ -3,7 +3,10 @@ import { z } from 'zod';
 import type { KeyedFacts } from './keys';
 import { JOSA_PAIRS } from './render';
 
-/** LLM 출력(PRD 4.6). 문법이 모양을 강제하지만 하네스의 문법 없는 실행과 저장본 읽기를 위해 다시 검증한다 */
+/**
+ * 저장하는 회고 출력(PRD 4.6). 코드가 LLM이 고른 틀 id를 플레이스홀더 문장으로 펼친 모양이다(frames.ts).
+ * 저장본 읽기와 백업 가져오기에서 검증한다
+ */
 export const OutputSchema = z.object({
   headline: z.string(),
   insights: z
@@ -73,8 +76,8 @@ export function checkSentence(text: string, keys: Set<string>, requirePlaceholde
 }
 
 /**
- * 필드 하나의 사후 검사. 문장 하나는 묶음 하나의 키만 쓴다(grammar.ts). insight는 about에 쓴 묶음,
- * headline·suggestion은 첫 플레이스홀더의 묶음이다
+ * 필드 하나의 사후 검사. 문장 하나는 묶음 하나의 키만 쓴다. insight는 about에 쓴 묶음, headline·suggestion은
+ * 첫 플레이스홀더의 묶음이다. 틀을 펼친 문장은 코드가 써서 걸리지 않지만 한 번 더 막는다(frames.ts)
  */
 export function checkField(keyed: KeyedFacts, field: Field): Problem[] {
   const require = field.field !== 'suggestion';
@@ -96,21 +99,4 @@ export function fieldsOf(output: Output): Field[] {
     ...output.insights.map((insight, index) => ({ field: 'insight' as const, index, ...insight })),
     { field: 'suggestion', text: output.suggestion },
   ];
-}
-
-/**
- * 모델 출력 문자열을 읽는다. Qwen3.5는 추론 모드를 꺼도 앞에 빈 `<think></think>`를 붙이므로 뗀다(PRD 6장).
- * 읽을 수 없으면 undefined
- */
-export function parseOutput(raw: string): Output | undefined {
-  const body = raw
-    .replace(/^\s*<think>[\s\S]*?<\/think>\s*/, '')
-    .replace(/^\s*```(?:json)?\s*/, '')
-    .replace(/\s*```\s*$/, '');
-  try {
-    const parsed = OutputSchema.safeParse(JSON.parse(body));
-    return parsed.success ? parsed.data : undefined;
-  } catch {
-    return undefined;
-  }
 }

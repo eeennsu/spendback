@@ -1,10 +1,10 @@
 /**
  * 평가 하네스(PRD 6장). 폰과 같은 GGUF·프롬프트·GBNF·사후 검사(narrate)로 facts 스냅샷을 돌려 자동 점검한다.
  *
- *   pnpm eval [모델 id…] [--runs 1] [--only week-base,month-base] [--dir <모델 폴더>] [--temp 0.7] [--repeat 1.1] [--prompt v1]
+ *   pnpm eval [모델 id…] [--runs 1] [--only week-base,month-base] [--dir <모델 폴더>] [--temp 0.7] [--repeat 1.1] [--prompt v3]
  *
  * 결과는 scripts/eval/results/<시각>.json(전체)과 .md(모델 비교표, 사람 채점용 문장)다.
- * PC에서는 Metal·CUDA 같은 GPU로 돌아 속도가 폰(CPU)과 다르다. 속도는 참고만 하고 품질을 본다.
+ * PC에서는 Metal·CUDA·Vulkan 같은 GPU로 돌아 속도가 폰(CPU)과 다르다. 속도는 참고만 하고 품질을 본다.
  */
 import {
   type ChatWrapper,

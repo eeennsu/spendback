@@ -1,7 +1,7 @@
 import type { Facts } from '../domain/facts';
-import { type Field, type Output, type Problem, checkField, fieldsOf, parseOutput } from './check';
+import { type Field, type Output, type Problem, fieldsOf } from './check';
 import { buildFrames, frameFormat, headlineFrames, nameKeys } from './frames';
-import { buildFrameGrammar, buildGrammar } from './grammar';
+import { buildGrammar } from './grammar';
 import { type KeyedFacts, type Names, factValues, keyFacts } from './keys';
 import { type Message, PROMPT_VERSION, type PromptVersion, buildMessages } from './prompt';
 import { render } from './render';
@@ -40,21 +40,7 @@ export const MIN_RECORDS = 3;
 /** 첫 생성 + 재시도 2회 */
 export const MAX_ATTEMPTS = 3;
 
-/** 지금까지 받은 출력에서 완성된 필드. 문법이 문장에 따옴표를 막으므로 정규식으로 충분하다 */
-export function completedFields(text: string): Field[] {
-  const fields: Field[] = [];
-  const headline = /"headline":\s*"([^"]*)"/.exec(text);
-  if (headline) fields.push({ field: 'headline', text: headline[1] });
-  let index = 0;
-  for (const m of text.matchAll(/\{\s*"about":\s*"([^"]*)",\s*"text":\s*"([^"]*)"\s*\}/g)) {
-    fields.push({ field: 'insight', index: index++, about: m[1], text: m[2] });
-  }
-  const suggestion = /"suggestion":\s*"([^"]*)"/.exec(text);
-  if (suggestion) fields.push({ field: 'suggestion', text: suggestion[1] });
-  return fields;
-}
-
-/** 프롬프트 버전마다 요청, 스트림의 필드 읽기, 최종 출력 읽기, 필드 검사가 다르다. v3는 틀 id를 문장으로 펼친다 */
+/** 프롬프트 버전마다 요청, 스트림의 필드 읽기, 최종 출력 읽기, 필드 검사가 다르다 */
 type Format = {
   request: { messages: Message[]; grammar: string };
   fields: (text: string) => Field[];
@@ -62,32 +48,30 @@ type Format = {
   check: (field: Field) => Problem[];
 };
 
-export function formatFor(keyed: KeyedFacts, version: PromptVersion): Format {
-  const frames = buildFrames(keyed);
-  if (version !== 'v3') {
+/** 하네스로 프롬프트를 비교할 때 버전을 더한다(scripts/eval --prompt) */
+const FORMATS: Record<PromptVersion, (keyed: KeyedFacts) => Format> = {
+  /** 문장 틀. LLM은 틀 id를 고르고 제안만 쓴다. 코드가 id를 문장으로 펼친다(frames.ts) */
+  v3: keyed => {
+    const frames = buildFrames(keyed);
+    const values = factValues(keyed);
+    const names = nameKeys(keyed);
+    const headlines = headlineFrames(frames, text => render(text, values));
     return {
-      request: { messages: buildMessages(keyed, version, frames), grammar: buildGrammar(keyed) },
-      fields: completedFields,
-      parse: parseOutput,
-      check: field => checkField(keyed, field),
+      request: {
+        messages: buildMessages(keyed, frames, names),
+        grammar: buildGrammar(
+          (headlines.length ? headlines : frames).map(f => f.id),
+          frames.map(f => f.id),
+          names,
+        ),
+      },
+      ...frameFormat(keyed, frames),
     };
-  }
-  const values = factValues(keyed);
-  const names = nameKeys(keyed);
-  const headlines = headlineFrames(frames, text => render(text, values));
-  const format = frameFormat(keyed, frames);
-  return {
-    request: {
-      messages: buildMessages(keyed, version, frames, names),
-      grammar: buildFrameGrammar(
-        (headlines.length ? headlines : frames).map(f => f.id),
-        frames.map(f => f.id),
-        names,
-      ),
-    },
-    ...format,
-  };
-}
+  },
+};
+
+export const formatFor = (keyed: KeyedFacts, version: PromptVersion = PROMPT_VERSION) =>
+  FORMATS[version](keyed);
 
 export async function narrate({
   facts,

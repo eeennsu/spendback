@@ -1,6 +1,7 @@
 /**
  * 저장한 하네스 결과를 지금의 자동 점검(checks.ts)으로 다시 센다. 모델은 돌리지 않고, 토큰 수를 세려고
- * 토크나이저만 올린다(프롬프트 토큰이 없는 예전 결과의 폰 시간 추정).
+ * 토크나이저만 올린다(프롬프트 토큰이 없는 예전 결과의 폰 시간 추정). 걷어 낸 프롬프트 버전(v1·v2)은 프롬프트를
+ * 다시 만들 수 없어 저장된 토큰 수만 쓴다.
  * 점검 항목을 더한 뒤 지난 결과와 같은 잣대로 비교할 때 쓴다.
  *
  *   pnpm exec tsx scripts/eval/rescore.mts scripts/eval/results/<시각>.json [--dir <모델 폴더>]
@@ -28,9 +29,10 @@ const { meta, runs } = JSON.parse(readFileSync(file, 'utf8')) as {
   meta: Record<string, string>;
   runs: Run[];
 };
+/** 지금 코드에 남은 버전일 때만 프롬프트를 다시 만들어 센다 */
 const version = (PROMPT_VERSIONS as readonly string[]).includes(meta.promptVersion)
   ? (meta.promptVersion as PromptVersion)
-  : 'v1';
+  : undefined;
 
 const llama = await getLlama({ gpu: false });
 const tokenizers = new Map<string, (text: string) => number>();
@@ -49,11 +51,13 @@ const rescored = runs.map(r => {
   const count = tokenizers.get(r.model);
   const promptTokens =
     r.promptTokens ??
-    count?.(
-      formatFor(keyed, version)
-        .request.messages.map(m => m.content)
-        .join('\n'),
-    );
+    (version === undefined
+      ? undefined
+      : count?.(
+          formatFor(keyed, version)
+            .request.messages.map(m => m.content)
+            .join('\n'),
+        ));
   const attempts = r.attempts.map(a => {
     if (a.headlineTokens !== undefined || !count) return a;
     const end = /"headline":\s*"[^"]*"/.exec(a.raw);

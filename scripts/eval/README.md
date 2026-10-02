@@ -12,7 +12,12 @@ pnpm eval                              # 스냅샷 20개 × 모델 3개 × 1회
 pnpm eval qwen3.5-2b --runs 3          # 모델 하나, 스냅샷마다 3회
 pnpm eval --only week-base,month-base  # 스냅샷 일부
 pnpm eval --temp 0.3 --repeat 1        # 샘플링 비교(기본값은 src/retro/models.ts의 INFERENCE)
+pnpm eval --prompt v3                  # 프롬프트 버전(src/retro/prompt.ts PROMPT_VERSIONS). 비교할 때 버전을 더한다
+pnpm exec tsx scripts/eval/rescore.mts scripts/eval/results/<시각>.json  # 저장한 결과를 지금의 점검으로 다시 센다
+pnpm exec tsx scripts/eval/compare.mts <결과.json> <결과.json> …     # 결과 여럿을 모델·버전별 한 표로 모은다
 ```
+
+PowerShell은 `--only a,b`의 쉼표를 배열로 읽어 "a b"로 넘긴다. PowerShell에서는 `--only 'a,b'`처럼 따옴표로 감싸거나 Git Bash에서 돌린다.
 
 모델은 `~/.cache/spendback/models`(Windows는 `%USERPROFILE%\.cache\spendback\models`)에 받는다. 다른 폴더는 `--dir <폴더>`로 준다. 결과는 `results/<시각>.json`(시도별 원문 포함)과 `results/<시각>.md`(모델 비교표, 사람 채점용 문장)다.
 
@@ -22,20 +27,24 @@ pnpm eval --temp 0.3 --repeat 1        # 샘플링 비교(기본값은 src/retro
 
 ## 자동 점검
 
-앱의 사후 검사(`src/retro/check.ts`)가 걸러 재생성하는 것과, 완료한 회고에 하네스가 더 보는 것으로 나뉜다.
+앱의 사후 검사(`src/retro/check.ts`)가 걸러 재생성하는 것과, 완료한 회고에 하네스가 더 보는 것으로 나뉜다. 사실 문장은 코드가 쓴 문장 틀이라 앱 검사는 사실상 LLM이 쓰는 제안 한 줄에 걸린다.
 
 | 항목 | 어디서 | 내용 |
 |---|---|---|
-| 읽기 실패 | 앱 | JSON 스키마(Zod)를 통과하지 못했다 |
-| 모르는 키 | 앱 | facts에 없는 키, 고른 묶음 밖의 키 |
+| 읽기 실패 | 앱 | JSON 스키마(Zod)를 통과하지 못했거나, 같은 묶음의 틀을 거른 뒤 insight가 2개보다 적다 |
+| 모르는 키 | 앱 | 모르는 틀 id, 제안에 쓴 이름 키 밖의 키 |
 | 수사 | 앱 | 문자 화이트리스트 밖(숫자, 다른 문자 체계), 한글 수사와 단위("삼만 원", "두 배", "세 번") |
 | 단위 | 앱 | 숫자 없이 남은 단위("지출이 원 늘었어요"), 값 뒤에 또 쓴 단위("1일 일") |
-| 방향 | 앱 | 증감을 서술어 키 없이 직접 쓴 말(늘었·줄었·증가·감소…) |
+| 방향 | 앱 | 증감을 직접 쓴 말(늘었·줄었·증가·감소…) |
 | 되풀이 | 앱 | 같은 글자를 세 번 넘게 이음("했어요요요") |
 | 길이 초과 | 하네스 | 채운 뒤 headline 30자, insight 60자, suggestion 45자(공백 포함). S24+ 본문 한 줄이 약 22자다 |
 | 문장 수 초과 | 하네스 | headline·suggestion 한 문장, insight 두 문장 |
 | 금지어 | 하네스 | 느낌표, 인사·호칭, 단정·과장, 비난·훈계("~야 해요"), 사실 밖 추측(`checks.ts`) |
-| 같은 묶음 | 하네스 | insight끼리 같은 묶음을 고름 |
+| 같은 묶음 | 하네스 | insight끼리 같은 묶음을 고름. 문장 틀은 코드가 걸러 늘 0이고, v1 결과와 비교할 때 본다 |
+| 다른 사실에 이름 | 하네스 | headline·insight에 다른 묶음의 카테고리·태그 이름을 글자로 씀. 문장 틀에서는 생기지 않는다 |
+| 문장 품질 휴리스틱 | 하네스 | 증감 낱말 깨뜨리기("늘 때")·동의어, 수사 누출("삼분의 일"), 프롬프트 옮겨 쓰기, 해요체 아님, 다짐·질문, 낱말 되풀이, 뭉친 낱말(`checks.ts` QUALITY) |
+
+"걸린 데 없는 회고"는 길이·문장 수·금지어·같은 묶음·다른 사실에 이름과 문장 품질 휴리스틱에 하나도 걸리지 않은 회고다. 휴리스틱이라 넘치거나 모자랄 수 있다. 결과의 "폰 시간 추정"은 프롬프트·생성 토큰 수를 LLM 스파이크의 S24+ 속도(`report.ts` PHONE)로 나눈 값이다.
 
 길이 한도와 금지어는 PRD 6장의 초안이고, 결과를 보고 조정한다.
 
@@ -51,7 +60,7 @@ pnpm eval --temp 0.3 --repeat 1        # 샘플링 비교(기본값은 src/retro
 
 ## 알려진 차이
 
-- PC에서는 Metal·CUDA로 돌아 속도가 폰(CPU, 스레드 6)과 다르다. 시간은 참고만 한다.
+- PC에서는 Metal·CUDA·Vulkan으로 돌아 속도가 폰(CPU, 스레드 6)과 다르다. 시간은 참고만 하고, 폰 시간은 토큰 수로 추정한다.
 - node-llama-cpp 3.21.1과 llama.rn 0.12.9에 든 llama.cpp 버전이 다르다(PRD 10장). 문법 처리는 거의 같다.
 - Kanana GGUF의 Jinja 템플릿은 node-llama-cpp의 검사를 통과하지 못해 같은 형식의 Llama 3.1 래퍼로 돈다. llama.rn은 GGUF 템플릿을 그대로 쓴다.
 - Qwen3.5는 node-llama-cpp에서 `thoughts: 'discourage'`로 추론 모드를 끈다(빈 think 블록을 프롬프트에 넣는다). `budgets.thoughtTokens: 0`으로 끄면 문법이 고른 첫 토큰 `{`가 think 구간에 들어가 사라진다.
@@ -91,7 +100,7 @@ PRD 11장 후보 중 묶음별 예시(v2)와 문장 틀(v3)을 최소 구현으�
 | EXAONE 4.0 1.2B | v2 | 37/40 | 25/40 | 0/40 | 84 | 2 | 6 | 119 | 1897 | 315 | 23.4 / 35.6 |
 | EXAONE 4.0 1.2B | v3 | 29/40 | 16/40 | 0/40 | 19 | 2 | 0 | 25 | 1362 | 171 | 16.9 / 21.4 |
 
-결과: [v2](results/2026-10-02T11-29-42.md), [v3](results/2026-10-02T11-08-30.md), [v3 묶음 거르기 전](results/2026-10-01T13-26-51.md), [v1 다시 세기](results/2026-09-26T07-56-10.rescored.md). 비교용 코드(문장 틀, `--prompt`, 문장 품질 휴리스틱, 폰 시간 추정, 다시 세기 `rescore.mts`, 비교표 `compare.mts`)는 브랜치 `exp/retro-quality`에 있고, 문장 틀을 main에 반영할 때 함께 옮긴다.
+결과: [v2](results/2026-10-02T11-29-42.md), [v3](results/2026-10-02T11-08-30.md), [v3 묶음 거르기 전](results/2026-10-01T13-26-51.md), [v1 다시 세기](results/2026-09-26T07-56-10.rescored.md). 비교에 쓴 하네스 기능(`--prompt`, 문장 품질 휴리스틱, 폰 시간 추정, 다시 세기 `rescore.mts`, 비교표 `compare.mts`)은 main에 옮겼고, 앱은 문장 틀(v3)만 남겼다. v1·v2를 다시 돌리려면 세 버전이 함께 있는 병합 커밋 `f4950f3`을 꺼낸다. 위 표는 `compare.mts`로 만들었다(v1은 `.rescored.json`).
 
 - "걸린 데 없는 회고"는 길이·문장 수·금지어·같은 묶음과 문장 품질 휴리스틱(증감 낱말 깨뜨리기·동의어, 수사 누출, 프롬프트 옮겨 쓰기, 해요체 아님, 다짐·질문, 되풀이, 뭉친 낱말, 다른 사실에 이름 붙이기)에 하나도 걸리지 않은 회고다. 휴리스틱이라 넘치거나 모자랄 수 있다.
 - 폰 시간은 토큰 수를 LLM 스파이크의 S24+ 속도(프롬프트 처리 Qwen 107, Kanana 54, EXAONE 100 tok/s, 생성 18.8·12.8·19 tok/s)로 나눈 추정이다. 재시도는 프롬프트 캐시가 남아 생성 시간만 더했다.

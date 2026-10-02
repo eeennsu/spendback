@@ -1,5 +1,6 @@
 import { budgetForMonth, weeklyBudget } from './budget';
-import { addDays, daysInMonth, weekday } from './date';
+import { addDays, weekday } from './date';
+import { type PeriodKind, periodEnd, previousStart } from './periods';
 import { type Budget, type Category, type Transaction, isVariableExpense } from './types';
 
 type Tx = Pick<
@@ -16,7 +17,7 @@ type Tx = Pick<
 >;
 
 /** 주간은 월요일 start부터 일요일까지, 월간은 start(`YYYY-MM-01`)가 있는 달력 월이다 */
-export type Period = { kind: 'weekly' | 'monthly'; start: string };
+export type Period = { kind: PeriodKind; start: string };
 
 export type FactsInput = {
   period: Period;
@@ -28,16 +29,6 @@ export type FactsInput = {
   /** 증감 상위 3개에서 동점을 가르는 카테고리 순서. 숨긴 카테고리도 넣는다 */
   categories: Pick<Category, 'id' | 'sortOrder'>[];
 };
-
-function periodEnd({ kind, start }: Period) {
-  if (kind === 'weekly') return addDays(start, 6);
-  const month = start.slice(0, 7);
-  return `${month}-${daysInMonth(month)}`;
-}
-
-function previousStart({ kind, start }: Period) {
-  return kind === 'weekly' ? addDays(start, -7) : `${addDays(start, -1).slice(0, 7)}-01`;
-}
 
 const sum = (txs: Tx[]) => txs.reduce((total, tx) => total + tx.amount, 0);
 
@@ -68,8 +59,8 @@ export function computeFacts({
   categories,
 }: FactsInput) {
   const { kind, start } = period;
-  const end = periodEnd(period);
-  const prevStart = previousStart(period);
+  const end = periodEnd(kind, start);
+  const prevStart = previousStart(kind, start);
   const between = (from: string, to: string) =>
     transactions.filter(tx => tx.date >= from && tx.date <= to);
 

@@ -161,7 +161,15 @@ function HistoryItem({
   return (
     <Row
       inset='screen'
-      label={`${title}, ${meta}, ${income ? '수입' : '지출'} ${formatWon(item.amount)}${item.isFixed ? ', 고정비' : ''}`}
+      // 아랫줄이 비면 빈 칸을 읽지 않는다("식비, , 지출")
+      label={[
+        title,
+        meta,
+        `${income ? '수입' : '지출'} ${formatWon(item.amount)}`,
+        item.isFixed ? '고정비' : '',
+      ]
+        .filter(Boolean)
+        .join(', ')}
       onPress={() => onPress(item.id)}
     >
       <Stack className='flex-1 gap-1'>

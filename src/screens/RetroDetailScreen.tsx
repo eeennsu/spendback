@@ -279,7 +279,7 @@ function Narrative({
   }
   if (generation.status === 'fallback') {
     const message = {
-      'no-model': '모델을 받으면 회고 문장이 생성됩니다',
+      'no-model': '모델을 받으면 회고 문장을 만들 수 있어요',
       'load-failed': '모델을 불러오지 못했어요',
       'check-failed': '회고 문장을 만들지 못했어요',
     }[generation.reason];

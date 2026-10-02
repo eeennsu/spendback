@@ -1,0 +1,205 @@
+import { fireEvent, render, screen } from '@testing-library/react-native';
+import type { EffectCallback } from 'react';
+
+import { registerGlobalCss } from '../jest/css';
+import { db } from '../src/db';
+import { addFixedCost } from '../src/db/lists';
+import { saveRetrospective } from '../src/db/retrospectives';
+import { fixedCosts, retrospectives, transactions } from '../src/db/schema';
+import { type TransactionInput, addTransaction } from '../src/db/transactions';
+import Files from '../src/native/NativeSpendbackFiles';
+import { llamaNarrator } from '../src/retro/llama';
+import { APP_MODELS } from '../src/retro/models';
+import { RetroDetailScreen } from '../src/screens/RetroDetailScreen';
+
+/**
+ * 회고 상세의 상태(PRD 9장 컴포넌트, 4.6): 진행 중, 기록 부족, 모델 없음 폴백, 생성 중과 취소, 저장본, 월간 고정비
+ * 미기록 알림. 모델은 가짜 narrator로 바꾼다(PRD 6장 인터페이스). 오늘은 2026-09-24 목요일이다
+ */
+jest.mock('../src/db', () => {
+  const { testDb } = jest.requireActual('../jest/db');
+  return { db: testDb(), runMigrations: jest.fn(async () => undefined) };
+});
+
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), setOptions: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+  // 테스트 화면은 늘 포커스를 받은 것으로 본다
+  useFocusEffect: (effect: EffectCallback) => {
+    jest.requireActual<typeof import('react')>('react').useEffect(effect);
+  },
+}));
+
+jest.mock('../src/retro/llama', () => ({ llamaNarrator: jest.fn() }));
+
+/** 끝나지 않는 생성. 취소하면 그때까지의 출력(없음)으로 끝난다 */
+function pendingNarrator() {
+  const generate = jest.fn(
+    (_request: unknown, _onToken: unknown, signal: AbortSignal) =>
+      new Promise<string>(resolve => signal.addEventListener('abort', () => resolve(''))),
+  );
+  const release = jest.fn(async () => {});
+  jest.mocked(llamaNarrator).mockReturnValue({ generate, release });
+  return { generate, release };
+}
+
+const QWEN = APP_MODELS[0];
+const withModel = () =>
+  jest
+    .mocked(Files.fileSize)
+    .mockImplementation(path => (path.endsWith(QWEN.fileName) ? QWEN.sizeBytes : -1));
+
+const FG_BRAND = '#1b64da';
+
+const expense = (overrides: Partial<TransactionInput>): TransactionInput => ({
+  type: 'expense',
+  amount: 9500,
+  date: '2026-09-15',
+  categoryId: 1,
+  reasonTagId: null,
+  satisfaction: null,
+  memo: null,
+  paymentMethod: null,
+  isFixed: false,
+  fixedCostId: null,
+  ...overrides,
+});
+
+/** 9월 3주(9.14~9.20)에 변동비 기록을 count건 넣는다 */
+async function week(count: number) {
+  for (let i = 0; i < count; i++) {
+    await addTransaction(db, expense({ amount: 10000 + i * 1000, date: `2026-09-${15 + i}` }));
+  }
+}
+
+async function mount(kind: 'weekly' | 'monthly', start: string) {
+  await registerGlobalCss();
+  await render(<RetroDetailScreen route={{ params: { kind, start } }} />);
+}
+
+beforeAll(async () => {
+  await registerGlobalCss();
+  jest.useFakeTimers({ now: new Date('2026-09-24T12:00:00'), advanceTimers: true });
+});
+
+afterAll(() => {
+  jest.useRealTimers();
+});
+
+beforeEach(async () => {
+  jest.clearAllMocks();
+  jest.mocked(Files.fileSize).mockReturnValue(-1);
+  await db.delete(transactions);
+  await db.delete(fixedCosts);
+  await db.delete(retrospectives);
+});
+
+test('진행 중인 주는 지표만 보이고 회고를 만들지 않는다', async () => {
+  await addTransaction(db, expense({ date: '2026-09-22' }));
+  await mount('weekly', '2026-09-21');
+
+  expect(await screen.findByText('이번 주가 끝나면 회고를 만들어요')).toBeOnTheScreen();
+  expect(screen.getByText('총지출')).toBeOnTheScreen();
+  expect(llamaNarrator).not.toHaveBeenCalled();
+});
+
+test('변동비 기록이 모자라면 회고를 만들지 않는다', async () => {
+  await week(2);
+  await mount('weekly', '2026-09-14');
+
+  expect(await screen.findByText('기록이 부족해요')).toBeOnTheScreen();
+  expect(llamaNarrator).not.toHaveBeenCalled();
+});
+
+test('모델이 없으면 폴백 안내와 모델 관리로 가는 버튼을 보인다', async () => {
+  await week(4);
+  await mount('weekly', '2026-09-14');
+
+  expect(await screen.findByText('모델을 받으면 회고 문장을 만들 수 있어요')).toBeOnTheScreen();
+  expect(screen.getByText('지표와 차트는 아래에 있어요')).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole('button', { name: '모델 관리로 이동' }));
+  expect(mockNavigation.navigate).toHaveBeenCalledWith('Models');
+  expect(llamaNarrator).not.toHaveBeenCalled();
+});
+
+test('끝난 주를 처음 열면 만들기 시작하고, 취소하면 모델을 내린다', async () => {
+  withModel();
+  const narrator = pendingNarrator();
+  await week(4);
+  await mount('weekly', '2026-09-14');
+
+  expect(await screen.findByText('쓰는 중')).toBeOnTheScreen();
+  expect(llamaNarrator).toHaveBeenCalledWith(expect.stringContaining(QWEN.fileName));
+  await fireEvent.press(screen.getByRole('button', { name: '취소' }));
+
+  expect(await screen.findByText('만들기를 취소했어요')).toBeOnTheScreen();
+  expect(narrator.release).toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: '회고 만들기' })).toBeOnTheScreen();
+});
+
+test('저장본이 있으면 다시 만들지 않고, 코드가 채운 이름과 숫자만 강조한다', async () => {
+  withModel();
+  await week(4);
+  await saveRetrospective(db, {
+    kind: 'weekly',
+    periodStart: '2026-09-14',
+    periodEnd: '2026-09-20',
+    facts: {
+      kind: 'weekly',
+      period: '9월 3주',
+      groups: [
+        {
+          id: 'category.3',
+          title: '배달',
+          facts: [
+            { key: 'category.3.name', value: '배달', kind: 'noun', note: '' },
+            {
+              key: 'category.3.change_phrase',
+              value: '29,000원 늘었어요',
+              kind: 'predicate',
+              note: '',
+            },
+          ],
+        },
+      ],
+    },
+    output: {
+      headline: '{category.3.name} 지출이 지난주보다 {category.3.change_phrase}.',
+      insights: [],
+      suggestion: '다음 주에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.',
+    },
+    modelId: QWEN.id,
+    promptVersion: 'v4',
+  });
+  await mount('weekly', '2026-09-14');
+
+  expect(await screen.findByText('배달 지출이 지난주보다 29,000원 늘었어요.')).toBeOnTheScreen();
+  expect(screen.getAllByText('배달')[0]).toHaveStyle({ color: FG_BRAND });
+  expect(screen.getByText('29,000원')).toHaveStyle({ color: FG_BRAND });
+  // 서술어("늘었어요")는 강조하지 않는다
+  expect(screen.queryByText('29,000원 늘었어요')).toBeNull();
+  expect(llamaNarrator).not.toHaveBeenCalled();
+});
+
+test('월간은 기록하지 않은 고정비를 먼저 알리고, "그대로 만들기"를 누르면 만든다', async () => {
+  await addFixedCost(db, {
+    name: '휴대폰 요금',
+    amount: 55000,
+    categoryId: 7,
+    dayOfMonth: 21,
+    paymentMethod: 'card',
+  });
+  await db.update(fixedCosts).set({ createdAt: Date.parse('2026-07-01T00:00:00') });
+  for (let i = 0; i < 4; i++) {
+    await addTransaction(db, expense({ date: `2026-08-${10 + i}` }));
+  }
+  await mount('monthly', '2026-08-01');
+
+  expect(await screen.findByText('기록하지 않은 고정비가 있어요')).toBeOnTheScreen();
+  expect(screen.getByRole('button', { name: /^휴대폰 요금 기록/ })).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole('button', { name: '그대로 만들기' }));
+
+  // 모델이 없어 폴백까지 간다
+  expect(await screen.findByText('모델을 받으면 회고 문장을 만들 수 있어요')).toBeOnTheScreen();
+});

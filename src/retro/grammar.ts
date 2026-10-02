@@ -84,6 +84,20 @@ function wordRule(name: string, banned: string[]) {
 /** (낱말 조각) 플레이스홀더 (낱말 조각 플레이스홀더)×2까지 (낱말 조각과 끝 문장부호) */
 const sentence = (ph: string) => `(seg " ")? ${ph} (gap after " " ${ph}){0,2} (gap after end)?`;
 
+/** 문장 낱말과 조사 규칙. v1·v2 문장과 v3 제안이 같이 쓴다 */
+const WORD_RULES = [
+  `josa ::= ${alt(JOSA_PAIRS.map(pair => `{${pair}}`))}`,
+  `particle ::= ${alt(PARTICLES)}`,
+  `seg ::= w (gap w){0,${WORDS - 1}}`,
+  `after ::= wa (gap w){0,${WORDS - 1}}`,
+  wordRule('w', []),
+  wordRule('wa', UNIT_STARTS),
+  'rest ::= [\\uAC00-\\uD7A3]{0,11}',
+  'gap ::= " " | ", "',
+  'end ::= [.?]',
+  'ws ::= [ \\n]?',
+];
+
 export function buildGrammar(keyed: KeyedFacts) {
   const groups = keyed.groups.map((_, i) => i);
   const insight = (g: FactGroup, i: number) =>
@@ -97,15 +111,25 @@ export function buildGrammar(keyed: KeyedFacts) {
     ...keyed.groups.map(insight),
     ...groups.map(i => `s-${i} ::= ${sentence(`ph-${i}`)}`),
     ...keyed.groups.map((g, i) => placeholderRule(String(i), g.facts)),
-    `josa ::= ${alt(JOSA_PAIRS.map(pair => `{${pair}}`))}`,
-    `particle ::= ${alt(PARTICLES)}`,
-    `seg ::= w (gap w){0,${WORDS - 1}}`,
-    `after ::= wa (gap w){0,${WORDS - 1}}`,
-    wordRule('w', []),
-    wordRule('wa', UNIT_STARTS),
-    'rest ::= [\\uAC00-\\uD7A3]{0,11}',
-    'gap ::= " " | ", "',
-    'end ::= [.?]',
-    'ws ::= [ \\n]?',
+    ...WORD_RULES,
+  ].join('\n');
+}
+
+/**
+ * v3(문장 틀) 문법. headline과 insights는 틀 id만 고르고, suggestion만 낱말로 쓴다. 제안의 플레이스홀더는 이름 키
+ * (카테고리·태그 이름, 메모)만 2개까지 쓸 수 있다. 금액·비율 같은 값은 틀이 쓴다
+ */
+export function buildFrameGrammar(headlineIds: string[], frameIds: string[], names: string[]) {
+  const ids = (list: string[]) => list.map(id => literal(`"${id}"`)).join(' | ');
+  const suggestion = names.length
+    ? 'suggestion ::= seg end | (seg " ")? nph (gap after " " nph)? (gap after end)?'
+    : 'suggestion ::= seg end';
+  return [
+    'root ::= "{" ws "\\"headline\\":" ws headline ws "," ws "\\"insights\\":" ws "[" ws frame (ws "," ws frame){1,3} ws "]" ws "," ws "\\"suggestion\\":" ws "\\"" suggestion "\\"" ws "}"',
+    `headline ::= ${ids(headlineIds)}`,
+    `frame ::= ${ids(frameIds)}`,
+    suggestion,
+    ...(names.length ? [`nph ::= "{" (${alt(names)}) "}" (josa | particle)? end?`] : []),
+    ...WORD_RULES,
   ].join('\n');
 }

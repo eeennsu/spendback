@@ -49,7 +49,7 @@ function Bar({ back, title, right }: { back?: () => void; title: string; right?:
   const insets = useSafeAreaInsets();
   return (
     <View className='bg-canvas' style={{ paddingTop: insets.top }}>
-      <View className={cn('h-14 flex-row items-center gap-1 pr-2', back ? 'pl-1' : 'pl-4')}>
+      <View className={cn('h-16 flex-row items-center gap-1 pr-2', back ? 'pl-1' : 'pl-4')}>
         {back && (
           <Pressable
             accessibilityRole='button'

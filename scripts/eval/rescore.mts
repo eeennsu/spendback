@@ -5,7 +5,7 @@
  *
  *   pnpm exec tsx scripts/eval/rescore.mts scripts/eval/results/<시각>.json [--dir <모델 폴더>]
  *
- * 같은 폴더에 <시각>.rescored.md를 쓴다.
+ * 같은 폴더에 <시각>.rescored.json과 .rescored.md를 쓴다.
  */
 import { getLlama } from 'node-llama-cpp';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -66,6 +66,8 @@ const rescored = runs.map(r => {
   if (!r.output || !r.rendered) return base;
   return { ...base, auto: autoCheck(r.output, r.rendered, keyed) };
 });
-const out = file.replace(/\.json$/, '.rescored.md');
-writeFileSync(out, markdown(rescored, { ...meta, rescored: new Date().toISOString() }));
-console.log(out);
+const rescoredMeta = { ...meta, rescored: new Date().toISOString() };
+const out = file.replace(/\.json$/, '.rescored');
+writeFileSync(`${out}.json`, JSON.stringify({ meta: rescoredMeta, runs: rescored }, null, 2));
+writeFileSync(`${out}.md`, markdown(rescored, rescoredMeta));
+console.log(`${out}.md`);

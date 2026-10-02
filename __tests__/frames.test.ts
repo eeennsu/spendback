@@ -94,16 +94,25 @@ describe('v3 문장 틀', () => {
     expect(user.content).toContain('{category.3.name} = 배달');
   });
 
-  test('같은 틀을 두 번 고르면 뒤의 것을 버린다', () => {
+  test('headline이나 앞 insight와 같은 묶음의 틀은 버린다', () => {
     const format = frameFormat(keyed, frames);
-    const output = format.parse(
-      JSON.stringify({
-        headline: 'total.change',
-        insights: ['total.change', 'category.3.amount_share', 'tag.2.amount_share'],
-        suggestion: '다음 주에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.',
-      }),
-    );
-    expect(output?.insights.map(i => i.about)).toEqual(['category.3', 'tag.2']);
+    const parse = (headline: string, insights: string[]) =>
+      format
+        .parse(JSON.stringify({ headline, insights, suggestion: '다음 주에는 꼭 확인해 보세요.' }))
+        ?.insights.map(i => i.about);
+    expect(
+      parse('total.change', ['total.change', 'category.3.amount_share', 'tag.2.amount_share']),
+    ).toEqual(['category.3', 'tag.2']);
+    expect(
+      parse('budget.balance', [
+        'budget.usage_balance',
+        'category.3.change',
+        'category.3.amount_share',
+        'tag.2.amount_share',
+      ]),
+    ).toEqual(['category.3', 'tag.2']);
+    // 버리고 남은 insight가 2개보다 적으면 읽기 실패다
+    expect(parse('budget.balance', ['budget.usage_balance', 'category.3.change'])).toBeUndefined();
   });
 
   test('제안에 값 키를 쓰면 걸린다', () => {

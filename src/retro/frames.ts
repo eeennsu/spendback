@@ -184,7 +184,11 @@ export function frameFormat(keyed: KeyedFacts, frames: Frame[]) {
   const byId = new Map(frames.map(f => [f.id, f]));
   const names = new Set(nameKeys(keyed));
 
-  /** 같은 틀을 두 번 고르면 뒤의 것을 버린다. 남은 insight가 2개보다 적으면 읽기 실패로 본다 */
+  /**
+   * 한 묶음의 틀은 회고에 하나만 쓴다. 같은 묶음의 틀은 같은 값을 되풀이하므로("예산에서 92,700원 남았어요." 뒤에
+   * "예산의 67%를 써서 92,700원 남았어요.") headline이나 앞 insight와 묶음이 같은 insight는 버린다.
+   * 남은 insight가 2개보다 적으면 읽기 실패로 본다
+   */
   const expand = (
     headline: string | undefined,
     insightIds: string[],
@@ -192,13 +196,14 @@ export function frameFormat(keyed: KeyedFacts, frames: Frame[]) {
   ) => {
     const fields: Field[] = [];
     const used = new Set<string>();
+    const groupOf = (id: string) => byId.get(id)?.group ?? id;
     if (headline !== undefined) {
       fields.push({ field: 'headline', text: byId.get(headline)?.text ?? '' });
-      used.add(headline);
+      used.add(groupOf(headline));
     }
     for (const id of insightIds) {
-      if (used.has(id)) continue;
-      used.add(id);
+      if (used.has(groupOf(id))) continue;
+      used.add(groupOf(id));
       const frame = byId.get(id);
       fields.push({
         field: 'insight',

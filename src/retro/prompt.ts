@@ -89,7 +89,7 @@ function frameSystem(kind: KeyedFacts['kind']) {
 
 규칙:
 - headline에는 이번 ${unit(kind)}에 가장 눈에 띄는 사실의 문장 id를 하나 쓴다. "headline 후보"에서 고른다.
-- insights에는 headline과 다른 사실의 문장 id를 2~4개, 중요한 것부터 쓴다. 한 묶음([ ] 안)에서는 하나만 고른다.
+- insights에는 headline과 다른 묶음의 문장 id를 2~4개, 중요한 것부터 쓴다. 묶음([ ] 안)마다 하나만 고른다.
 - suggestion은 고른 사실에 근거해 다음 ${unit(kind)}에 할 수 있는 일 하나를 권하는 한 문장이다. 해요체로 쓰고, 훈계하거나 과장하지 않는다.
 - suggestion에는 숫자를 쓸 수 없다. 카테고리·태그 이름과 메모는 "이름 키"의 {키}로 쓰고, {키} 바로 뒤에 조사를 쓸 때는 {이/가}, {을/를}, {은/는}, {와/과}, {으로/로} 중 하나를 쓴다.
 - JSON만 출력한다.

@@ -55,15 +55,49 @@ function josa(pair: string, before: string) {
   return final ? withFinal : withoutFinal;
 }
 
-/** 모르는 키는 그대로 둔다. 사후 검사(check.ts)가 모르는 키를 먼저 거른다 */
-export function render(text: string, values: Record<string, string>) {
+/** 문장 조각. value는 코드가 채운 facts 값이다. 회고 화면이 값을 강조한다(docs/DESIGN.md 4.4) */
+export type Part = { text: string; value: boolean };
+
+/** 서술어 값("29,000원 늘었어요")의 앞 숫자. 강조는 숫자까지다 */
+const LEADING_NUMBER = /^(\d[\d,]*(?:원|%))(.*)$/s;
+
+/**
+ * 모르는 키는 그대로 둔다. 사후 검사(check.ts)가 모르는 키를 먼저 거른다.
+ * predicates에 든 키(서술어 값)는 앞 숫자만 값 조각이고 나머지 서술어("늘었어요")는 문장 글자다
+ */
+export function renderParts(
+  text: string,
+  values: Record<string, string>,
+  predicates: ReadonlySet<string> = new Set(),
+): Part[] {
+  const parts: Part[] = [];
   let out = '';
   let last = 0;
+  const push = (piece: string, value: boolean) => {
+    out += piece;
+    const prev = parts[parts.length - 1];
+    if (prev && prev.value === value) prev.text += piece;
+    else if (piece) parts.push({ text: piece, value });
+  };
   for (const match of text.matchAll(/\{([^{}]+)\}/g)) {
-    out += text.slice(last, match.index);
+    push(text.slice(last, match.index), false);
     const token = match[1];
-    out += token in JOSA ? josa(token, out) : (values[token] ?? match[0]);
+    const value = values[token];
+    if (token in JOSA) push(josa(token, out), false);
+    else if (value === undefined) push(match[0], false);
+    else if (predicates.has(token)) {
+      const [, number = '', rest = value] = value.match(LEADING_NUMBER) ?? [];
+      push(number, true);
+      push(rest, false);
+    } else push(value, true);
     last = match.index + match[0].length;
   }
-  return out + text.slice(last);
+  push(text.slice(last), false);
+  return parts;
+}
+
+export function render(text: string, values: Record<string, string>) {
+  return renderParts(text, values)
+    .map(part => part.text)
+    .join('');
 }

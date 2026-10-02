@@ -1,6 +1,7 @@
 package com.eeennsu.spendback
 
 import android.app.Application
+import com.eeennsu.spendback.files.SpendbackFilesPackage
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -15,8 +16,8 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          // Packages that cannot be autolinked yet can be added manually here, for example:
-          // add(MyReactNativePackage())
+          // 앱 전용 Turbo Native Module(모델 내려받기, 백업 파일)
+          add(SpendbackFilesPackage())
         },
     )
   }

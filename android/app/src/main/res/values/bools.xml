@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 밝은 바탕에서는 상태 바·내비게이션 바 아이콘을 짙게 한다(docs/DESIGN.md 3.5) -->
+    <bool name="light_bars">true</bool>
+</resources>

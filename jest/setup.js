@@ -23,3 +23,33 @@ jest.mock('@op-engineering/op-sqlite', () => ({
 
 // llama.rn도 불러올 때 네이티브 모듈을 찾는다. 모델을 올리는 테스트는 저마다 모킹한다(__tests__/llama.test.ts)
 jest.mock('llama.rn', () => ({ initLlama: jest.fn() }));
+
+// 앱 전용 Turbo Native Module(src/native/NativeSpendbackFiles.ts). 테스트가 저마다 동작을 바꾼다
+jest.mock('../src/native/NativeSpendbackFiles', () => ({
+  __esModule: true,
+  default: {
+    getFilesDir: () => '/files',
+    getCacheDir: () => '/cache',
+    getFreeBytes: () => 64 * 1024 ** 3,
+    fileSize: jest.fn(() => -1),
+    deleteFile: jest.fn(() => true),
+    download: jest.fn(async () => {}),
+    cancelDownload: jest.fn(),
+    writeTextFile: jest.fn(async () => {}),
+    readTextFile: jest.fn(async () => ''),
+    shareFile: jest.fn(async () => {}),
+    pickTextFile: jest.fn(async () => null),
+    onDownloadProgress: jest.fn(() => ({ remove: () => {} })),
+  },
+}));
+
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
+);
+
+// 날짜 대화상자는 네이티브다. 열렸는지만 본다
+jest.mock('@react-native-community/datetimepicker', () => ({
+  __esModule: true,
+  default: () => null,
+}));

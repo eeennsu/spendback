@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      DS base의 canvas와 brand(docs/DESIGN.md 2장). 네이티브 리소스는 CSS 변수를 읽지 못해 값을 옮겨 적는다.
+      JS가 뜨기 전 첫 프레임의 창 배경과, Android가 그리는 스위치·날짜 대화상자의 강조색에만 쓴다
+    -->
+    <color name="canvas">#F3F4F6</color>
+    <color name="brand">#206FEA</color>
+</resources>

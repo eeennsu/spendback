@@ -1,9 +1,8 @@
 import { Badge, Box, Card, Label, Textarea } from '@eeennsu/native';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
 import { registerGlobalCss, setColorScheme } from '../jest/css';
-import { DsCheckScreen } from '../src/preview/DsCheckScreen';
 
 /**
  * 디자인 시스템(@eeennsu/native) 연동 확인. className이 jest에서도 스타일로 풀려야 한다.
@@ -68,17 +67,4 @@ test('다크 모드는 OS 색 구성표를 따른다', async () => {
 
   await mount(<Box className='bg-brand'>{null}</Box>, 'dark');
   expect(rootStyle()).toMatchObject({ backgroundColor: BRAND });
-});
-
-test('확인 화면이 DS 컴포넌트로 그려지고 누름에 반응한다', async () => {
-  await mount(<DsCheckScreen />);
-
-  const save = screen.getByRole('button', { name: '저장 0회' });
-  expect(save).toHaveStyle({ backgroundColor: BRAND });
-  expect(screen.getByRole('button', { name: '취소' })).toHaveStyle({
-    backgroundColor: SURFACE_MUTED_LIGHT,
-  });
-
-  await fireEvent.press(save);
-  expect(screen.getByRole('button', { name: '저장 1회' })).toBeOnTheScreen();
 });

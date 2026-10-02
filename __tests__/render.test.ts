@@ -1,4 +1,4 @@
-import { render } from '../src/retro/render';
+import { render, renderParts } from '../src/retro/render';
 
 describe('render: 플레이스홀더를 값으로 채운다', () => {
   test('키를 값으로 바꾼다', () => {
@@ -53,4 +53,39 @@ describe('조사는 채운 값의 마지막 글자 받침으로 고른다', () =
   ])('영문과 기호: %s + {%s} → %s', (value, pair, text) => {
     expect(fill(value, pair)).toBe(text);
   });
+});
+
+test('채운 값과 나머지를 조각으로 나눈다', () => {
+  expect(
+    renderParts('{category.3.name} 지출이 {category.3.change_phrase}.', {
+      'category.3.name': '배달',
+      'category.3.change_phrase': '29,000원 늘었어요',
+    }),
+  ).toEqual([
+    { text: '배달', value: true },
+    { text: ' 지출이 ', value: false },
+    { text: '29,000원 늘었어요', value: true },
+    { text: '.', value: false },
+  ]);
+});
+
+test('서술어 값은 앞 숫자만 값 조각이다', () => {
+  const values = {
+    'category.3.name': '배달',
+    'category.3.change_phrase': '29,000원 늘었어요',
+    'total.change_phrase': '같았어요',
+  };
+  const predicates = new Set(['category.3.change_phrase', 'total.change_phrase']);
+  expect(
+    renderParts('{category.3.name} 지출이 {category.3.change_phrase}.', values, predicates),
+  ).toEqual([
+    { text: '배달', value: true },
+    { text: ' 지출이 ', value: false },
+    { text: '29,000원', value: true },
+    { text: ' 늘었어요.', value: false },
+  ]);
+  // 숫자가 없는 서술어는 강조하지 않는다
+  expect(renderParts('변동비가 지난주와 {total.change_phrase}.', values, predicates)).toEqual([
+    { text: '변동비가 지난주와 같았어요.', value: false },
+  ]);
 });

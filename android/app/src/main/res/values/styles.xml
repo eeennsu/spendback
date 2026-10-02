@@ -1,9 +1,13 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Base application theme. -->
+    <!-- 앱 테마(docs/DESIGN.md 3.5). 첫 프레임의 창 배경과 막대 아이콘 색을 DS canvas에 맞추고, 스위치는 brand다 -->
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+        <item name="android:windowBackground">@color/canvas</item>
+        <item name="colorAccent">@color/brand</item>
+        <item name="colorControlActivated">@color/brand</item>
+        <item name="android:windowLightStatusBar">@bool/light_bars</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">@bool/light_bars</item>
     </style>
 
 </resources>

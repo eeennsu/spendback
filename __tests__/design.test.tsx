@@ -1,21 +1,16 @@
 import { Box, Chip, Text } from '@eeennsu/native';
-import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
 import { registerGlobalCss, setColorScheme } from '../jest/css';
-import { EntrySheetMock } from '../src/preview/EntrySheetMock';
-import { HomeMock } from '../src/preview/HomeMock';
 import { Meter } from '../src/ui/Meter';
 
 /**
- * DS base 색과 시안 화면(docs/DESIGN.md 2·4장).
+ * DS base 색과 앱 컴포넌트(docs/DESIGN.md 2·5장). 화면은 screens.test.tsx가 본다.
  * 기대값은 DS 0.4.0 base 값이다. 앱은 색을 재선언하지 않는다(docs/DESIGN.md 2장).
  */
 const BRAND = '#206fea';
-const BRAND_HOVER = '#1b64da';
 const DANGER = '#e7000b';
-/** 글자 빨강은 채움 빨강과 다른 변수다 — 회색 canvas 위에서도 4.5:1(DS 스펙 R26 fg.danger) */
-const FG_DANGER = '#c10007';
 const SURFACE_MUTED = '#e5e7eb';
 
 async function mount(ui: ReactElement, scheme: 'light' | 'dark' = 'light') {
@@ -126,151 +121,5 @@ describe('Meter', () => {
     const [fill] = screen.getByRole('progressbar').children;
     if (typeof fill === 'string') throw new Error('막대가 없다');
     expect(fill).toHaveStyle({ width: '100%', backgroundColor: DANGER });
-  });
-});
-
-describe('홈 시안', () => {
-  test('남은 예산, 미기록 고정비, 초과한 카테고리, 기록 버튼을 보여 준다', async () => {
-    await mount(<HomeMock />);
-
-    expect(screen.getByText('411,600원')).toBeOnTheScreen();
-    expect(screen.getByRole('progressbar', { name: '9월 예산 사용률' })).toBeOnTheScreen();
-    expect(screen.getByText('휴대폰 요금')).toBeOnTheScreen();
-    expect(screen.getByText('118,000 / 100,000원 · 18,000원 초과')).toHaveStyle({
-      color: FG_DANGER,
-    });
-    expect(screen.getByRole('button', { name: '기록' })).toHaveStyle({
-      backgroundColor: BRAND,
-    });
-    // 같은 이름의 버튼이 여럿이면 스크린 리더 사용자가 구분하지 못한다
-    expect(screen.getByRole('button', { name: /^휴대폰 요금 기록/ })).toBeOnTheScreen();
-  });
-
-  test('떠 있는 기록 버튼은 누르는 동안 투명해지지 않고 표면색이 진해진다', async () => {
-    await mount(<HomeMock />);
-
-    // 투명도 눌림(DS 기본)은 아래 내용을 비치게 한다(docs/DESIGN.md 3.5)
-    await fireEvent(screen.getByRole('button', { name: '기록' }), 'pressIn');
-    expect(screen.getByRole('button', { name: '기록' })).toHaveStyle({
-      backgroundColor: BRAND_HOVER,
-      opacity: 1,
-    });
-  });
-
-  test('총예산을 넘으면 금액을 초과액으로 바꾸고 danger로 쓴다', async () => {
-    await mount(<HomeMock variant='over' />);
-
-    expect(screen.getByText('9월 예산')).toBeOnTheScreen();
-    expect(screen.getByText('18,000원 초과')).toHaveStyle({ color: FG_DANGER });
-    expect(
-      screen.getByRole('progressbar', { name: '9월 예산 사용률' }).props.accessibilityValue,
-    ).toEqual({ text: '예산을 18,000원 넘었어요, 기간의 80% 지남' });
-    expect(screen.queryByText(/하루 .*원까지/)).toBeNull();
-  });
-
-  test('첫 실행에는 예산을 정하라는 안내와 동작이 있다', async () => {
-    await mount(<HomeMock variant='firstRun' />);
-
-    expect(screen.getByText('아직 예산이 없어요')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: '예산 정하기' })).toBeOnTheScreen();
-  });
-});
-
-describe('입력 시트 시안', () => {
-  test('결제수단은 미리 고르지 않는다(PRD 4.1)', async () => {
-    await mount(<EntrySheetMock expanded />);
-
-    for (const method of ['카드', '현금', '계좌이체']) {
-      expect(screen.getByRole('button', { name: method }).props.accessibilityState).toMatchObject({
-        selected: false,
-      });
-    }
-  });
-
-  test('금액과 카테고리가 있어야 저장할 수 있다', async () => {
-    await mount(<EntrySheetMock />);
-
-    const save = () => screen.getByRole('button', { name: '저장' });
-    expect(save().props.accessibilityState).toMatchObject({ disabled: false });
-
-    await fireEvent.changeText(screen.getByLabelText('금액'), '');
-    expect(save().props.accessibilityState).toMatchObject({ disabled: true });
-    // 저장이 왜 안 되는지 글로 알린다
-    expect(screen.getByText('금액을 입력해 주세요')).toBeOnTheScreen();
-
-    await fireEvent.changeText(screen.getByLabelText('금액'), '12900');
-    expect(screen.getByLabelText('금액').props.value).toBe('12,900');
-    expect(save().props.accessibilityState).toMatchObject({ disabled: false });
-  });
-
-  test('선택 항목은 접혀 있다가 펼치면 보인다', async () => {
-    await mount(<EntrySheetMock />);
-
-    expect(screen.queryByText('만족도')).toBeNull();
-    await fireEvent.press(screen.getByRole('button', { name: /선택 항목 더 보기/ }));
-    expect(screen.getByText('만족도')).toBeOnTheScreen();
-  });
-
-  test('수입으로 바꾸면 수입 카테고리만 남고 지출 전용 항목이 사라진다', async () => {
-    await mount(<EntrySheetMock expanded />);
-
-    await fireEvent.press(screen.getByRole('button', { name: '수입' }));
-
-    expect(screen.getByText('수입 기록')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: '급여' })).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: '배달' })).toBeNull();
-    expect(screen.getByText('카테고리를 골라 주세요')).toBeOnTheScreen();
-    expect(screen.queryByText('만족도')).toBeNull();
-    // 카테고리를 다시 골라야 저장할 수 있다
-    expect(screen.getByRole('button', { name: '저장' }).props.accessibilityState).toMatchObject({
-      disabled: true,
-    });
-  });
-
-  test('선택 칩은 다시 누르면 선택이 풀리고, 필수 칩은 풀리지 않는다', async () => {
-    await mount(<EntrySheetMock expanded />);
-
-    const regret = () => screen.getByRole('button', { name: '후회' });
-    await fireEvent.press(regret());
-    expect(regret().props.accessibilityState).toMatchObject({ selected: true });
-    await fireEvent.press(regret());
-    expect(regret().props.accessibilityState).toMatchObject({ selected: false });
-
-    const food = () =>
-      within(screen.getByText('카테고리').parent!.parent!).getByRole('button', {
-        name: '식비',
-      });
-    await fireEvent.press(food());
-    expect(food().props.accessibilityState).toMatchObject({ selected: true });
-  });
-
-  test('고정비를 켜면 연결할 항목 칩이 나오고, 줄 전체가 스위치다', async () => {
-    await mount(<EntrySheetMock expanded />);
-
-    expect(screen.queryByText('연결할 고정비 항목')).toBeNull();
-    const row = screen.getByRole('switch', { name: '고정비' });
-    await fireEvent.press(row);
-    expect(screen.getByRole('switch', { name: '고정비' }).props.accessibilityState).toMatchObject({
-      checked: true,
-    });
-    expect(screen.getByText('연결할 고정비 항목')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: '휴대폰 요금' })).toBeOnTheScreen();
-  });
-
-  test('저장이 안 되는 이유는 live region에 있고, 입력 칸에는 placeholder가 없다', async () => {
-    await mount(<EntrySheetMock />);
-
-    await fireEvent.changeText(screen.getByLabelText('금액'), '');
-    // 이유 글자를 감싼 조상 중 live region을 찾는다
-    let node: { props: Record<string, unknown>; parent: unknown } | null =
-      screen.getByText('금액을 입력해 주세요');
-    while (node && node.props.accessibilityLiveRegion === undefined) {
-      node = node.parent as typeof node;
-    }
-    expect(node?.props.accessibilityLiveRegion).toBe('polite');
-    // 평탄화되면 기기에서 live region이 사라진다(Jest 트리에는 남아 있어 이 단언이 필요하다)
-    expect(node?.props.collapsable).toBe(false);
-    // placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(docs/DESIGN.md 4.3)
-    expect(screen.getByLabelText('금액').props.placeholder).toBeUndefined();
   });
 });

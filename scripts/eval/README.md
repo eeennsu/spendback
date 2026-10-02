@@ -12,6 +12,7 @@ pnpm eval                              # 스냅샷 20개 × 모델 3개 × 1회
 pnpm eval qwen3.5-2b --runs 3          # 모델 하나, 스냅샷마다 3회
 pnpm eval --only week-base,month-base  # 스냅샷 일부
 pnpm eval --temp 0.3 --repeat 1        # 샘플링 비교(기본값은 src/retro/models.ts의 INFERENCE)
+pnpm eval qwen3.5-2b --temp 1 --top-p 1 --repeat 1 --presence 2  # 모델 카드 비추론 권장값
 pnpm eval --prompt v3                  # 프롬프트 버전(src/retro/prompt.ts PROMPT_VERSIONS). 비교할 때 버전을 더한다
 pnpm exec tsx scripts/eval/rescore.mts scripts/eval/results/<시각>.json  # 저장한 결과를 지금의 점검으로 다시 센다
 pnpm exec tsx scripts/eval/compare.mts <결과.json> <결과.json> …     # 결과 여럿을 모델·버전별 한 표로 모은다

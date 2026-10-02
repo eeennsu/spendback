@@ -26,12 +26,15 @@ import { autoCheck } from './checks';
 import { type Attempt, type Run, markdown } from './report';
 import { SNAPSHOTS, type Snapshot } from './snapshots';
 
+/** 앱 설정(INFERENCE)에 하네스만 바꿔 보는 존재 벌점을 더한 것. 0이면 끈다 */
+type Inference = typeof INFERENCE & { presencePenalty: number };
+
 /** node-llama-cpp 구현. 앱의 llama.rn 구현과 같은 설정을 쓴다(src/retro/models.ts INFERENCE) */
 function llamaGenerate(
   llama: Llama,
   context: LlamaContext,
   chatWrapper: ChatWrapper,
-  inference: typeof INFERENCE,
+  inference: Inference,
 ): Generate {
   return async ({ messages, grammar, seed }, onToken, signal) => {
     const sequence = context.getSequence();
@@ -50,9 +53,13 @@ function llamaGenerate(
         minP: inference.minP,
         maxTokens: inference.maxTokens,
         repeatPenalty:
-          inference.repeatPenalty === 1
+          inference.repeatPenalty === 1 && inference.presencePenalty === 0
             ? false
-            : { penalty: inference.repeatPenalty, lastTokens: inference.repeatLastTokens },
+            : {
+                penalty: inference.repeatPenalty,
+                lastTokens: inference.repeatLastTokens,
+                presencePenalty: inference.presencePenalty,
+              },
         onTextChunk: onToken,
         signal,
         stopOnAbortSignal: true,
@@ -149,12 +156,16 @@ const {
   only,
   temperature,
   repeatPenalty,
+  topP,
+  presencePenalty,
   prompt: version,
 } = parseArgs(process.argv.slice(2));
-const inference = {
+const inference: Inference = {
   ...INFERENCE,
+  presencePenalty: presencePenalty ?? 0,
   ...(temperature === undefined ? {} : { temperature }),
   ...(repeatPenalty === undefined ? {} : { repeatPenalty }),
+  ...(topP === undefined ? {} : { topP }),
 };
 const snapshots = only ? SNAPSHOTS.filter(s => only.includes(s.id)) : SNAPSHOTS;
 const llama = await getLlama();

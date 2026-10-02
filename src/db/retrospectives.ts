@@ -26,3 +26,15 @@ export function findRetrospective(db: Db, kind: Kind, periodStart: string) {
     .where(and(eq(retrospectives.kind, kind), eq(retrospectives.periodStart, periodStart)))
     .get();
 }
+
+/** 회고 목록의 저장본(PRD 4.6). 기간마다 headline을 보인다 */
+export function listRetrospectives(db: Db, kind: Kind) {
+  return db
+    .select({
+      periodStart: retrospectives.periodStart,
+      facts: retrospectives.facts,
+      output: retrospectives.output,
+    })
+    .from(retrospectives)
+    .where(eq(retrospectives.kind, kind));
+}

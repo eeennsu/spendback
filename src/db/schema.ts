@@ -125,3 +125,12 @@ export const retrospectives = sqliteTable(
   },
   t => [uniqueIndex('retrospectives_period').on(t.kind, t.periodStart)],
 );
+
+/**
+ * 앱 설정(PRD 7장). 사용 모델 같은 키-값이다. 값은 JSON 문자열이다. 기기에 딸린 값이라 백업에 넣지 않는다.
+ * 설정 몇 개를 위해 키-값 저장소(MMKV, Nitro 네이티브 빌드)를 따로 두지 않는다(PRD 13장)
+ */
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});

@@ -15,7 +15,8 @@ import { mutate } from './data';
 
 export type Generation =
   | { status: 'idle' }
-  | { status: 'writing'; sentences: string[]; retrying: boolean }
+  /** templates는 나온 headline·insight의 틀이다. 회고 상세가 카드의 비교 줄을 정하는 데 쓴다 */
+  | { status: 'writing'; sentences: string[]; templates: string[]; retrying: boolean }
   /** 방금 만들어 저장했다. 화면의 DB 읽기가 따라오기 전에도 새 회고를 보인다 */
   | { status: 'saved'; facts: KeyedFacts; output: Output; modelId: string }
   | { status: 'fallback'; reason: 'no-model' | 'load-failed' | 'check-failed' }
@@ -77,7 +78,7 @@ export function useGeneration(period: PeriodRef) {
     const abort = new AbortController();
     controller.current = abort;
     narrator.current = llamaNarrator(modelPath(model));
-    setState({ status: 'writing', sentences: [], retrying: false });
+    setState({ status: 'writing', sentences: [], templates: [], retrying: false });
 
     let result: NarrateResult;
     try {
@@ -88,9 +89,17 @@ export function useGeneration(period: PeriodRef) {
         signal: abort.signal,
         onSentence: sentence =>
           setState(s =>
-            s.status === 'writing' ? { ...s, sentences: [...s.sentences, sentence.rendered] } : s,
+            s.status === 'writing'
+              ? {
+                  ...s,
+                  sentences: [...s.sentences, sentence.rendered],
+                  templates:
+                    sentence.field === 'suggestion' ? s.templates : [...s.templates, sentence.text],
+                }
+              : s,
           ),
-        onRetry: () => setState({ status: 'writing', sentences: [], retrying: true }),
+        onRetry: () =>
+          setState({ status: 'writing', sentences: [], templates: [], retrying: true }),
       });
     } catch {
       result = { status: 'fallback', reason: 'load-failed' };

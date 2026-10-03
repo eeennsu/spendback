@@ -55,6 +55,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   }));
   const generation = useGeneration(period);
   const [skipFixedCheck, setSkipFixedCheck] = useState(false);
+  // 카드의 비교 줄을 뺄지 마지막으로 정한 값. 생성 중 첫 문장이 오기 전에 쓴다
+  const [saidChangeBefore, setSaidChangeBefore] = useState(false);
   const autoStarted = useRef(false);
 
   const ongoing = isOngoing(period, today);
@@ -147,18 +149,27 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   const busiest = days.reduce((best, d) => (d.amount > best.amount ? d : best), days[0]);
   // 보일 회고. 방금 만든 회고가 DB 저장본보다 새롭다
   const shown = generation.state.status === 'saved' ? generation.state : (data.saved ?? undefined);
-  // 폴백이면 코드가 고른 틀 문장을 보인다(PRD 4.6)
-  const picked = generation.state.status === 'fallback' ? pickFrames(keyed) : undefined;
-  // 회고 카드가 보이는 문장이 변동비 증감을 말하면 카드의 비교 줄을 빼 같은 사실을 두 번 말하지 않는다(PRD 4.6)
+  // 폴백이면 코드가 고른 틀 문장을 보인다. 저장본이 있으면 다시 만들기가 실패해도 저장본을 보인다(PRD 4.6)
+  const state = generation.state;
+  const picked = state.status === 'fallback' && !shown ? pickFrames(keyed) : undefined;
+  // 회고 카드가 보이는 문장(틀). 생성 중에 아직 문장이 없으면 undefined다
+  const texts = (output: Told | undefined) =>
+    output ? [output.headline, ...output.insights.map(i => i.text)] : [];
   const told =
-    generation.state.status === 'writing' || (!picked && needsFixedCheck)
-      ? undefined
-      : (picked ?? shown?.output);
-  const saidChange =
-    told !== undefined &&
-    [told.headline, ...told.insights.map(i => i.text)].some(text =>
-      /\{total\.change(?:_rate)?_phrase\}/.test(text),
-    );
+    state.status === 'writing'
+      ? state.templates.length > 0
+        ? state.templates
+        : undefined
+      : state.status === 'fallback'
+        ? texts(picked ?? shown?.output)
+        : needsFixedCheck
+          ? []
+          : texts(shown?.output);
+  // 회고 문장이 변동비 증감을 말하면 카드의 비교 줄을 빼 같은 사실을 두 번 말하지 않는다(PRD 4.6). 생성 중 첫
+  // 문장이 오기 전에는 직전 판단을 둬, 줄이 나왔다 다시 빠지며 카드가 두 번 튀지 않게 한다(6차 031)
+  const decided = told?.some(text => /\{total\.change(?:_rate)?_phrase\}/.test(text));
+  if (decided !== undefined && decided !== saidChangeBefore) setSaidChangeBefore(decided);
+  const saidChange = decided ?? saidChangeBefore;
 
   return (
     <ScreenScroll>
@@ -215,7 +226,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
                 <Text size='sm' tone='muted' className='w-12 text-right tabular-nums'>
                   {percents[i]}
                 </Text>
-                <Text className='tabular-nums'>{formatWon(slice.amount)}</Text>
+                {/* 금액 칸도 폭을 잡아 자릿수가 달라도 % 열이 밀리지 않는다(6차 024) */}
+                <Text className='min-w-24 text-right tabular-nums'>{formatWon(slice.amount)}</Text>
               </Row>
             ))}
           </View>
@@ -328,23 +340,35 @@ function Narrative({
       </>
     );
   } else if (generation.status === 'fallback') {
-    // 상태 줄은 저장본의 "…가 기기 안에서 엮은 회고예요"처럼 문장 위의 흐린 머리말이다
-    status = { text: FALLBACK[generation.reason], lead: false };
+    // 상태 줄은 저장본의 "…가 기기 안에서 엮은 회고예요"처럼 문장 위의 흐린 머리말이다. 저장본이 있는 기간에서
+    // 다시 만들기가 실패하면 저장본을 그대로 보인다. 덮어쓰기는 성공했을 때만이다(PRD 4.6). 그때 다시 만들기는
+    // 헤더에 있어 카드에는 모델 관리만 둔다(6차 032)
+    const modelProblem = generation.reason !== 'check-failed';
+    status = {
+      text: saved ? '다시 만들지 못해 저장한 회고를 보여 줘요' : FALLBACK[generation.reason],
+      lead: false,
+    };
+    const shownSentences = saved ?? picked;
     body = (
       <>
-        {picked && <Sentences facts={picked.facts} output={picked.output} />}
-        <Stack direction='row' wrap className='gap-3'>
-          {generation.reason !== 'no-model' && (
-            <Button
-              label={generation.reason === 'check-failed' ? '다시 만들기' : '다시 시도'}
-              variant='secondary'
-              onPress={onGenerate}
-            />
-          )}
-          {generation.reason !== 'check-failed' && (
-            <Button label='모델 관리로 이동' variant='secondary' onPress={onModels} />
-          )}
-        </Stack>
+        {shownSentences && (
+          <Sentences facts={shownSentences.facts} output={shownSentences.output} />
+        )}
+        {(!saved || modelProblem) && (
+          // 동작은 문장 목록과 떨어뜨린다(6차 034)
+          <Stack direction='row' wrap className='mt-3 gap-3'>
+            {!saved && generation.reason !== 'no-model' && (
+              <Button
+                label={generation.reason === 'check-failed' ? '다시 만들기' : '다시 시도'}
+                variant='secondary'
+                onPress={onGenerate}
+              />
+            )}
+            {modelProblem && (
+              <Button label='모델 관리로 이동' variant='secondary' onPress={onModels} />
+            )}
+          </Stack>
+        )}
       </>
     );
   } else if (unrecorded.length > 0) {

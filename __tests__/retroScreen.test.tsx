@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { EffectCallback } from 'react';
 
 import { registerGlobalCss } from '../jest/css';
@@ -85,6 +85,40 @@ async function week(count: number) {
 async function mount(kind: 'weekly' | 'monthly', start: string) {
   await registerGlobalCss();
   await render(<RetroDetailScreen route={{ params: { kind, start } }} />);
+}
+
+/** 9월 3주 저장본. 값은 facts 스냅샷 하나로 채운다 */
+const saveWeek = (key: string, value: string, headline: string) =>
+  saveRetrospective(db, {
+    kind: 'weekly',
+    periodStart: '2026-09-14',
+    periodEnd: '2026-09-20',
+    facts: {
+      kind: 'weekly',
+      period: '9월 3주',
+      groups: [
+        {
+          id: key.split('.').slice(0, -1).join('.'),
+          title: '',
+          facts: [{ key, value, kind: 'predicate', note: '' }],
+        },
+      ],
+    },
+    output: {
+      headline,
+      insights: [],
+      suggestion: '다음 주에는 지출 전에 꼭 필요한지 생각해 보세요.',
+    },
+    modelId: QWEN.id,
+    promptVersion: 'v5',
+  });
+
+/** 헤더의 "다시 만들기"를 누른다. 헤더는 navigation.setOptions로 붙어 화면 밖에 그려진다 */
+async function pressRegenerate() {
+  const options = mockNavigation.setOptions.mock.calls.at(-1)?.[0];
+  const action = options?.headerRight?.();
+  expect(action?.props.label).toBe('다시 만들기');
+  await act(async () => action.props.onPress());
 }
 
 beforeAll(async () => {
@@ -237,6 +271,46 @@ test('회고 문장이 변동비 증감을 말하면 카드의 비교 줄을 뺀
 
   expect(await screen.findByText('변동비가 지난주보다 26,000원 늘었어요.')).toBeOnTheScreen();
   expect(screen.queryByText('변동비가 지난주보다 26,000원 늘었어요')).toBeNull();
+});
+
+test('다시 만드는 동안 첫 문장이 오기 전에는 카드의 비교 줄을 직전 판단대로 둔다', async () => {
+  withModel();
+  pendingNarrator();
+  await addTransaction(db, expense({ date: '2026-09-01' }));
+  await addTransaction(db, expense({ amount: 20000, date: '2026-09-08' }));
+  await week(4);
+  await saveWeek(
+    'total.change_phrase',
+    '26,000원 늘었어요',
+    '변동비가 지난주보다 {total.change_phrase}.',
+  );
+  await mount('weekly', '2026-09-14');
+  expect(await screen.findByText('변동비가 지난주보다 26,000원 늘었어요.')).toBeOnTheScreen();
+
+  await pressRegenerate();
+  expect(await screen.findByText('쓰는 중')).toBeOnTheScreen();
+  // 문장이 아직 없어도 줄이 다시 나오지 않아 카드가 튀지 않는다(6차 031)
+  expect(screen.queryByText('변동비가 지난주보다 26,000원 늘었어요')).toBeNull();
+});
+
+test('저장본이 있는 기간에서 다시 만들기가 실패하면 저장본을 그대로 보인다', async () => {
+  await week(4);
+  await saveWeek(
+    'category.3.change_phrase',
+    '29,000원 늘었어요',
+    '배달 지출이 지난주보다 {category.3.change_phrase}.',
+  );
+  await mount('weekly', '2026-09-14');
+  expect(await screen.findByText('배달 지출이 지난주보다 29,000원 늘었어요.')).toBeOnTheScreen();
+
+  // 모델이 없어 폴백으로 끝난다. 덮어쓰기는 성공했을 때만이다(PRD 4.6)
+  await pressRegenerate();
+  expect(await screen.findByText('다시 만들지 못해 저장한 회고를 보여 줘요')).toBeOnTheScreen();
+  expect(screen.getByText('배달 지출이 지난주보다 29,000원 늘었어요.')).toBeOnTheScreen();
+  expect(screen.queryByText('모델이 없어 앱이 고른 사실만 보여 줘요')).toBeNull();
+  // 다시 만들기는 헤더에만 있고, 카드에는 모델 관리만 둔다(6차 032)
+  expect(screen.getByRole('button', { name: '모델 관리로 이동' })).toBeOnTheScreen();
+  expect(screen.queryByRole('button', { name: '다시 만들기' })).toBeNull();
 });
 
 test('월간은 기록하지 않은 고정비를 먼저 알리고, "그대로 만들기"를 누르면 만든다', async () => {

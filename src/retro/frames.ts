@@ -224,10 +224,16 @@ export function headlineFrames(
 const FALLBACK_INSIGHTS = 3;
 
 /**
+ * 폴백에서 섞는 종류. 후회한 지출과 이유 태그는 틀 모양이 같아("…은 …원으로 변동비의 …%였어요") 한 종류로 본다
+ * (6차 033)
+ */
+const varietyKind = (id: string) => (groupKind(id) === 'regret' ? 'tag' : groupKind(id));
+
+/**
  * 폴백 회고(PRD 4.6). 모델을 쓸 수 없으면 코드가 틀을 고른다. headline은 headline 후보의 첫 틀(가장 눈에 띄는
  * 묶음의 까닭을 말하는 틀)이고, insight는 다른 묶음에서 묶음마다 하나씩(그 묶음의 까닭을 쓴 틀이 있으면 그 틀) 쓴다.
- * 눈에 띄는 순서로 고르되 headline이나 앞 insight와 종류가 같은 묶음(카테고리 여럿 등)은 다른 종류를 먼저 고른 뒤에
- * 채운다. 에뮬레이터에서 "배달·쇼핑·생활 지출이 지난주보다 …줄었어요"처럼 같은 모양의 문장이 셋 이어졌다. 보이는
+ * 눈에 띄는 순서로 고르되 headline이나 앞 insight와 종류가 같은 묶음(카테고리 여럿 등, varietyKind)은 다른 종류를
+ * 먼저 고른 뒤에 채운다. 에뮬레이터에서 "배달·쇼핑·생활 지출이 지난주보다 …줄었어요"처럼 같은 모양의 문장이 셋 이어졌다. 보이는
  * 순서는 눈에 띄는 순서다. 총지출 묶음을 빼는 규칙은 insight와 같다. 제안은 LLM이 쓰는 문장이라 없다
  */
 export function pickFrames(keyed: KeyedFacts): Pick<Output, 'headline' | 'insights'> | undefined {
@@ -246,9 +252,9 @@ export function pickFrames(keyed: KeyedFacts): Pick<Output, 'headline' | 'insigh
       const frame = mine.find(usesFocus) ?? mine[0];
       return frame ? [frame] : [];
     });
-  const kinds = new Set([groupKind(headline.group)]);
+  const kinds = new Set([varietyKind(headline.group)]);
   const varied = candidates.filter(f => {
-    const kind = groupKind(f.group);
+    const kind = varietyKind(f.group);
     if (kinds.has(kind)) return false;
     kinds.add(kind);
     return true;

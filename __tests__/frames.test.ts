@@ -238,8 +238,8 @@ describe('pickFrames(폴백)', () => {
       expect(new Set(abouts).size).toBe(abouts.length);
       expect(abouts).not.toContain(first.group);
       expect(abouts).not.toContain('total');
-      // 스냅샷마다 종류가 넉넉해 insight의 종류가 서로 다르고 headline과도 다르다
-      const kind = (id: string) => id.split('.')[0];
+      // 스냅샷마다 종류가 넉넉해 insight의 종류가 서로 다르고 headline과도 다르다. 후회와 태그는 한 종류다
+      const kind = (id: string) => (id.startsWith('regret') ? 'tag' : id.split('.')[0]);
       const kinds = abouts.map(kind);
       expect(new Set(kinds).size).toBe(kinds.length);
       expect(kinds).not.toContain(kind(first.group));
@@ -285,6 +285,28 @@ describe('pickFrames(폴백)', () => {
       const picked = pickFrames(keyed([...categories, regret, noSpend]));
       expect(picked?.headline).toContain('{category.1.change_phrase}');
       expect(picked?.insights.map(i => i.about)).toEqual(['category.2', 'regret', 'no_spend']);
+    });
+
+    test('후회한 지출과 이유 태그는 문장 모양이 같아 한 종류로 본다', () => {
+      const tag: FactGroup = {
+        id: 'tag.1',
+        title: '이유 태그',
+        facts: [
+          { key: 'tag.1.name', value: '충동', kind: 'noun', note: '' },
+          { key: 'tag.1.amount', value: '54,000원', kind: 'noun', note: '' },
+          { key: 'tag.1.share', value: '29%', kind: 'noun', note: '' },
+        ],
+      };
+      const largest: FactGroup = {
+        id: 'largest',
+        title: '가장 큰 지출 한 건',
+        facts: [
+          { key: 'largest.amount', value: '32,000원', kind: 'noun', note: '' },
+          { key: 'largest.category', value: '배달', kind: 'noun', note: '' },
+        ],
+      };
+      const picked = pickFrames(keyed([categories[0], regret, tag, noSpend, largest]));
+      expect(picked?.insights.map(i => i.about)).toEqual(['regret', 'no_spend', 'largest']);
     });
 
     test('다른 종류가 모자라면 같은 종류로 채운다', () => {

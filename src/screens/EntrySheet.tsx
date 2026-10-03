@@ -263,8 +263,9 @@ function EntryForm({
     ]);
   };
 
+  // 카드 알림은 가맹점이 제목이다. 고정비 시트의 항목 이름과 같다(7차 047)
   const title = inbox
-    ? '카드 결제 기록'
+    ? `${inbox.merchant ?? '카드 결제'} 기록`
     : fixedItem
       ? `${fixedItem.name} 기록`
       : `${expense ? '지출' : '수입'} ${editingId === undefined ? '기록' : '수정'}`;
@@ -301,13 +302,25 @@ function EntryForm({
           {status}
         </Text>
       </View>
-      <Button
-        label='저장'
-        size='lg'
-        disabled={missing !== '' || saving}
-        onPress={save}
-        className='w-full'
-      />
+      {/* 카드 알림은 거래로 남기지 않을 수 있다. 겹친 기록 안내가 가리키는 버튼이라 저장 옆에 둔다(7차 037) */}
+      <Stack direction='row' className='gap-2'>
+        {inbox && (
+          <Button
+            label='기록 안 함'
+            variant='secondary'
+            size='lg'
+            onPress={skip}
+            disabled={saving}
+          />
+        )}
+        <Button
+          label='저장'
+          size='lg'
+          disabled={missing !== '' || saving}
+          onPress={save}
+          className='flex-1'
+        />
+      </Stack>
     </View>
   );
 
@@ -521,10 +534,6 @@ function EntryForm({
         {/* 수정할 때만. 선택 항목을 펼치지 않아도 찾을 수 있게 접힘 밖에 둔다(5차 030) */}
         {editingId !== undefined && (
           <Button label='삭제' variant='danger' onPress={remove} className='self-start' />
-        )}
-        {/* 카드 알림을 거래로 남기지 않는다(같은 결제를 이미 적었거나 기록할 필요가 없는 결제) */}
-        {inbox && (
-          <Button label='기록 안 함' variant='secondary' onPress={skip} className='self-start' />
         )}
       </ScrollView>
     </Sheet>

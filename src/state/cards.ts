@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { syncInbox, suggestPending } from '../cards/inbox';
@@ -77,4 +77,16 @@ export function stopCardSuggestions() {
 }
 
 export const isListenerEnabled = () => Cards.isListenerEnabled();
+
+/** 알림 접근 허용 여부. 시스템 설정에서 돌아오면(앱이 앞으로 오면) 다시 읽는다 */
+export function useListenerEnabled() {
+  const [enabled, setEnabled] = useState(isListenerEnabled);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') setEnabled(isListenerEnabled());
+    });
+    return () => subscription.remove();
+  }, []);
+  return enabled;
+}
 export const openListenerSettings = () => Cards.openListenerSettings();

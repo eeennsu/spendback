@@ -9,7 +9,7 @@ import { insertSample } from '../dev/sample';
 import { budgetForMonth } from '../domain/budget';
 import { formatWon } from '../domain/format';
 import { hasModel } from '../native/files';
-import { isListenerEnabled } from '../state/cards';
+import { useListenerEnabled } from '../state/cards';
 import { mutate, useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { modelFor } from '../state/retro';
@@ -24,6 +24,7 @@ export function SettingsScreen() {
   const navigation = useNavigation();
   const today = useToday();
   const lists = useLists();
+  const listenerEnabled = useListenerEnabled();
   const data = useQuery('settings', async db => ({
     budgets: await allBudgets(db),
     modelId: await getSetting(db, 'model'),
@@ -40,6 +41,11 @@ export function SettingsScreen() {
       <Group title='기록'>
         <Link label='카테고리' onPress={() => navigation.navigate('Categories')} />
         <Link label='이유 태그' onPress={() => navigation.navigate('ReasonTags')} />
+        <Link
+          label='카드 알림으로 기록'
+          detail={cardsDetail(listenerEnabled, data.accuracy)}
+          onPress={() => navigation.navigate('Cards')}
+        />
       </Group>
       {/* 묶음 제목과 줄 이름이 같아지지 않게("예산" 안의 "예산") 예산과 고정비를 한 묶음으로 둔다 */}
       <Group title='예산과 고정비'>
@@ -58,14 +64,8 @@ export function SettingsScreen() {
           onPress={() => navigation.navigate('FixedCosts')}
         />
       </Group>
-      <Group title='카드 알림'>
-        <Link
-          label='카드 알림으로 기록'
-          detail={cardsDetail(isListenerEnabled(), data.accuracy)}
-          onPress={() => navigation.navigate('Cards')}
-        />
-      </Group>
-      <Group title='회고'>
+      {/* 모델은 회고와 카드 알림 추천이 함께 쓴다(7차 044) */}
+      <Group title='기기 안 모델'>
         <Link
           label='모델 관리'
           detail={hasModel(model) ? `사용 중 · ${model.name}` : '모델 없음'}

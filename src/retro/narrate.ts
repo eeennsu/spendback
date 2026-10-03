@@ -12,7 +12,13 @@ import { render } from './render';
  * 걸리면 생성을 끊고 전체를 다시 만든다.
  */
 
-export type GenerateRequest = { messages: Message[]; grammar: string; seed: number };
+/** temperature를 주면 기본 샘플링(models.ts INFERENCE) 대신 쓴다. 카드 알림의 카테고리 추천은 분류라 0이다 */
+export type GenerateRequest = {
+  messages: Message[];
+  grammar: string;
+  seed: number;
+  temperature?: number;
+};
 /** 토큰을 onToken으로 흘리고 전체 출력으로 끝난다. signal이 끊기면 그때까지의 출력으로 끝낸다 */
 export type Generate = (
   request: GenerateRequest,

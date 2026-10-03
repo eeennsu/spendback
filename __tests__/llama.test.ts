@@ -70,6 +70,14 @@ test('한 번 올린 모델로 토큰을 흘리고, 설정은 하네스와 같�
   expect(context.completion.mock.calls[0][0]).not.toHaveProperty('ignore_eos');
 });
 
+test('요청이 온도를 주면 그 온도로 생성한다(카드 알림의 카테고리 추천)', async () => {
+  const context = fakeContext(['배달']);
+  jest.mocked(initLlama).mockResolvedValue(context as never);
+  const { generate } = llamaNarrator('/models/qwen.gguf');
+  await generate({ ...request, temperature: 0 }, () => {}, new AbortController().signal);
+  expect(context.completion.mock.calls[0][0]).toMatchObject({ temperature: 0 });
+});
+
 /** stopCompletion을 받아야 끝나는 생성 */
 function hangingContext() {
   let finish = () => {};

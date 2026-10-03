@@ -53,7 +53,7 @@ export function llamaNarrator(modelPath: string | null) {
     return context;
   };
 
-  const generate: Generate = async ({ messages, grammar, seed }, onToken, signal) => {
+  const generate: Generate = async ({ messages, grammar, seed, temperature }, onToken, signal) => {
     const llama = await load();
     // 로드하는 동안 취소됐으면 시작하지 않는다. release가 곧 이 컨텍스트를 내린다
     if (signal.aborted) return '';
@@ -69,7 +69,7 @@ export function llamaNarrator(modelPath: string | null) {
           grammar,
           seed,
           n_predict: INFERENCE.maxTokens,
-          temperature: INFERENCE.temperature,
+          temperature: temperature ?? INFERENCE.temperature,
           top_k: INFERENCE.topK,
           top_p: INFERENCE.topP,
           min_p: INFERENCE.minP,

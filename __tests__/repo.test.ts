@@ -17,6 +17,7 @@ import {
   setCategoryHidden,
 } from '../src/db/lists';
 import { saveRetrospective } from '../src/db/retrospectives';
+import { cardInbox } from '../src/db/schema';
 import { getSetting, setSetting } from '../src/db/settings';
 import {
   type TransactionInput,
@@ -192,6 +193,16 @@ describe('백업', () => {
       db,
       expense({ amount: 55000, categoryId: 7, isFixed: true, fixedCostId: 1, date: '2026-09-21' }),
     );
+    // 카드 알림으로 저장한 거래(PRD 4.9)
+    await addTransaction(
+      db,
+      expense({
+        memo: '스타벅스',
+        merchant: '스타벅스 역삼점',
+        suggestedCategoryId: 2,
+        suggestionSource: 'llm',
+      }),
+    );
     await setBudget(db, '2026-09', 1200000, [{ categoryId: 1, amount: 300000 }]);
     await saveRetrospective(db, {
       kind: 'weekly',
@@ -215,7 +226,11 @@ describe('백업', () => {
   test('내보낸 파일을 다른 기기에 가져오면 기록과 고정비 연결이 같다', async () => {
     const source = await filled();
     const backup = parseBackup(JSON.stringify(await exportBackup(source)));
-    expect(backupSummary(backup)).toEqual({ transactions: 2, fixedCosts: 1, retrospectives: 1 });
+    expect(backupSummary(backup)).toEqual({ transactions: 3, fixedCosts: 1, retrospectives: 1 });
+    expect(backup.transactions[2]).toMatchObject({
+      merchant: '스타벅스 역삼점',
+      suggestionSource: 'llm',
+    });
 
     const target = testDb();
     await addTransaction(target, expense({ memo: '사라질 기록' }));
@@ -229,7 +244,7 @@ describe('백업', () => {
     const backup = await exportBackup(await filled());
     expect(() => parseBackup('not json')).toThrow(new BackupError('JSON 파일이 아니에요'));
     expect(() => parseBackup('{"app":"other"}')).toThrow('spendback 백업 파일이 아니에요');
-    expect(() => parseBackup(JSON.stringify({ ...backup, version: 2 }))).toThrow(
+    expect(() => parseBackup(JSON.stringify({ ...backup, version: 3 }))).toThrow(
       '지원하지 않는 백업 버전이에요',
     );
     const broken = {
@@ -237,6 +252,55 @@ describe('백업', () => {
       transactions: backup.transactions.map(tx => ({ ...tx, categoryId: 99 })),
     };
     expect(() => parseBackup(JSON.stringify(broken))).toThrow('백업의 기록이 올바르지 않아요');
+    const suggested = {
+      ...backup,
+      transactions: backup.transactions.map(tx => ({ ...tx, suggestedCategoryId: 99 })),
+    };
+    expect(() => parseBackup(JSON.stringify(suggested))).toThrow('백업의 기록이 올바르지 않아요');
+  });
+
+  test('버전 1 파일은 가맹점과 추천값이 없는 것으로 읽는다', async () => {
+    const backup = await exportBackup(await filled());
+    const v1 = {
+      ...backup,
+      version: 1,
+      transactions: backup.transactions.map(
+        ({ merchant: _m, suggestedCategoryId: _c, suggestionSource: _s, ...tx }) => tx,
+      ),
+    };
+    const read = parseBackup(JSON.stringify(v1));
+    expect(read.version).toBe(2);
+    expect(read.transactions[2]).toMatchObject({
+      merchant: null,
+      suggestedCategoryId: null,
+      suggestionSource: null,
+    });
+  });
+
+  test('가져오면 카드 알림 대기열의 추천과 짝을 비워 새 기록으로 다시 정한다', async () => {
+    const db = testDb();
+    await db.insert(cardInbox).values({
+      fingerprint: 'a',
+      app: 'card',
+      kind: 'cancel',
+      title: '',
+      text: '',
+      postedAt: 0,
+      suggestedCategoryId: 12,
+      suggestionSource: 'llm',
+      suggestedAt: 1,
+      pairedTransactionId: 1,
+    });
+    await importBackup(db, await exportBackup(await filled()));
+    expect(await db.select().from(cardInbox)).toEqual([
+      expect.objectContaining({
+        status: 'pending',
+        suggestedCategoryId: null,
+        suggestionSource: null,
+        suggestedAt: null,
+        pairedTransactionId: null,
+      }),
+    ]);
   });
 
   test('가져오다 실패하면 기존 기록이 그대로 남는다', async () => {

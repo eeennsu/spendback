@@ -29,6 +29,13 @@
       "when": 1790944672994,
       "tag": "0003_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791029932963,
+      "tag": "0004_card_inbox",
+      "breakpoints": true
     }
   ]
 }

@@ -17,6 +17,13 @@ export type Context = 'none' | 'similar' | 'representatives';
 /** 비슷한 가맹점을 몇 곳 넣을지 */
 export const EXAMPLES = 5;
 
+/** 1단계: 정규화한 이름이 전에 적은 가맹점과 같으면 그 가맹점의 가장 최근 카테고리. 숨긴 카테고리는 쓰지 않는다 */
+export function exactMatch(merchant: string, known: Known[], categories: Category[]) {
+  const name = normalizeMerchant(merchant);
+  const visible = new Set(categories.map(c => c.id));
+  return known.find(m => m.name === name && visible.has(m.categoryId))?.categoryId;
+}
+
 export async function suggestCategory({
   merchant,
   known,
@@ -35,12 +42,13 @@ export async function suggestCategory({
   signal?: AbortSignal;
   context?: Context;
 }): Promise<Suggestion | undefined> {
+  const exact = exactMatch(merchant, known, categories);
+  if (exact !== undefined) return { categoryId: exact, source: 'exact' };
+  if (!generate) return undefined;
+
   const visible = new Set(categories.map(c => c.id));
   const usable = known.filter(m => visible.has(m.categoryId));
   const name = normalizeMerchant(merchant);
-  const exact = usable.find(m => m.name === name);
-  if (exact) return { categoryId: exact.categoryId, source: 'exact' };
-  if (!generate) return undefined;
 
   const messages = categoryMessages(name, categories, {
     similar: context === 'none' ? [] : findSimilar(name, usable, EXAMPLES),

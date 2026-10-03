@@ -25,6 +25,8 @@ const updatedAt = () =>
 
 const TX_TYPES = ['expense', 'income'] as const;
 const PAYMENT_METHODS = ['card', 'cash', 'transfer'] as const;
+/** 카드 알림의 카테고리 추천(PRD 4.9). exact는 전에 적은 가맹점(코드), llm은 검색 + LLM이다 */
+const SUGGESTION_SOURCES = ['exact', 'llm'] as const;
 
 export const categories = sqliteTable('categories', {
   id: id(),
@@ -85,6 +87,11 @@ export const transactions = sqliteTable(
     paymentMethod: text('payment_method', { enum: PAYMENT_METHODS }),
     isFixed: integer('is_fixed', { mode: 'boolean' }).notNull().default(false),
     fixedCostId: integer('fixed_cost_id').references(() => fixedCosts.id),
+    /** 카드 알림의 가맹점 원문(PRD 4.9). 정규화는 비교할 때 한다(src/cards/merchant.ts). 정확 일치와 검색, 취소 짝짓기에 쓴다 */
+    merchant: text('merchant'),
+    /** 카드 알림이 추천한 카테고리. 추천을 고치지 않고 저장한 비율이 정확도다 */
+    suggestedCategoryId: integer('suggested_category_id').references(() => categories.id),
+    suggestionSource: text('suggestion_source', { enum: SUGGESTION_SOURCES }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -134,3 +141,41 @@ export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
 });
+
+/**
+ * 카드 알림 대기열(PRD 4.9). 네이티브 서비스가 받은 원문을 JS가 읽어 넣는다. 거래는 사용자가 폼에서 확인해야 생긴다.
+ * 처리한 항목은 같은 알림을 다시 받지 않게(지문) 남겨 두고 90일 뒤 지운다. 기기에 딸린 값이라 백업에 넣지 않는다
+ */
+export const cardInbox = sqliteTable(
+  'card_inbox',
+  {
+    id: id(),
+    /** 카드 앱 + 제목 + 본문. 알림이 다시 올라와도(리스너 재연결) 한 번만 받는다 */
+    fingerprint: text('fingerprint').notNull(),
+    /** 카드 앱 패키지명 */
+    app: text('app').notNull(),
+    kind: text('kind', { enum: ['approval', 'cancel', 'unreadable'] }).notNull(),
+    amount: integer('amount'),
+    merchant: text('merchant'),
+    date: text('date'),
+    title: text('title').notNull(),
+    text: text('text').notNull(),
+    postedAt: integer('posted_at').notNull(),
+    /** done은 승인을 저장했거나 취소를 처리한 것, dismissed는 사용자가 넘긴 것이다 */
+    status: text('status', { enum: ['pending', 'done', 'dismissed'] })
+      .notNull()
+      .default('pending'),
+    /** LLM 추천. 전에 적은 가맹점(exact)은 보일 때마다 코드가 다시 정해 최근 기록을 따른다 */
+    suggestedCategoryId: integer('suggested_category_id').references(() => categories.id),
+    suggestionSource: text('suggestion_source', { enum: SUGGESTION_SOURCES }),
+    /** LLM 추천을 시도한 시각. 모델이 없어 못 했으면 비어 있고, 모델을 받은 뒤 다시 시도한다 */
+    suggestedAt: integer('suggested_at'),
+    /** 취소가 짝지은 저장한 거래. 사용자가 지우기 전에 거래가 없어질 수 있어 외래 키를 두지 않는다 */
+    pairedTransactionId: integer('paired_transaction_id'),
+    createdAt: createdAt(),
+  },
+  t => [
+    uniqueIndex('card_inbox_fingerprint').on(t.fingerprint),
+    index('card_inbox_status').on(t.status),
+  ],
+);

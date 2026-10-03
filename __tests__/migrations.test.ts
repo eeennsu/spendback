@@ -58,3 +58,16 @@ test('고정비 항목에는 고정비 거래만 연결된다(PRD 7장)', () => 
   expect(() => insert(0)).toThrow(/CHECK constraint failed/);
   expect(() => insert(1)).not.toThrow();
 });
+
+test('카드 알림: 거래에 가맹점과 추천값을 남기고, 대기열은 같은 알림을 두 번 받지 않는다(PRD 4.9)', () => {
+  const db = migrated();
+  db.exec(`INSERT INTO transactions (type, amount, date, category_id, merchant, suggested_category_id,
+      suggestion_source, created_at, updated_at)
+    VALUES ('expense', 4500, '2026-10-03', 2, '스타벅스 역삼점', 2, 'llm', 0, 0)`);
+  const insert = () =>
+    db.exec(`INSERT INTO card_inbox (fingerprint, app, kind, title, text, posted_at, created_at)
+      VALUES ('a', 'com.android.shell', 'approval', '테스트카드', '승인 …', 0, 0)`);
+  insert();
+  expect(db.prepare('SELECT status FROM card_inbox').get()).toEqual({ status: 'pending' });
+  expect(insert).toThrow(/UNIQUE constraint failed/);
+});

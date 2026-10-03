@@ -4,6 +4,8 @@ import type { Db } from '.';
 import { transactions } from './schema';
 
 export type TransactionRow = typeof transactions.$inferSelect;
+/** db나 그 트랜잭션. 다른 기록과 함께 한 트랜잭션으로 쓸 때 트랜잭션을 준다(카드 알림 저장) */
+export type Writer = Db | Parameters<Parameters<Db['transaction']>[0]>[0];
 export type TransactionInput = Omit<
   typeof transactions.$inferInsert,
   'id' | 'createdAt' | 'updatedAt'
@@ -23,7 +25,7 @@ function normalize(input: TransactionInput): TransactionInput {
   };
 }
 
-export async function addTransaction(db: Db, input: TransactionInput) {
+export async function addTransaction(db: Writer, input: TransactionInput) {
   const [row] = await db
     .insert(transactions)
     .values(normalize(input))
@@ -35,7 +37,7 @@ export function updateTransaction(db: Db, id: number, input: TransactionInput) {
   return db.update(transactions).set(normalize(input)).where(eq(transactions.id, id));
 }
 
-export function deleteTransaction(db: Db, id: number) {
+export function deleteTransaction(db: Writer, id: number) {
   return db.delete(transactions).where(eq(transactions.id, id));
 }
 

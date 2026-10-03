@@ -5,6 +5,7 @@ import { OutputSchema } from '../retro/check';
 import { allBudgets } from './budgets';
 import {
   budgets,
+  cardInbox,
   categories,
   fixedCosts,
   reasonTags,
@@ -15,9 +16,10 @@ import {
 /**
  * JSON 백업(PRD 4.8). 내보내기는 모든 기록을 한 파일로, 가져오기는 파일 전체를 먼저 검증한 뒤 한 트랜잭션으로
  * 전체 교체한다. 도중에 실패하면 기존 데이터가 그대로 남는다. 설정(사용 모델)은 기기에 딸린 값이라 넣지 않는다.
- * 스키마를 바꾸면 BACKUP_VERSION을 올리고 옛 버전을 읽는 변환을 둔다.
+ * 스키마를 바꾸면 BACKUP_VERSION을 올리고 옛 버전을 읽는 변환을 둔다(upgrade).
+ * 버전 2는 거래에 카드 알림의 가맹점과 추천값(PRD 4.9)을 더했다. 카드 알림 대기열은 기기에 딸린 값이라 넣지 않는다.
  */
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 
 const id = z.number().int().positive();
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -67,6 +69,9 @@ const TransactionSchema = z.object({
   paymentMethod,
   isFixed: z.boolean(),
   fixedCostId: id.nullable(),
+  merchant: z.string().nullable(),
+  suggestedCategoryId: id.nullable(),
+  suggestionSource: z.enum(['exact', 'llm']).nullable(),
   createdAt: time,
   updatedAt: time,
 });
@@ -130,6 +135,8 @@ export const BackupSchema = z
       ctx.addIssue({ code: 'custom', path, message });
     backup.transactions.forEach((tx, i) => {
       if (!categoryIds.has(tx.categoryId)) broken(['transactions', i], '없는 카테고리');
+      if (tx.suggestedCategoryId !== null && !categoryIds.has(tx.suggestedCategoryId))
+        broken(['transactions', i], '없는 추천 카테고리');
       if (tx.reasonTagId !== null && !tagIds.has(tx.reasonTagId))
         broken(['transactions', i], '없는 이유 태그');
       if (tx.fixedCostId !== null && !fixedIds.has(tx.fixedCostId))
@@ -163,6 +170,22 @@ export async function exportBackup(db: Db, now = new Date()): Promise<Backup> {
 /** 가져오기 전에 사용자에게 보여 줄 오류. 스키마 메시지를 그대로 보이지 않는다 */
 export class BackupError extends Error {}
 
+/** 버전 1 파일의 거래에는 가맹점과 추천값이 없다. 없는 것(null)으로 채워 버전 2로 읽는다 */
+function upgrade(raw: Record<string, unknown>) {
+  if (raw.version !== 1) return raw;
+  const transactions = Array.isArray(raw.transactions) ? raw.transactions : [];
+  return {
+    ...raw,
+    version: BACKUP_VERSION,
+    transactions: transactions.map((tx: object) => ({
+      merchant: null,
+      suggestedCategoryId: null,
+      suggestionSource: null,
+      ...tx,
+    })),
+  };
+}
+
 /** 파일 내용을 읽어 검증한다. 다른 앱의 파일, 다른 버전, 깨진 기록을 구분해 알린다 */
 export function parseBackup(text: string): Backup {
   let raw: unknown;
@@ -173,8 +196,9 @@ export function parseBackup(text: string): Backup {
   }
   const head = raw as { app?: unknown; version?: unknown } | null;
   if (head?.app !== 'spendback') throw new BackupError('spendback 백업 파일이 아니에요');
-  if (head.version !== BACKUP_VERSION) throw new BackupError('지원하지 않는 백업 버전이에요');
-  const parsed = BackupSchema.safeParse(raw);
+  if (head.version !== 1 && head.version !== BACKUP_VERSION)
+    throw new BackupError('지원하지 않는 백업 버전이에요');
+  const parsed = BackupSchema.safeParse(upgrade(raw as Record<string, unknown>));
   if (!parsed.success) {
     const where = parsed.error.issues[0]?.path.slice(0, 2).join(' ');
     throw new BackupError(`백업의 기록이 올바르지 않아요(${where})`);
@@ -190,6 +214,14 @@ async function insertAll<T>(rows: T[], insert: (chunk: T[]) => Promise<unknown>)
 /** 전체 교체. 한 트랜잭션이라 중간에 실패하면 아무것도 바뀌지 않는다 */
 export async function importBackup(db: Db, backup: Backup) {
   await db.transaction(async tx => {
+    // 카드 알림 대기열은 백업 밖이라 남는다. 추천과 짝은 지금 기록의 카테고리·거래를 가리키므로 비워, 새 기록으로
+    // 다시 정한다(PRD 4.9)
+    await tx.update(cardInbox).set({
+      suggestedCategoryId: null,
+      suggestionSource: null,
+      suggestedAt: null,
+      pairedTransactionId: null,
+    });
     // 다른 표가 가리키는 표를 나중에 지우고 먼저 넣는다
     await tx.delete(transactions);
     await tx.delete(retrospectives);

@@ -6,14 +6,7 @@
  * 결과는 scripts/eval/results/<시각>.json(전체)과 .md(모델 비교표, 사람 채점용 문장)다.
  * PC에서는 Metal·CUDA·Vulkan 같은 GPU로 돌아 속도가 폰(CPU)과 다르다. 속도는 참고만 하고 품질을 본다.
  */
-import {
-  type ChatWrapper,
-  type Llama,
-  LlamaChatSession,
-  type LlamaContext,
-  getLlama,
-  resolveChatWrapper,
-} from 'node-llama-cpp';
+import { getLlama } from 'node-llama-cpp';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -21,54 +14,11 @@ import { keyFacts } from '../../src/retro/keys';
 import { INFERENCE, MODELS } from '../../src/retro/models';
 import { type Generate, formatFor, narrate, renderOutput } from '../../src/retro/narrate';
 import type { PromptVersion } from '../../src/retro/prompt';
-import { modelsDir, parseArgs } from './args';
+import { parseArgs } from './args';
 import { autoCheck } from './checks';
+import { type Inference, openModel } from './llama.mjs';
 import { type Attempt, type Run, markdown } from './report';
 import { SNAPSHOTS, type Snapshot } from './snapshots';
-
-/** 앱 설정(INFERENCE)에 하네스만 바꿔 보는 존재 벌점을 더한 것. 0이면 끈다 */
-type Inference = typeof INFERENCE & { presencePenalty: number };
-
-/** node-llama-cpp 구현. 앱의 llama.rn 구현과 같은 설정을 쓴다(src/retro/models.ts INFERENCE) */
-function llamaGenerate(
-  llama: Llama,
-  context: LlamaContext,
-  chatWrapper: ChatWrapper,
-  inference: Inference,
-): Generate {
-  return async ({ messages, grammar, seed }, onToken, signal) => {
-    const sequence = context.getSequence();
-    try {
-      const session = new LlamaChatSession({
-        contextSequence: sequence,
-        chatWrapper,
-        systemPrompt: messages[0].content,
-      });
-      return await session.prompt(messages[1].content, {
-        grammar: await llama.createGrammar({ grammar }),
-        seed,
-        temperature: inference.temperature,
-        topK: inference.topK,
-        topP: inference.topP,
-        minP: inference.minP,
-        maxTokens: inference.maxTokens,
-        repeatPenalty:
-          inference.repeatPenalty === 1 && inference.presencePenalty === 0
-            ? false
-            : {
-                penalty: inference.repeatPenalty,
-                lastTokens: inference.repeatLastTokens,
-                presencePenalty: inference.presencePenalty,
-              },
-        onTextChunk: onToken,
-        signal,
-        stopOnAbortSignal: true,
-      });
-    } finally {
-      await sequence.dispose();
-    }
-  };
-}
 
 async function runOnce(
   generate: Generate,
@@ -172,15 +122,7 @@ const llama = await getLlama();
 const runs: Run[] = [];
 
 for (const model of MODELS.filter(m => models.includes(m.id))) {
-  const loaded = await llama.loadModel({ modelPath: join(modelsDir(dir), model.fileName) });
-  const context = await loaded.createContext({ contextSize: INFERENCE.contextSize });
-  // 추론 모드를 끈다(PRD 6장). Qwen 래퍼는 빈 think 블록을 프롬프트에 넣는다. budgets로 끄면 문법이 고른 첫 토큰이
-  // think 구간에 들어가 사라진다
-  const chatWrapper = resolveChatWrapper(loaded, {
-    customWrapperSettings: { qwen: { thoughts: 'discourage' } },
-  });
-  const generate = llamaGenerate(llama, context, chatWrapper, inference);
-  const countTokens = (text: string) => loaded.tokenize(text).length;
+  const { generate, countTokens, dispose } = await openModel(llama, model, inference, dir);
   for (const snapshot of snapshots) {
     for (let run = 1; run <= runCount; run++) {
       const result = await runOnce(generate, countTokens, snapshot, run, model.id, version);
@@ -190,8 +132,7 @@ for (const model of MODELS.filter(m => models.includes(m.id))) {
       );
     }
   }
-  await context.dispose();
-  await loaded.dispose();
+  await dispose();
 }
 
 const date = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);

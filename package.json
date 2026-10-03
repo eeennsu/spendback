@@ -117,7 +117,7 @@
     "type": "modules",
     "jsSrcsDir": "src/native",
     "android": {
-      "javaPackageName": "com.eeennsu.spendback.files"
+      "javaPackageName": "com.eeennsu.spendback.specs"
     }
   }
 }

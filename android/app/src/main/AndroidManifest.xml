@@ -24,6 +24,16 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      <!-- 카드 알림 받기(PRD 4.9). 시스템만 묶을 수 있게 권한을 건다 -->
+      <service
+        android:name=".cards.CardNotificationService"
+        android:label="@string/app_name"
+        android:exported="true"
+        android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+        <intent-filter>
+          <action android:name="android.service.notification.NotificationListenerService" />
+        </intent-filter>
+      </service>
       <provider
         android:name="androidx.core.content.FileProvider"
         android:authorities="${applicationId}.files"

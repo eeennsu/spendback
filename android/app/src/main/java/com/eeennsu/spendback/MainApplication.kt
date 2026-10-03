@@ -1,6 +1,7 @@
 package com.eeennsu.spendback
 
 import android.app.Application
+import com.eeennsu.spendback.cards.SpendbackCardsPackage
 import com.eeennsu.spendback.files.SpendbackFilesPackage
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -16,8 +17,9 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          // 앱 전용 Turbo Native Module(모델 내려받기, 백업 파일)
+          // 앱 전용 Turbo Native Module(모델 내려받기, 백업 파일, 카드 알림)
           add(SpendbackFilesPackage())
+          add(SpendbackCardsPackage())
         },
     )
   }

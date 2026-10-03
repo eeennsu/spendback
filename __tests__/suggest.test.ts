@@ -116,6 +116,23 @@ describe('suggestCategory', () => {
     expect(fake.calls[0].messages[1].content).not.toContain('→ 배달');
   });
 
+  test('최소 점수를 주면 그 점수로 예시를 거른다(하네스 비교)', async () => {
+    const one = knownMerchants([{ merchant: '교촌치킨 역삼점', categoryId: 3 }]);
+    const run = async (minScore: number) => {
+      const fake = fakeGenerate(['배달']);
+      await suggestCategory({
+        merchant: 'BHC치킨 선릉점',
+        known: one,
+        categories: CATEGORIES,
+        generate: fake.generate,
+        minScore,
+      });
+      return fake.calls[0].messages[1].content;
+    };
+    expect(await run(0)).toContain('- 교촌치킨 역삼점 → 배달');
+    expect(await run(0.5)).not.toContain('→');
+  });
+
   test('Qwen이 앞에 붙이는 빈 think 블록을 떼고 읽는다', async () => {
     const fake = fakeGenerate(['<think>\n\n</think>\n\n배달']);
     const suggestion = await suggestCategory({

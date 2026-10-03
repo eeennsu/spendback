@@ -16,8 +16,12 @@ import { type Known, nameGrams, normalizeMerchant } from './merchant';
 
 export type Similar = Known & { score: number };
 
-/** 이보다 낮은 가맹점은 내지 않는다. 조각 하나가 스친 가맹점(서울아산병원과 서울도시가스)은 예시가 아니라 잡음이다 */
-export const MIN_SCORE = 0.2;
+/**
+ * 이보다 낮은 가맹점은 내지 않는다. 낱말 하나가 겹친 가맹점은 "치킨"(습관)과 "서울"(잡음)이 0.1~0.2에 섞여 있어 점수로
+ * 가를 수 없다. 0.2로 두면 과거 가맹점이 적을 때 "치킨"이 빠졌고(에뮬레이터 0.19), 하네스에서 0과 0.1은 같고 0.2와는
+ * 모델마다 1건 안팎 차이였다(scripts/eval/README.md)
+ */
+export const MIN_SCORE = 0.1;
 
 /** 검색에 쓰는 조각. 이름이 두 낱말 이상이고 마지막 낱말이 '점'으로 끝나면 지점명으로 보고 뺀다 */
 function searchGrams(name: string) {

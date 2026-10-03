@@ -52,6 +52,12 @@ describe('findSimilar', () => {
     expect(findSimilar('서울아산병원', corpus)).toEqual([]);
   });
 
+  test('과거 가맹점이 적어도 낱말 하나(치킨)가 겹치면 낸다', () => {
+    // 과거 가맹점이 하나뿐이면 겹친 조각의 가중치가 낮아 점수가 0.19였다(에뮬레이터, 최소 점수 0.2에서 빠졌다)
+    const corpus = known(['교촌치킨 역삼점', 3]);
+    expect(findSimilar('BHC치킨 선릉점', corpus).map(m => m.name)).toEqual(['교촌치킨 역삼점']);
+  });
+
   test('과거 가맹점이 없으면 빈 목록이다', () => {
     expect(findSimilar('스타벅스', [])).toEqual([]);
   });

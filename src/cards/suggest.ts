@@ -1,7 +1,7 @@
 import type { Generate } from '../retro/narrate';
 import { type Known, normalizeMerchant } from './merchant';
 import { type Category, categoryGrammar, categoryMessages, representatives } from './prompt';
-import { findSimilar } from './similar';
+import { MIN_SCORE, findSimilar } from './similar';
 
 /**
  * 카드 알림의 카테고리 추천(PRD 4.9). 1단계는 코드(전에 적은 가맹점), 2단계는 검색 + LLM(처음 보는 가맹점),
@@ -31,6 +31,7 @@ export async function suggestCategory({
   generate,
   signal,
   context = 'similar',
+  minScore = MIN_SCORE,
 }: {
   merchant: string;
   /** 사용자가 전에 적은 가맹점(knownMerchants, 최근 것 먼저) */
@@ -41,6 +42,8 @@ export async function suggestCategory({
   generate?: Generate;
   signal?: AbortSignal;
   context?: Context;
+  /** 예시로 넣을 최소 점수. 하네스가 비교한다 */
+  minScore?: number;
 }): Promise<Suggestion | undefined> {
   const exact = exactMatch(merchant, known, categories);
   if (exact !== undefined) return { categoryId: exact, source: 'exact' };
@@ -51,7 +54,7 @@ export async function suggestCategory({
   const name = normalizeMerchant(merchant);
 
   const messages = categoryMessages(name, categories, {
-    similar: context === 'none' ? [] : findSimilar(name, usable, EXAMPLES),
+    similar: context === 'none' ? [] : findSimilar(name, usable, EXAMPLES, minScore),
     representatives:
       context === 'representatives' ? representatives(usable, categories) : undefined,
   });

@@ -45,6 +45,8 @@ export type InboxItem = {
   text: string;
   /** 승인만. 전에 적은 가맹점은 보일 때마다 코드가 다시 정한다(최근 기록을 따른다) */
   suggestion?: Suggestion;
+  /** 처음 보는 가맹점이라 LLM 추천을 기다린다(아직 묻지 않았다). 홈이 보이면 suggestPending을 돌린다 */
+  needsSuggestion: boolean;
   /** 같은 날 같은 금액의 지출이 이미 있다(직접 적었거나 같은 가맹점) */
   maybeDuplicate: boolean;
   /** 취소가 짝지은 저장한 거래 */
@@ -133,12 +135,14 @@ export async function inboxView(db: Db, categories: Category[]): Promise<InboxIt
       title: row.title,
       text: row.text,
       maybeDuplicate: false,
+      needsSuggestion: false,
     };
     if (row.kind === 'approval' && row.merchant) {
       const exact = exactMatch(row.merchant, known, categories);
       if (exact !== undefined) item.suggestion = { categoryId: exact, source: 'exact' };
       else if (row.suggestedCategoryId !== null && visible.has(row.suggestedCategoryId))
         item.suggestion = { categoryId: row.suggestedCategoryId, source: 'llm' };
+      item.needsSuggestion = exact === undefined && row.suggestedAt === null;
       const name = normalizeMerchant(row.merchant);
       // 직접 적은 지출(가맹점 없음)이나 같은 가맹점의 지출만 겹친 것으로 본다. 다른 가맹점이면 다른 결제다
       item.maybeDuplicate = sameDay.some(

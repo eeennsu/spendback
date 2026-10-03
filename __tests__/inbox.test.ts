@@ -190,6 +190,26 @@ describe('suggestPending', () => {
     ]);
   });
 
+  test('처음 보는 가맹점은 LLM 추천을 기다리고, 물은 뒤에는 기다리지 않는다', async () => {
+    const db = testDb();
+    await addTransaction(db, expense({ merchant: 'BBQ치킨', categoryId: 3 }));
+    await syncInbox(
+      db,
+      [raw('승인 20,000원 10/03 19:00 교촌치킨'), raw('승인 18,000원 10/02 19:00 BBQ치킨')],
+      NOW,
+    );
+    const before = await inboxView(db, CATEGORIES);
+    expect(before.map(i => i.needsSuggestion)).toEqual([true, false]);
+    await suggestPending(
+      db,
+      CATEGORIES,
+      fakeGenerate(['아무말']).generate,
+      new AbortController().signal,
+      NOW,
+    );
+    expect((await inboxView(db, CATEGORIES)).map(i => i.needsSuggestion)).toEqual([false, false]);
+  });
+
   test('한 번 물은 항목은 다시 묻지 않는다', async () => {
     const db = testDb();
     await syncInbox(db, [raw('승인 20,000원 10/03 19:00 교촌치킨')], NOW);

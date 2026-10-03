@@ -9,6 +9,12 @@ import { type Generate, NarratorError } from './narrate';
  */
 let releasing: Promise<void> = Promise.resolve();
 
+/** 올라가 있는 컨텍스트 수. 회고와 카드 알림 추천이 모델 두 벌을 함께 올리지 않게 본다(PRD 6장 실행 정책) */
+let contexts = 0;
+
+/** 어떤 narrator가 모델을 올려 두었는가 */
+export const llamaBusy = () => contexts > 0;
+
 /**
  * 실패해도 넘어간다. llama.rn 0.12.9의 stopCompletion은 타입은 Promise지만 JSI 동기 호출이라 undefined를 돌려준다
  * (기기에서 `.catch`가 TypeError를 냈다)
@@ -46,6 +52,10 @@ export function llamaNarrator(modelPath: string | null) {
           use_mlock: false,
         }),
       )
+      .then(llama => {
+        contexts += 1;
+        return llama;
+      })
       .catch(() => {
         context = undefined;
         throw new NarratorError('load-failed');
@@ -98,6 +108,7 @@ export function llamaNarrator(modelPath: string | null) {
       await settle(() => llama.stopCompletion());
       await running;
       await settle(() => llama.release());
+      contexts -= 1;
     })().catch(() => undefined);
     return releasing;
   };

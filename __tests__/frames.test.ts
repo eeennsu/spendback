@@ -9,7 +9,7 @@ import {
   insightFrames,
   pickFrames,
 } from '../src/retro/frames';
-import { factValues, keyFacts } from '../src/retro/keys';
+import { type FactGroup, type KeyedFacts, factValues, keyFacts } from '../src/retro/keys';
 import { render } from '../src/retro/render';
 
 const keyedOf = (s: (typeof SNAPSHOTS)[number]) => keyFacts(s.facts, s.names);
@@ -238,8 +238,63 @@ describe('pickFrames(폴백)', () => {
       expect(new Set(abouts).size).toBe(abouts.length);
       expect(abouts).not.toContain(first.group);
       expect(abouts).not.toContain('total');
+      // 스냅샷마다 종류가 넉넉해 insight의 종류가 서로 다르고 headline과도 다르다
+      const kind = (id: string) => id.split('.')[0];
+      const kinds = abouts.map(kind);
+      expect(new Set(kinds).size).toBe(kinds.length);
+      expect(kinds).not.toContain(kind(first.group));
     },
   );
+
+  describe('종류가 같은 묶음', () => {
+    const category = (id: number, name: string, change: string): FactGroup => ({
+      id: `category.${id}`,
+      title: '카테고리',
+      facts: [
+        { key: `category.${id}.name`, value: name, kind: 'noun', note: '' },
+        { key: `category.${id}.change_phrase`, value: change, kind: 'predicate', note: '' },
+      ],
+      focus: ['change_phrase'],
+    });
+    const regret: FactGroup = {
+      id: 'regret',
+      title: '후회한 지출',
+      facts: [
+        { key: 'regret.amount', value: '47,000원', kind: 'noun', note: '' },
+        { key: 'regret.share', value: '25%', kind: 'noun', note: '' },
+      ],
+    };
+    const noSpend: FactGroup = {
+      id: 'no_spend',
+      title: '무지출일',
+      facts: [{ key: 'no_spend.days', value: '하루', kind: 'noun', note: '' }],
+    };
+    const keyed = (groups: FactGroup[]): KeyedFacts => ({
+      kind: 'weekly',
+      period: '9월 3주',
+      groups,
+    });
+    const categories = [
+      category(1, '식비', '5,000원 늘었어요'),
+      category(2, '배달', '4,000원 늘었어요'),
+      category(3, '쇼핑', '3,000원 늘었어요'),
+      category(4, '생활', '2,000원 늘었어요'),
+    ];
+
+    test('다른 종류를 먼저 고른 뒤에 채우고, 눈에 띄는 순서로 보인다', () => {
+      const picked = pickFrames(keyed([...categories, regret, noSpend]));
+      expect(picked?.headline).toContain('{category.1.change_phrase}');
+      expect(picked?.insights.map(i => i.about)).toEqual(['category.2', 'regret', 'no_spend']);
+    });
+
+    test('다른 종류가 모자라면 같은 종류로 채운다', () => {
+      expect(pickFrames(keyed(categories))?.insights.map(i => i.about)).toEqual([
+        'category.2',
+        'category.3',
+        'category.4',
+      ]);
+    });
+  });
 
   test('insight는 눈에 띄는 순서이고, 묶음의 까닭을 쓴 틀을 고른다', () => {
     const snapshot = SNAPSHOTS.find(s => s.id === 'week-category-over');

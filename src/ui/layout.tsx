@@ -1,7 +1,10 @@
 import { Card, Chip, Label, Stack, Text, cn } from '@eeennsu/native';
 import type { ElementChildren } from '@eeennsu/tokens';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, View } from 'react-native-css/components';
+import { Pressable, ScrollView, View } from 'react-native-css/components';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Prose } from './prose';
 
 /**
  * 화면들이 같이 쓰는 조각(docs/DESIGN.md 3.3, 4.2). 섹션 하나가 카드 하나이고, 카드 안의 줄은 구분선 없이 여백으로
@@ -9,6 +12,20 @@ import { Pressable, View } from 'react-native-css/components';
  */
 
 type Children = ElementChildren;
+
+/**
+ * 스택 화면의 스크롤 바탕. 아래 끝은 제스처 막대나 3버튼 내비게이션 자리를 더 비워 마지막 버튼이 막대에 걸리지 않는다
+ */
+export function ScreenScroll({ children }: { children: Children }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <ScrollView className='flex-1 bg-canvas' contentContainerClassName='gap-3 px-4 pb-8 pt-1'>
+      {children as ReactNode}
+      {/* contentContainerStyle을 주면 react-native-css가 className의 여백을 덮어써(에뮬레이터) 빈 뷰로 비운다 */}
+      <View style={{ height: insets.bottom }} />
+    </ScrollView>
+  );
+}
 
 /** 섹션 카드. 제목 옆(aside)에 진행 상황 같은 한 줄을 둔다 */
 export function Section({
@@ -192,11 +209,11 @@ export function Empty({
 }) {
   return (
     <Card className='gap-3'>
-      <Text size='lg'>{title}</Text>
+      <Prose size='lg'>{title}</Prose>
       {body !== undefined && (
-        <Text size='sm' tone='muted'>
+        <Prose size='sm' tone='muted'>
           {body}
-        </Text>
+        </Prose>
       )}
       {action}
     </Card>

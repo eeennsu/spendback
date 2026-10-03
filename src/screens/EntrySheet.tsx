@@ -1,8 +1,8 @@
-import { Button, Chip, Input, Label, Stack, Text } from '@eeennsu/native';
+import { Button, Chip, Icon, Input, Label, Stack, Text, cn } from '@eeennsu/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { type StaticScreenProps, useNavigation, usePreventRemove } from '@react-navigation/native';
-import { useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
+import { Alert, Keyboard } from 'react-native';
 import { Pressable, ScrollView, Switch, View } from 'react-native-css/components';
 
 import type { CategoryRow, FixedCostRow, ReasonTagRow } from '../db/lists';
@@ -22,6 +22,7 @@ import { paymentDate } from '../domain/fixedCost';
 import { mutate, read, useQuery, useToday } from '../state/data';
 import { PAYMENT_METHODS, SATISFACTION, useLists } from '../state/lists';
 import { Choices, SwitchRow } from '../ui/layout';
+import { Prose } from '../ui/prose';
 import { Sheet } from '../ui/sheet';
 
 type Params = { transactionId?: number; fixedCostId?: number } | undefined;
@@ -116,6 +117,9 @@ function EntryForm({
   const navigation = useNavigation();
   const [values, setValues] = useState(initial);
   const [more, setMore] = useState(false);
+  // 펼치면 펼친 줄을 시트 위쪽으로 올려 새로 생긴 항목이 보이게 한다(DESIGN.md 4.3)
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const toggleY = useRef(0);
   const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
   const amountRef = useRef<{ focus(): void; blur(): void }>(null);
@@ -234,7 +238,8 @@ function EntryForm({
   ].filter((s): s is string => typeof s === 'string');
 
   const footer = (
-    <View className='gap-2 px-6 pb-4 pt-3'>
+    // 펼친 시트는 가운데가 스크롤되므로 아래 버튼 영역과의 경계를 긋는다
+    <View className={cn('gap-2 px-6 pb-4 pt-3', more && 'border-t border-border')}>
       {/*
         저장이 안 되는 이유가 바뀌면 스크린 리더가 조용히 알린다. 접근성 prop만 가진 View는 New Architecture가
         평탄화해 live region이 사라지므로 collapsable={false}로 네이티브 뷰를 남긴다(DESIGN.md 3.7)
@@ -259,6 +264,7 @@ function EntryForm({
   return (
     <Sheet title={title} onClose={() => navigation.goBack()} expanded={more} footer={footer}>
       <ScrollView
+        ref={scrollRef}
         className={more ? 'flex-1' : 'shrink grow-0'}
         contentContainerClassName='gap-6 px-6 pb-4 pt-2'
         keyboardShouldPersistTaps='handled'
@@ -324,17 +330,35 @@ function EntryForm({
         <Pressable
           accessibilityRole='button'
           accessibilityState={{ expanded: more }}
-          onPress={() => setMore(open => !open)}
-          className='-mx-6 gap-1 px-6 py-3 active:bg-surface-hover'
+          onLayout={event => {
+            toggleY.current = event.nativeEvent.layout.y;
+          }}
+          onPress={() => {
+            if (more) {
+              setMore(false);
+              return;
+            }
+            Keyboard.dismiss();
+            setMore(true);
+            // 시트가 커진 뒤에 스크롤한다
+            setTimeout(
+              () => scrollRef.current?.scrollTo({ y: toggleY.current, animated: true }),
+              100,
+            );
+          }}
+          className='-mx-6 flex-row items-center gap-3 px-6 py-3 active:bg-surface-hover'
         >
-          <Text>{more ? '선택 항목 접기' : '선택 항목 더 보기'}</Text>
-          <Text size='sm' tone='muted'>
-            {summary.length > 0
-              ? summary.join(' · ')
-              : expense
-                ? '구분 · 이유 · 만족도 · 메모 · 결제수단 · 고정비'
-                : '구분 · 메모 · 결제수단'}
-          </Text>
+          <Stack className='flex-1 gap-1'>
+            <Text>{more ? '선택 항목 접기' : '선택 항목 더 보기'}</Text>
+            <Prose size='sm' tone='muted'>
+              {summary.length > 0
+                ? summary.join(' · ')
+                : expense
+                  ? '구분 · 이유 · 만족도 · 메모 · 결제수단 · 고정비'
+                  : '구분 · 메모 · 결제수단'}
+            </Prose>
+          </Stack>
+          <Icon name={more ? 'chevron-up' : 'chevron-down'} tone='muted' />
         </Pressable>
 
         {more && (

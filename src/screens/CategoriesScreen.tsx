@@ -1,7 +1,7 @@
-import { Button, Card, Chip, Input, Stack, Text } from '@eeennsu/native';
+import { Button, Card, Chip, Input, Label, Stack, Text } from '@eeennsu/native';
 import { useRoute } from '@react-navigation/native';
-import { useState } from 'react';
-import { Pressable, ScrollView, Switch } from 'react-native-css/components';
+import { useEffect, useRef, useState } from 'react';
+import { ScrollView, Switch } from 'react-native-css/components';
 
 import {
   addCategory,
@@ -14,8 +14,10 @@ import {
 } from '../db/lists';
 import { mutate, read } from '../state/data';
 import { useLists } from '../state/lists';
+import { IconButton } from '../ui/chrome';
 import { FormFrame } from '../ui/keyboard';
 import { Row } from '../ui/layout';
+import { Prose } from '../ui/prose';
 
 type Item = { id: number; name: string; hidden: boolean };
 
@@ -46,6 +48,11 @@ export function CategoriesScreen() {
             <Chip label='수입' selected={type === 'income'} onPress={() => setType('income')} />
           </Stack>
         )}
+        {/* 무엇을 할 수 있는지 목록보다 먼저 말한다 */}
+        <Prose size='sm' tone='muted'>
+          연필을 누르면 이름을 바꿔요. 스위치를 끈 항목은 입력에서 빠지고, 지난 기록과 회고에는
+          그대로 남아요
+        </Prose>
         <Card className='gap-1'>
           {items.map(item => (
             <EditableRow
@@ -82,10 +89,6 @@ export function CategoriesScreen() {
             return '';
           }}
         />
-        <Text size='sm' tone='muted'>
-          이름을 누르면 바꿀 수 있어요. 스위치를 끈 항목은 입력에서 빠지고, 지난 기록과 회고에는
-          그대로 남아요
-        </Text>
       </ScrollView>
     </FormFrame>
   );
@@ -104,13 +107,23 @@ function EditableRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
+  const input = useRef<{ focus(): void; blur(): void }>(null);
+  useEffect(() => {
+    if (editing) input.current?.focus();
+  }, [editing]);
   const trimmed = name.trim();
   const error = !trimmed ? '이름을 입력해 주세요' : taken(trimmed) ? '같은 이름이 있어요' : '';
 
   if (editing) {
     return (
       <Stack className='gap-2 py-2'>
-        <Input label={`${item.name} 새 이름`} value={name} onValueChange={setName} size='lg' />
+        <Input
+          ref={input}
+          label={`${item.name} 새 이름`}
+          value={name}
+          onValueChange={setName}
+          size='lg'
+        />
         {error !== '' && (
           <Text size='sm' tone='danger'>
             {error}
@@ -136,19 +149,17 @@ function EditableRow({
       </Stack>
     );
   }
-  // 줄마다 같은 이름의 버튼이 생기지 않게(DESIGN.md 3.7) 이름을 누르면 바꾸고, 스위치는 이름을 붙여 읽힌다
+  // 동작이 둘(이름 바꾸기, 입력에 보이기)이라 줄 전체를 스위치로 만들지 않고 컨트롤마다 이름을 준다(DESIGN.md 3.7)
   return (
     <Row compact>
-      <Pressable
-        accessibilityRole='button'
-        accessibilityLabel={`${item.name} 이름 바꾸기`}
+      <Text tone={item.hidden ? 'muted' : 'default'} className='flex-1'>
+        {item.hidden ? `${item.name} · 숨김` : item.name}
+      </Text>
+      <IconButton
+        icon='pencil'
+        label={`${item.name} 이름 바꾸기`}
         onPress={() => setEditing(true)}
-        className='min-h-12 flex-1 justify-center rounded-md active:bg-surface-hover'
-      >
-        <Text tone={item.hidden ? 'muted' : 'default'}>
-          {item.hidden ? `${item.name} · 숨김` : item.name}
-        </Text>
-      </Pressable>
+      />
       <Switch
         value={!item.hidden}
         onValueChange={() => void onToggle()}
@@ -163,8 +174,16 @@ function AddRow({ label, onAdd }: { label: string; onAdd: (name: string) => Prom
   const [error, setError] = useState('');
   return (
     <Card className='gap-2'>
+      <Label htmlFor='new-name'>{label}</Label>
       <Stack direction='row' align='center' className='gap-3'>
-        <Input label={label} value={name} onValueChange={setName} size='lg' className='flex-1' />
+        <Input
+          id='new-name'
+          label={label}
+          value={name}
+          onValueChange={setName}
+          size='lg'
+          className='flex-1'
+        />
         <Button
           label='추가'
           disabled={!name.trim()}

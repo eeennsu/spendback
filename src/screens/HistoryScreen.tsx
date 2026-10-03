@@ -1,6 +1,6 @@
 import { Badge, Button, Stack, Text } from '@eeennsu/native';
-import { useNavigation } from '@react-navigation/native';
-import { useLayoutEffect } from 'react';
+import { useNavigation, useScrollToTop } from '@react-navigation/native';
+import { useLayoutEffect, useRef } from 'react';
 import { FlatList } from 'react-native';
 import { Text as RNText, View } from 'react-native-css/components';
 
@@ -9,9 +9,10 @@ import { groupByDate, sectionTitle } from '../domain/entry';
 import { formatWon } from '../domain/format';
 import { useQuery, useToday } from '../state/data';
 import { paymentLabel, useLists } from '../state/lists';
-import { filterRange, isFiltered, rangeLabel, useHistoryFilter } from '../state/ui';
+import { EMPTY_FILTER, filterRange, isFiltered, rangeLabel, useHistoryFilter } from '../state/ui';
 import { HeaderAction } from '../ui/chrome';
 import { Empty, Row } from '../ui/layout';
+import { Prose } from '../ui/prose';
 
 type Entry = {
   key: string;
@@ -26,7 +27,10 @@ export function HistoryScreen() {
   const navigation = useNavigation();
   const today = useToday();
   const lists = useLists();
-  const { filter, reset } = useHistoryFilter();
+  const { filter, apply, reset } = useHistoryFilter();
+  // 고른 탭을 다시 누르면 맨 위로 간다
+  const list = useRef<FlatList<Entry>>(null);
+  useScrollToTop(list);
   const range = filterRange(filter, today);
   const data = useQuery(`history:${JSON.stringify(filter)}:${today}`, async db => ({
     rows: await filterTransactions(db, {
@@ -71,9 +75,9 @@ export function HistoryScreen() {
       </Text>
       {isFiltered(filter) && (
         <Stack direction='row' align='center' justify='between' className='gap-3'>
-          <Text size='sm' tone='muted' className='flex-1'>
+          <Prose size='sm' tone='muted' className='flex-1'>
             {conditions.length > 0 ? conditions.join(' · ') : '기간만 바꿨어요'}
-          </Text>
+          </Prose>
           <Button label='초기화' variant='ghost' size='sm' onPress={reset} />
         </Stack>
       )}
@@ -101,6 +105,7 @@ export function HistoryScreen() {
 
   return (
     <FlatList
+      ref={list}
       className='flex-1 bg-canvas'
       contentContainerClassName='px-4 pb-6 pt-1'
       data={entries}
@@ -108,17 +113,38 @@ export function HistoryScreen() {
       stickyHeaderIndices={sticky}
       ListHeaderComponent={header}
       ListEmptyComponent={
-        <Empty
-          title='조건에 맞는 기록이 없어요'
-          action={
-            <Button
-              label='필터 초기화'
-              variant='secondary'
-              className='self-start'
-              onPress={reset}
-            />
-          }
-        />
+        isFiltered(filter) ? (
+          <Empty
+            title='조건에 맞는 기록이 없어요'
+            action={
+              <Button
+                label='필터 초기화'
+                variant='secondary'
+                className='self-start'
+                onPress={reset}
+              />
+            }
+          />
+        ) : (
+          // 필터 없이 이번 달이 비었다. 달이 막 바뀌었을 때다(DESIGN.md 4.4)
+          <Empty
+            title={`${rangeLabel(filter, today)}에는 아직 기록이 없어요`}
+            action={
+              <Stack direction='row' wrap className='gap-3'>
+                <Button
+                  label='기록하기'
+                  variant='secondary'
+                  onPress={() => navigation.navigate('Entry', {})}
+                />
+                <Button
+                  label='지난 달 보기'
+                  variant='ghost'
+                  onPress={() => apply({ ...EMPTY_FILTER, period: 'lastMonth' })}
+                />
+              </Stack>
+            }
+          />
+        )
       }
       renderItem={({ item }) => (
         <HistoryItem

@@ -1,7 +1,7 @@
 import { Button, Card, Stack, Text } from '@eeennsu/native';
 import { type StaticScreenProps, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ScrollView, Text as RNText, View } from 'react-native-css/components';
+import { Text as RNText, View } from 'react-native-css/components';
 
 import { allBudgets } from '../db/budgets';
 import { findRetrospective } from '../db/retrospectives';
@@ -26,9 +26,10 @@ import { renderParts } from '../retro/render';
 import { useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { type Generation, modelFor, useGeneration } from '../state/retro';
-import { DailyBars, Donut } from '../ui/charts';
+import { DailyBars, Donut, Swatch } from '../ui/charts';
 import { HeaderAction } from '../ui/chrome';
-import { Row, Section } from '../ui/layout';
+import { Row, ScreenScroll, Section } from '../ui/layout';
+import { Prose, wrapWords } from '../ui/prose';
 
 type Params = { kind: PeriodKind; start: string };
 
@@ -142,9 +143,14 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
     return { date, amount };
   });
   const busiest = days.reduce((best, d) => (d.amount > best.amount ? d : best), days[0]);
+  // 회고 문장이 총지출 묶음(변동비 증감 등)을 말하면 카드의 비교 줄을 빼 같은 사실을 두 번 말하지 않는다
+  const output = data.saved?.output;
+  const saidTotal =
+    output !== undefined &&
+    [output.headline, ...output.insights.map(i => i.text)].some(text => text.includes('{total.'));
 
   return (
-    <ScrollView className='flex-1 bg-canvas' contentContainerClassName='gap-3 px-4 pb-8 pt-1'>
+    <ScreenScroll>
       <Card className='gap-2'>
         <Text size='sm' tone='muted'>
           총지출
@@ -155,13 +161,15 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
         <Text size='sm' tone='muted' className='tabular-nums'>
           {`변동비 ${formatWon(facts.variable)} · 고정비 ${formatWon(facts.fixed)}`}
         </Text>
-        <Text className='tabular-nums'>
-          {change === undefined
-            ? `${before}와 비교할 기록이 없어요`
-            : change === '같았어요'
-              ? `변동비가 ${before}와 같았어요`
-              : `변동비가 ${before}보다 ${change}`}
-        </Text>
+        {!saidTotal && (
+          <Prose className='tabular-nums'>
+            {change === undefined
+              ? `${before}와 비교할 기록이 없어요`
+              : change === '같았어요'
+                ? `변동비가 ${before}와 같았어요`
+                : `변동비가 ${before}보다 ${change}`}
+          </Prose>
+        )}
       </Card>
 
       <Narrative
@@ -185,15 +193,19 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
       {slices.length > 0 && (
         <Section title='카테고리'>
           <Donut slices={slices} percents={percents} />
-          {slices.map((slice, i) => (
-            <Row key={slice.label}>
-              <Text className='flex-1'>{slice.label}</Text>
-              <Text size='sm' tone='muted' className='tabular-nums'>
-                {percents[i]}
-              </Text>
-              <Text className='tabular-nums'>{formatWon(slice.amount)}</Text>
-            </Row>
-          ))}
+          {/* 줄 사이 간격은 줄 자신의 여백만 쓴다(Section gap은 제목과 내용 사이) */}
+          <View>
+            {slices.map((slice, i) => (
+              <Row key={slice.label}>
+                <Swatch index={i} />
+                <Text className='flex-1'>{slice.label}</Text>
+                <Text size='sm' tone='muted' className='tabular-nums'>
+                  {percents[i]}
+                </Text>
+                <Text className='tabular-nums'>{formatWon(slice.amount)}</Text>
+              </Row>
+            ))}
+          </View>
         </Section>
       )}
 
@@ -206,11 +218,11 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
               : '변동비를 쓴 날이 없어요'
           }
         />
-        <Text size='sm' tone='muted'>
+        <Prose size='sm' tone='muted'>
           고정비는 빼고 변동비만 날마다 더했어요
-        </Text>
+        </Prose>
       </Section>
-    </ScrollView>
+    </ScreenScroll>
   );
 }
 
@@ -269,9 +281,9 @@ function Narrative({
           </Text>
         </View>
         {generation.sentences.map((sentence, i) => (
-          <Text key={sentence} size={i === 0 ? 'xl' : 'md'}>
+          <Prose key={sentence} size={i === 0 ? 'xl' : 'md'}>
             {sentence}
-          </Text>
+          </Prose>
         ))}
         <Button label='취소' variant='secondary' className='self-start' onPress={onCancel} />
       </Card>
@@ -285,14 +297,14 @@ function Narrative({
     }[generation.reason];
     return (
       <Card className='gap-3'>
-        <Text>{message}</Text>
+        <Prose>{message}</Prose>
         <Text size='sm' tone='muted'>
           지표와 차트는 아래에 있어요
         </Text>
         <Stack direction='row' wrap className='gap-3'>
           {generation.reason !== 'no-model' && (
             <Button
-              label={generation.reason === 'check-failed' ? '다시 생성' : '다시 시도'}
+              label={generation.reason === 'check-failed' ? '다시 만들기' : '다시 시도'}
               variant='secondary'
               onPress={onGenerate}
             />
@@ -308,9 +320,9 @@ function Narrative({
     return (
       <Card className='gap-3'>
         <Text>기록하지 않은 고정비가 있어요</Text>
-        <Text size='sm' tone='muted'>
+        <Prose size='sm' tone='muted'>
           빠뜨리면 고정비 합계와 수입 대비 지출률이 틀려요. 기록하거나 그대로 만들 수 있어요
-        </Text>
+        </Prose>
         {unrecorded.map(item => (
           <Row
             key={item.id}
@@ -324,7 +336,7 @@ function Narrative({
               </Text>
             </Stack>
             <Text size='sm' className='text-fg-brand'>
-              기록하기
+              기록
             </Text>
           </Row>
         ))}
@@ -385,18 +397,21 @@ function Emphasized({
   heading?: boolean;
 }) {
   const parts = renderParts(text, fill.values, fill.predicates);
+  // 낱말 단위로 줄을 바꾼다. 조각이 공백 없이 이어지면("배달" + "이") 그 사이도 묶는다(src/ui/prose.tsx)
+  const joined = (i: number) => i > 0 && !/\s$/.test(parts[i - 1].text);
   return (
     <RNText
       accessibilityRole={heading ? 'header' : undefined}
+      accessibilityLabel={parts.map(part => part.text).join('')}
       className={`font-sans text-fg ${className}`}
     >
       {parts.map((part, i) =>
         part.value ? (
           <RNText key={i} className='text-fg-brand tabular-nums'>
-            {part.text}
+            {wrapWords(part.text, joined(i))}
           </RNText>
         ) : (
-          part.text
+          wrapWords(part.text, joined(i))
         ),
       )}
     </RNText>
@@ -406,10 +421,10 @@ function Emphasized({
 function Notice({ title, body }: { title: string; body: string }) {
   return (
     <Card className='gap-2'>
-      <Text>{title}</Text>
-      <Text size='sm' tone='muted'>
+      <Prose>{title}</Prose>
+      <Prose size='sm' tone='muted'>
         {body}
-      </Text>
+      </Prose>
     </Card>
   );
 }

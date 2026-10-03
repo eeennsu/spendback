@@ -8,10 +8,12 @@ import { addFixedCost } from '../src/db/lists';
 import { budgets, fixedCosts, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
 import { EntrySheet } from '../src/screens/EntrySheet';
+import { HistoryScreen } from '../src/screens/HistoryScreen';
 import { HomeScreen } from '../src/screens/HomeScreen';
+import { useHistoryFilter } from '../src/state/ui';
 
 /**
- * 홈과 입력 시트(docs/DESIGN.md 4.2, 4.3). 앱과 같은 drizzle 드라이버를 Node 내장 SQLite로 잇고(jest/db.ts),
+ * 홈, 입력 시트, 내역(docs/DESIGN.md 4.2~4.4). 앱과 같은 drizzle 드라이버를 Node 내장 SQLite로 잇고(jest/db.ts),
  * 내비게이션은 이동 요청만 받는다. 오늘은 2026-09-24다
  */
 jest.mock('../src/db', () => {
@@ -29,6 +31,8 @@ jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => mockNavigation,
   usePreventRemove: jest.fn(),
+  // 탭을 다시 누르면 맨 위로 가는 훅. 내비게이터 밖이라 아무 일도 하지 않게 둔다
+  useScrollToTop: jest.fn(),
 }));
 
 const BRAND = '#206fea';
@@ -280,5 +284,34 @@ describe('입력 시트', () => {
     expect(screen.getByLabelText('금액').props.value).toBe('4,500');
     await fireEvent.press(screen.getByRole('button', { name: /선택 항목 더 보기/ }));
     expect(screen.getByRole('button', { name: '삭제' })).toBeOnTheScreen();
+  });
+});
+
+describe('내역', () => {
+  beforeEach(() => useHistoryFilter.getState().reset());
+
+  test('이번 달이 비었으면 필터 결과가 아니라 달의 빈 상태와 지난 달 보기를 보인다', async () => {
+    await addTransaction(db, expense({ memo: '점심 순대국', date: '2026-08-20' }));
+    await mount(<HistoryScreen />);
+
+    expect(await screen.findByText('9월에는 아직 기록이 없어요')).toBeOnTheScreen();
+    expect(screen.queryByText('조건에 맞는 기록이 없어요')).toBeNull();
+    expect(screen.getByRole('button', { name: '기록하기' })).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: '지난 달 보기' }));
+    expect(await screen.findByText('8월 지출 9,500원')).toBeOnTheScreen();
+    expect(screen.getByText('점심 순대국')).toBeOnTheScreen();
+  });
+
+  test('필터 결과가 비면 필터 초기화를 보인다', async () => {
+    await addTransaction(db, expense({ memo: '점심 순대국' }));
+    useHistoryFilter
+      .getState()
+      .apply({ period: 'thisMonth', type: 'income', categoryIds: [], reasonTagIds: [] });
+    await mount(<HistoryScreen />);
+
+    expect(await screen.findByText('조건에 맞는 기록이 없어요')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: '필터 초기화' }));
+    expect(await screen.findByText('점심 순대국')).toBeOnTheScreen();
   });
 });

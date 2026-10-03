@@ -1,11 +1,10 @@
 import { Button, Stack, Text } from '@eeennsu/native';
 import { useNavigation } from '@react-navigation/native';
-import { ScrollView } from 'react-native-css/components';
 
 import type { FixedCostRow } from '../db/lists';
 import { formatWon } from '../domain/format';
 import { paymentLabel, useLists } from '../state/lists';
-import { Empty, Row, Section } from '../ui/layout';
+import { Empty, Row, ScreenScroll, Section } from '../ui/layout';
 
 /**
  * 고정비 항목(PRD 4.4). 월세·통신비·구독처럼 매달 나가는 지출을 등록해 두면 홈이 달마다 기록했는지 확인한다.
@@ -32,7 +31,7 @@ export function FixedCostsScreen() {
       .join(' · ');
 
   return (
-    <ScrollView className='flex-1 bg-canvas' contentContainerClassName='gap-3 px-4 pb-8 pt-1'>
+    <ScreenScroll>
       {active.length === 0 ? (
         <Empty
           title='등록한 고정비가 없어요'
@@ -77,6 +76,6 @@ export function FixedCostsScreen() {
           ))}
         </Section>
       )}
-    </ScrollView>
+    </ScreenScroll>
   );
 }

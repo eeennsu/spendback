@@ -1,6 +1,6 @@
 import { Button, Card, Input, Label, Stack, Text } from '@eeennsu/native';
 import { type StaticScreenProps, useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { ScrollView, View } from 'react-native-css/components';
 
@@ -17,6 +17,7 @@ import { mutate } from '../state/data';
 import { PAYMENT_METHODS, useLists } from '../state/lists';
 import { FormFrame } from '../ui/keyboard';
 import { Choices } from '../ui/layout';
+import { Prose } from '../ui/prose';
 
 /** 고정비 항목 추가·수정(PRD 4.4). 이름, 예상 금액, 카테고리, 결제일(매월 N일), 결제수단 */
 export function FixedCostEditScreen({ route }: StaticScreenProps<{ id?: number } | undefined>) {
@@ -37,6 +38,9 @@ function Form({
   categories: Array<{ value: number; label: string }>;
 }) {
   const navigation = useNavigation();
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: item ? '고정비 항목' : '고정비 항목 추가' });
+  }, [navigation, item]);
   const [name, setName] = useState(item?.name ?? '');
   const [amount, setAmount] = useState(item ? String(item.amount) : '');
   const [categoryId, setCategoryId] = useState(item?.categoryId);
@@ -118,13 +122,13 @@ function Form({
                 size='lg'
                 value={amountText(amount)}
                 onValueChange={text => setAmount(editAmount(amount, text))}
-                className='flex-1 tabular-nums'
+                className='flex-1 text-xl tabular-nums'
               />
               <Text>원</Text>
             </Stack>
-            <Text size='sm' tone='muted'>
+            <Prose size='sm' tone='muted'>
               입력 폼의 기본값으로만 써요. 실제 금액은 기록할 때 고쳐요
-            </Text>
+            </Prose>
           </Stack>
           <Choices
             label='카테고리'
@@ -147,9 +151,9 @@ function Form({
               />
               <Text>일</Text>
             </Stack>
-            <Text size='sm' tone='muted'>
+            <Prose size='sm' tone='muted'>
               그 달에 없는 날이면(2월 30일) 말일로 봐요
-            </Text>
+            </Prose>
           </Stack>
           <Choices
             label='결제수단'

@@ -1,7 +1,7 @@
 import { Button, Card, Stack, Text } from '@eeennsu/native';
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { ScrollView, View } from 'react-native-css/components';
+import { View } from 'react-native-css/components';
 
 import {
   type Backup,
@@ -13,6 +13,8 @@ import {
 } from '../db/backup';
 import { Files } from '../native/files';
 import { mutate, read, useToday } from '../state/data';
+import { ScreenScroll } from '../ui/layout';
+import { Prose } from '../ui/prose';
 
 /** 가져오기 직전의 데이터 한 벌(PRD 4.8). 잘못 가져왔을 때 한 번 되돌린다 */
 const beforeImportPath = () => `${Files.getFilesDir()}/backup/before-import.json`;
@@ -95,15 +97,15 @@ export function BackupScreen() {
     );
 
   return (
-    <ScrollView className='flex-1 bg-canvas' contentContainerClassName='gap-3 px-4 pb-8 pt-1'>
+    <ScreenScroll>
       <Card className='gap-3'>
         <Text heading='2' size='lg'>
           내보내기
         </Text>
-        <Text size='sm' tone='muted'>
+        <Prose size='sm' tone='muted'>
           거래, 카테고리, 이유 태그, 예산, 고정비 항목, 회고를 JSON 파일 하나로 만들어 공유 시트로
           보내요. 사용 중인 모델 설정과 모델 파일은 넣지 않아요
-        </Text>
+        </Prose>
         <Button
           label='파일로 보내기'
           variant='secondary'
@@ -116,10 +118,10 @@ export function BackupScreen() {
         <Text heading='2' size='lg'>
           가져오기
         </Text>
-        <Text size='sm' tone='muted'>
+        <Prose size='sm' tone='muted'>
           백업 파일을 골라 지금 기록을 모두 바꿔요. 합치지 않아요. 파일 전체를 먼저 확인하고, 중간에
           실패하면 지금 기록이 그대로 남아요
-        </Text>
+        </Prose>
         <Stack direction='row' wrap className='gap-3'>
           <Button label='파일 고르기' variant='danger' disabled={busy} onPress={pick} />
           {canUndo && (
@@ -139,6 +141,6 @@ export function BackupScreen() {
           </View>
         </Card>
       )}
-    </ScrollView>
+    </ScreenScroll>
   );
 }

@@ -11,6 +11,7 @@ import { formatWon } from '../domain/format';
 import { mutate, useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { FormFrame } from '../ui/keyboard';
+import { Prose } from '../ui/prose';
 
 /**
  * 예산(PRD 4.3). 월 총예산과 선택형 카테고리 예산. 이번 달부터 적용하고 다음 달에도 이어 쓴다.
@@ -65,9 +66,9 @@ function BudgetForm({
         keyboardShouldPersistTaps='handled'
       >
         <Card className='gap-6'>
-          <Text size='sm' tone='muted'>
+          <Prose size='sm' tone='muted'>
             {`${Number(month.slice(5))}월부터 적용하고 다음 달에도 이어 써요. 지난 달의 예산은 바뀌지 않아요. 고정비는 예산에 넣지 않아요`}
-          </Text>
+          </Prose>
           <Stack className='gap-1'>
             <Label htmlFor='total'>월 예산</Label>
             <Stack direction='row' align='center' className='gap-2'>
@@ -89,9 +90,9 @@ function BudgetForm({
             <Text heading='2' size='lg'>
               카테고리 예산
             </Text>
-            <Text size='sm' tone='muted'>
+            <Prose size='sm' tone='muted'>
               정하고 싶은 카테고리만 적어요. 비우면 그 카테고리는 예산이 없어요
-            </Text>
+            </Prose>
           </Stack>
           {categories.map(category => {
             const value = perCategory[category.id] ?? '';
@@ -104,6 +105,7 @@ function BudgetForm({
                   id={`category-${category.id}`}
                   label={`${category.name} 예산`}
                   kind='number'
+                  size='lg'
                   value={amountText(value)}
                   onValueChange={text =>
                     setPerCategory(p => ({ ...p, [category.id]: editAmount(value, text) }))
@@ -115,9 +117,9 @@ function BudgetForm({
             );
           })}
           {categorySum > Number(total || 0) && Number(total) > 0 && (
-            <Text size='sm' tone='muted' className='tabular-nums'>
+            <Prose size='sm' tone='muted' className='tabular-nums'>
               {`카테고리 예산의 합(${formatWon(categorySum)})이 월 예산보다 커요`}
-            </Text>
+            </Prose>
           )}
         </Card>
       </ScrollView>

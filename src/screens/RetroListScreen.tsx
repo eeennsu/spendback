@@ -1,16 +1,24 @@
 import { Badge, Chip, Stack, Text } from '@eeennsu/native';
-import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useNavigation, useScrollToTop } from '@react-navigation/native';
+import { useRef, useState } from 'react';
 import { FlatList } from 'react-native';
 import { Text as RNText, View } from 'react-native-css/components';
 
 import { listRetrospectives } from '../db/retrospectives';
 import { expenseDays, firstRecordDate } from '../db/transactions';
-import { type PeriodKind, isOngoing, periodLabel, periodsSince } from '../domain/periods';
-import { MIN_RECORDS } from '../retro/narrate';
-import { renderOutput } from '../retro/narrate';
+import {
+  type PeriodKind,
+  type PeriodRef,
+  isOngoing,
+  periodLabel,
+  periodsSince,
+} from '../domain/periods';
+import { MIN_RECORDS, renderOutput } from '../retro/narrate';
 import { useQuery, useToday } from '../state/data';
 import { Empty, Row } from '../ui/layout';
+
+/** 목록의 한 줄 */
+type Item = { period: PeriodRef; label: string; ongoing: boolean; saved: boolean; line: string };
 
 /**
  * 회고 목록(PRD 4.6, docs/DESIGN.md 4.4). 주간/월간 칩, 기간마다 한 줄 상태(저장한 회고의 headline · 아직 만들지
@@ -20,6 +28,9 @@ export function RetroListScreen() {
   const navigation = useNavigation();
   const today = useToday();
   const [kind, setKind] = useState<PeriodKind>('weekly');
+  // 고른 탭을 다시 누르면 맨 위로 간다
+  const list = useRef<FlatList<Item>>(null);
+  useScrollToTop(list);
   const data = useQuery(`retros:${kind}:${today}`, async db => ({
     first: await firstRecordDate(db),
     days: await expenseDays(db),
@@ -41,13 +52,21 @@ export function RetroListScreen() {
         : variable < MIN_RECORDS
           ? '기록이 부족해요'
           : '아직 만들지 않았어요';
-    return { period, label: periodLabel(period, today), ongoing, saved: saved !== undefined, line };
+    const item: Item = {
+      period,
+      label: periodLabel(period, today),
+      ongoing,
+      saved: saved !== undefined,
+      line,
+    };
+    return item;
   });
 
   return (
     <FlatList
+      ref={list}
       className='flex-1 bg-canvas'
-      contentContainerClassName='gap-1 px-4 pb-6 pt-1'
+      contentContainerClassName='px-4 pb-6 pt-1'
       data={periods}
       keyExtractor={item => item.period.start}
       ListHeaderComponent={
@@ -76,7 +95,8 @@ export function RetroListScreen() {
             <Stack direction='row' align='center' className='gap-2'>
               <Text className='tabular-nums'>{item.label}</Text>
               {item.ongoing && (
-                <Badge variant='primary' size='sm'>
+                // 아직 회고를 만들 수 없는 줄이 목록에서 가장 튀지 않게 회색이다
+                <Badge variant='secondary' size='sm'>
                   진행 중
                 </Badge>
               )}

@@ -1,7 +1,6 @@
 import { Card, Icon, Stack, Text } from '@eeennsu/native';
 import { useNavigation } from '@react-navigation/native';
 import { Alert } from 'react-native';
-import { ScrollView } from 'react-native-css/components';
 
 import { allBudgets } from '../db/budgets';
 import { getSetting } from '../db/settings';
@@ -12,7 +11,8 @@ import { hasModel } from '../native/files';
 import { mutate, useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { modelFor } from '../state/retro';
-import { Row } from '../ui/layout';
+import { Row, ScreenScroll } from '../ui/layout';
+import { Prose } from '../ui/prose';
 
 /**
  * 설정(docs/DESIGN.md 4.4). 홈 헤더 톱니로 연다. 묶은 목록이고 줄은 하위 화면으로 간다.
@@ -33,7 +33,7 @@ export function SettingsScreen() {
   const items = lists.fixedCosts.filter(f => !f.hidden).length;
 
   return (
-    <ScrollView className='flex-1 bg-canvas' contentContainerClassName='gap-3 px-4 pb-8 pt-1'>
+    <ScreenScroll>
       <Group title='기록'>
         <Link label='카테고리' onPress={() => navigation.navigate('Categories')} />
         <Link label='이유 태그' onPress={() => navigation.navigate('ReasonTags')} />
@@ -81,7 +81,7 @@ export function SettingsScreen() {
           />
         </Group>
       )}
-    </ScrollView>
+    </ScreenScroll>
   );
 }
 
@@ -109,9 +109,9 @@ function Link({ label, detail, onPress }: { label: string; detail?: string; onPr
       <Stack className='flex-1 gap-1'>
         <Text>{label}</Text>
         {detail !== undefined && (
-          <Text size='sm' tone='muted' className='tabular-nums'>
+          <Prose size='sm' tone='muted' className='tabular-nums'>
             {detail}
-          </Text>
+          </Prose>
         )}
       </Stack>
       <Icon name='chevron-right' tone='muted' />

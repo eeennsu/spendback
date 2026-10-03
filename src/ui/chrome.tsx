@@ -1,4 +1,5 @@
 import { Icon, Text, cn } from '@eeennsu/native';
+import type { IconName } from '@eeennsu/tokens';
 import type { BottomTabBarProps, BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackHeaderProps } from '@react-navigation/native-stack';
 import type { ReactNode } from 'react';
@@ -10,13 +11,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  * 색을 한 벌 더 들고 있어야 한다(DESIGN.md 2장). 그래서 같은 자리를 DS 클래스로 그린다. 화면 전환과 시트는 네이티브다
  */
 
-/** 헤더 오른쪽 아이콘 버튼. DS에 아이콘만 있는 Button이 없어(DS 알려진 동작 9) Pressable과 Icon으로 만든다 */
-export function HeaderIcon({
+/**
+ * 아이콘만 있는 버튼(헤더 톱니, 카테고리 이름 바꾸기). DS에 아이콘만 있는 Button이 없어(DS 알려진 동작 9) Pressable과
+ * Icon으로 만들고 누름 영역 48을 준다
+ */
+export function IconButton({
   icon,
   label,
   onPress,
 }: {
-  icon: 'settings' | 'plus' | 'trash';
+  icon: IconName;
   label: string;
   onPress: () => void;
 }) {
@@ -49,7 +53,8 @@ function Bar({ back, title, right }: { back?: () => void; title: string; right?:
   const insets = useSafeAreaInsets();
   return (
     <View className='bg-canvas' style={{ paddingTop: insets.top }}>
-      <View className={cn('h-16 flex-row items-center gap-1 pr-2', back ? 'pl-1' : 'pl-4')}>
+      {/* 높이는 64가 기본이고, 큰 글자에서 제목이 두 줄이 되면 늘어난다 */}
+      <View className={cn('min-h-16 flex-row items-center gap-1 pr-2', back ? 'pl-1' : 'pl-4')}>
         {back && (
           <Pressable
             accessibilityRole='button'
@@ -95,7 +100,8 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
     <View
       accessibilityRole='tablist'
-      className='flex-row bg-surface'
+      // 카드와 같은 surface라 스크롤 중에 카드와 섞이지 않게 위 경계를 긋는다
+      className='flex-row border-t border-border bg-surface'
       style={{ paddingBottom: insets.bottom }}
     >
       {state.routes.map((route, index) => {

@@ -1,7 +1,6 @@
 import { Badge, Button, Card, Stack, Text } from '@eeennsu/native';
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { ScrollView } from 'react-native-css/components';
 
 import { getSetting, setSetting } from '../db/settings';
 import { formatPercent } from '../domain/format';
@@ -11,6 +10,8 @@ import { mutate, useQuery } from '../state/data';
 import { useDownloads } from '../state/downloads';
 import { modelFor } from '../state/retro';
 import { Meter } from '../ui/Meter';
+import { ScreenScroll } from '../ui/layout';
+import { Prose } from '../ui/prose';
 
 /** 1GB 아래는 MB로 쓴다(받기 시작할 때 "0.0GB"가 되지 않게) */
 const gigabytes = (bytes: number) =>
@@ -54,11 +55,11 @@ export function ModelsScreen() {
     );
 
   return (
-    <ScrollView className='flex-1 bg-canvas' contentContainerClassName='gap-3 px-4 pb-8 pt-1'>
-      <Text size='sm' tone='muted'>
+    <ScreenScroll>
+      <Prose size='sm' tone='muted'>
         회고 문장을 쓰는 모델이에요. 기기 안에서만 돌고, 받을 때 말고는 인터넷을 쓰지 않아요. 큰
         파일이라 Wi-Fi에서 받기를 권해요
-      </Text>
+      </Prose>
       {APP_MODELS.map(model => {
         const ready = hasModel(model);
         const download = downloads[model.id];
@@ -107,20 +108,20 @@ export function ModelsScreen() {
                     onPress={() => void mutate(db => setSetting(db, 'model', model.id))}
                   />
                 )}
-                <Button label='지우기' variant='ghost' onPress={() => remove(model)} />
+                <Button label='지우기' variant='secondary' onPress={() => remove(model)} />
               </Stack>
             ) : (
               <>
                 {download?.status === 'failed' && (
                   // 사용자가 멈춘 것은 오류가 아니라 흐린 글자로 쓴다
-                  <Text size='sm' tone={download.failure === 'cancelled' ? 'muted' : 'danger'}>
+                  <Prose size='sm' tone={download.failure === 'cancelled' ? 'muted' : 'danger'}>
                     {FAILURES[download.failure]}
-                  </Text>
+                  </Prose>
                 )}
                 {partial > 0 && download?.status !== 'failed' && (
-                  <Text size='sm' tone='muted' className='tabular-nums'>
+                  <Prose size='sm' tone='muted' className='tabular-nums'>
                     {`${formatPercent(partial, model.sizeBytes)} 받았어요. 이어받을 수 있어요`}
-                  </Text>
+                  </Prose>
                 )}
                 <Button
                   label={partial > 0 || download?.status === 'failed' ? '다시 받기' : '받기'}
@@ -133,6 +134,6 @@ export function ModelsScreen() {
           </Card>
         );
       })}
-    </ScrollView>
+    </ScreenScroll>
   );
 }

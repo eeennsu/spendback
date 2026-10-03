@@ -2,12 +2,14 @@ import { Card, Stack, Text } from '@eeennsu/native';
 import { useNavigation } from '@react-navigation/native';
 import { Alert } from 'react-native';
 
+import { suggestionAccuracy } from '../cards/inbox';
 import { allBudgets } from '../db/budgets';
 import { getSetting } from '../db/settings';
 import { insertSample } from '../dev/sample';
 import { budgetForMonth } from '../domain/budget';
 import { formatWon } from '../domain/format';
 import { hasModel } from '../native/files';
+import { isListenerEnabled } from '../state/cards';
 import { mutate, useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { modelFor } from '../state/retro';
@@ -25,6 +27,7 @@ export function SettingsScreen() {
   const data = useQuery('settings', async db => ({
     budgets: await allBudgets(db),
     modelId: await getSetting(db, 'model'),
+    accuracy: await suggestionAccuracy(db),
   }));
   if (!lists || !data) return null;
 
@@ -53,6 +56,13 @@ export function SettingsScreen() {
           label='고정비 항목'
           detail={items > 0 ? `${items}개` : '아직 없어요'}
           onPress={() => navigation.navigate('FixedCosts')}
+        />
+      </Group>
+      <Group title='카드 알림'>
+        <Link
+          label='카드 알림으로 기록'
+          detail={cardsDetail(isListenerEnabled(), data.accuracy)}
+          onPress={() => navigation.navigate('Cards')}
         />
       </Group>
       <Group title='회고'>
@@ -118,4 +128,12 @@ function Link({ label, detail, onPress }: { label: string; detail?: string; onPr
       </Stack>
     </Row>
   );
+}
+
+/** 켜짐 여부와 추천을 고치지 않고 저장한 비율(PRD 4.9) */
+function cardsDetail(enabled: boolean, accuracy: Awaited<ReturnType<typeof suggestionAccuracy>>) {
+  if (!enabled) return '꺼져 있어요';
+  const total = accuracy.exact.total + accuracy.llm.total;
+  const accepted = accuracy.exact.accepted + accuracy.llm.accepted;
+  return total ? `켜짐 · 추천 그대로 저장 ${total}건 중 ${accepted}건` : '켜짐';
 }

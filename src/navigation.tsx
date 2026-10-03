@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { BackupScreen } from './screens/BackupScreen';
 import { BudgetScreen } from './screens/BudgetScreen';
+import { CardsScreen } from './screens/CardsScreen';
 import { CategoriesScreen } from './screens/CategoriesScreen';
 import { EntrySheet } from './screens/EntrySheet';
 import { FixedCostEditScreen } from './screens/FixedCostEditScreen';
@@ -48,6 +49,7 @@ const RootStack = createNativeStackNavigator({
     ReasonTags: { screen: CategoriesScreen, options: { title: '이유 태그' } },
     Models: { screen: ModelsScreen, options: { title: '모델 관리' } },
     Backup: { screen: BackupScreen, options: { title: '백업' } },
+    Cards: { screen: CardsScreen, options: { title: '카드 알림' } },
   },
   groups: {
     Sheets: {

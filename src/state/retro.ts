@@ -11,6 +11,7 @@ import { llamaNarrator } from '../retro/llama';
 import { APP_MODELS, DEFAULT_MODEL_ID } from '../retro/models';
 import { type NarrateResult, narrate } from '../retro/narrate';
 import { PROMPT_VERSION } from '../retro/prompt';
+import { stopCardSuggestions } from './cards';
 import { mutate } from './data';
 
 export type Generation =
@@ -77,6 +78,8 @@ export function useGeneration(period: PeriodRef) {
     }
     const abort = new AbortController();
     controller.current = abort;
+    // 카드 알림 추천이 모델을 쓰고 있으면 멈추고 내린다. 다음 로드는 내린 뒤에 한다(llama.ts releasing)
+    void stopCardSuggestions();
     narrator.current = llamaNarrator(modelPath(model));
     setState({ status: 'writing', sentences: [], templates: [], retrying: false });
 

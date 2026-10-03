@@ -33,6 +33,8 @@ jest.mock('@react-navigation/native', () => ({
   usePreventRemove: jest.fn(),
   // 탭을 다시 누르면 맨 위로 가는 훅. 내비게이터 밖이라 아무 일도 하지 않게 둔다
   useScrollToTop: jest.fn(),
+  // 홈의 카드 알림 추천은 화면이 보일 때 돈다(src/screens/CardInboxSection.tsx). 내비게이터 밖이라 부르지 않는다
+  useFocusEffect: jest.fn(),
 }));
 
 const BRAND = '#206fea';

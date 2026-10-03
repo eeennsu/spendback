@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { runMigrations } from './db';
 import { Navigation } from './navigation';
+import { useCardSync } from './state/cards';
 
 /**
  * 앱 루트. 마이그레이션을 마치면 화면을 띄운다(로컬 DB라 금방 끝난다). 헤더·탭 바·시트의 색은 DS 클래스가 그리고,
@@ -16,6 +17,9 @@ export default function App() {
   const dark = useColorScheme() === 'dark';
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string>();
+
+  // 카드 알림 대기열은 마이그레이션이 끝난 뒤에 DB로 옮긴다(PRD 4.9)
+  useCardSync(ready);
 
   useEffect(() => {
     runMigrations().then(

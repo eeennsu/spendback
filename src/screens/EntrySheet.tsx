@@ -5,7 +5,8 @@ import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Alert, Keyboard } from 'react-native';
 import { Pressable, ScrollView, Switch, View } from 'react-native-css/components';
 
-import type { CategoryRow, FixedCostRow, ReasonTagRow } from '../db/lists';
+import { type InboxItem, dismissInbox, inboxView, saveFromInbox } from '../cards/inbox';
+import { type CategoryRow, type FixedCostRow, type ReasonTagRow, allCategories } from '../db/lists';
 import {
   type TransactionInput,
   type TransactionRow,
@@ -19,20 +20,23 @@ import {
 import { addDays, toLocalDate } from '../domain/date';
 import { amountText, editAmount } from '../domain/entry';
 import { paymentDate } from '../domain/fixedCost';
+import { render } from '../retro/render';
 import { mutate, read, useQuery, useToday } from '../state/data';
 import { PAYMENT_METHODS, SATISFACTION, useLists } from '../state/lists';
 import { Choices, SwitchRow } from '../ui/layout';
 import { Prose } from '../ui/prose';
 import { Sheet } from '../ui/sheet';
+import { visibleExpenseCategories } from './CardInboxSection';
 
-type Params = { transactionId?: number; fixedCostId?: number } | undefined;
+type Params = { transactionId?: number; fixedCostId?: number; inboxId?: number } | undefined;
 
 /**
  * 입력 시트(PRD 4.1, docs/DESIGN.md 4.3). 금액 → 카테고리 → 저장, 3번에 끝나도록 필수 항목만 먼저 보이고 나머지는
- * "선택 항목"으로 접는다. 거래 줄에서 열면 수정, 홈 고정비 줄에서 열면 그 항목으로 채운 채로 연다(PRD 4.4)
+ * "선택 항목"으로 접는다. 거래 줄에서 열면 수정, 홈 고정비 줄에서 열면 그 항목으로 채운 채로 연다(PRD 4.4).
+ * 홈 카드 알림 줄에서 열면 알림 값과 추천 카테고리로 채운다(PRD 4.9)
  */
 export function EntrySheet({ route }: StaticScreenProps<Params>) {
-  const { transactionId, fixedCostId } = route.params ?? {};
+  const { transactionId, fixedCostId, inboxId } = route.params ?? {};
   const today = useToday();
   const lists = useLists();
   const editing = useQuery(`entry:${transactionId}`, db =>
@@ -40,14 +44,21 @@ export function EntrySheet({ route }: StaticScreenProps<Params>) {
       ? Promise.resolve(null)
       : getTransaction(db, transactionId).then(tx => tx ?? null),
   );
-  if (!lists || editing === undefined) return null;
+  // 추천은 홈이 보이는 동안 늦게 올 수 있어 구독한다
+  const inbox = useQuery(`entry:inbox:${inboxId}`, async db => {
+    if (inboxId === undefined) return null;
+    const items = await inboxView(db, visibleExpenseCategories(await allCategories(db)));
+    return items.find(item => item.id === inboxId) ?? null;
+  });
+  if (!lists || editing === undefined || inbox === undefined) return null;
 
   const fixedItem = lists.fixedCosts.find(item => item.id === fixedCostId);
   return (
     <EntryForm
-      initial={initialValues(editing, fixedItem, today)}
+      initial={initialValues(editing, fixedItem, inbox, today)}
       editingId={editing?.id}
       fixedItem={fixedItem}
+      inbox={inbox ?? undefined}
       today={today}
       categories={lists.categories}
       reasonTags={lists.reasonTags}
@@ -66,9 +77,25 @@ type Values = Omit<TransactionInput, 'amount' | 'categoryId' | 'isFixed'> & {
 function initialValues(
   tx: TransactionRow | null,
   item: FixedCostRow | undefined,
+  inbox: InboxItem | null,
   today: string,
 ): Values {
   if (tx) return { ...tx, amount: String(tx.amount) };
+  // 금액·날짜·가맹점은 알림의 사실이고 결제수단은 카드다. 이유와 만족도는 회고의 재료라 비운다(PRD 4.9)
+  if (inbox) {
+    return {
+      type: 'expense',
+      amount: inbox.amount !== null ? String(inbox.amount) : '',
+      date: inbox.date ?? today,
+      categoryId: inbox.suggestion?.categoryId,
+      reasonTagId: null,
+      satisfaction: null,
+      memo: inbox.merchant,
+      paymentMethod: 'card',
+      isFixed: false,
+      fixedCostId: null,
+    };
+  }
   if (item) {
     return {
       type: 'expense',
@@ -101,6 +128,7 @@ function EntryForm({
   initial,
   editingId,
   fixedItem,
+  inbox,
   today,
   categories,
   reasonTags,
@@ -109,6 +137,7 @@ function EntryForm({
   initial: Values;
   editingId: number | undefined;
   fixedItem: FixedCostRow | undefined;
+  inbox: InboxItem | undefined;
   today: string;
   categories: CategoryRow[];
   reasonTags: ReasonTagRow[];
@@ -142,10 +171,12 @@ function EntryForm({
     .filter(f => !f.hidden || f.id === initial.fixedCostId)
     .map(f => ({ value: f.id, label: f.name }));
 
+  // 카드 알림의 추천은 시트를 연 뒤에 올 수 있다. 아직 고르지 않았으면 추천을 고른 것으로 본다
+  const categoryId = values.categoryId ?? (expense ? inbox?.suggestion?.categoryId : undefined);
   const missing =
     values.amount === ''
       ? '금액을 입력해 주세요'
-      : categoryOptions.some(o => o.value === values.categoryId)
+      : categoryOptions.some(o => o.value === categoryId)
         ? ''
         : '카테고리를 골라 주세요';
   const dirty = JSON.stringify(values) !== JSON.stringify(initial);
@@ -156,11 +187,11 @@ function EntryForm({
 
   // 새 기록은 금액 칸에서 시작한다. 시트가 열리면 숫자 키패드가 바로 뜬다(DESIGN.md 4.3)
   useEffect(() => {
-    if (editingId === undefined && fixedItem === undefined) {
+    if (editingId === undefined && fixedItem === undefined && inbox === undefined) {
       const timer = setTimeout(() => amountRef.current?.focus(), 250);
       return () => clearTimeout(timer);
     }
-  }, [editingId, fixedItem]);
+  }, [editingId, fixedItem, inbox]);
 
   // 입력이 있는 채로 닫기·뒤로 가기를 하면 버릴지 묻는다(DESIGN.md 4.3)
   usePreventRemove(dirty && !saving, ({ data }) => {
@@ -192,18 +223,27 @@ function EntryForm({
   };
 
   const save = async () => {
-    if (missing !== '' || values.categoryId === undefined) return;
+    if (missing !== '' || categoryId === undefined) return;
     setSaving(true);
     const input: TransactionInput = {
       ...values,
       amount: Number(values.amount),
-      categoryId: values.categoryId,
+      categoryId,
       memo: values.memo?.trim() ? values.memo.trim() : null,
     };
     await mutate(async db => {
-      if (editingId === undefined) await addTransaction(db, input);
+      // 폼이 보인 추천을 함께 남긴다. 추천을 고치지 않고 저장한 비율이 정확도다(PRD 4.9)
+      if (inbox) await saveFromInbox(db, inbox.id, input, inbox.suggestion);
+      else if (editingId === undefined) await addTransaction(db, input);
       else await updateTransaction(db, editingId, input);
     });
+    navigation.goBack();
+  };
+
+  const skip = async () => {
+    if (!inbox) return;
+    setSaving(true);
+    await mutate(db => dismissInbox(db, inbox.id));
     navigation.goBack();
   };
 
@@ -223,9 +263,11 @@ function EntryForm({
     ]);
   };
 
-  const title = fixedItem
-    ? `${fixedItem.name} 기록`
-    : `${expense ? '지출' : '수입'} ${editingId === undefined ? '기록' : '수정'}`;
+  const title = inbox
+    ? '카드 결제 기록'
+    : fixedItem
+      ? `${fixedItem.name} 기록`
+      : `${expense ? '지출' : '수입'} ${editingId === undefined ? '기록' : '수정'}`;
   const yesterday = addDays(today, -1);
   const dateChoice =
     values.date === today ? 'today' : values.date === yesterday ? 'yesterday' : 'other';
@@ -303,12 +345,22 @@ function EntryForm({
           </Stack>
         </Stack>
 
-        <Choices
-          label='카테고리'
-          options={categoryOptions}
-          value={values.categoryId}
-          onChange={categoryId => categoryId !== undefined && set({ categoryId })}
-        />
+        <Stack className='gap-2'>
+          <Choices
+            label='카테고리'
+            options={categoryOptions}
+            value={categoryId}
+            onChange={categoryId => categoryId !== undefined && set({ categoryId })}
+          />
+          {inbox?.suggestion && (
+            <SuggestionNote suggestion={inbox.suggestion} categories={categories} />
+          )}
+          {inbox?.maybeDuplicate && (
+            <Prose size='sm' tone='muted'>
+              같은 날 같은 금액의 지출이 이미 있어요. 같은 결제라면 기록 안 함을 눌러 주세요
+            </Prose>
+          )}
+        </Stack>
 
         <Stack className='gap-2'>
           <Label>날짜</Label>
@@ -470,7 +522,29 @@ function EntryForm({
         {editingId !== undefined && (
           <Button label='삭제' variant='danger' onPress={remove} className='self-start' />
         )}
+        {/* 카드 알림을 거래로 남기지 않는다(같은 결제를 이미 적었거나 기록할 필요가 없는 결제) */}
+        {inbox && (
+          <Button label='기록 안 함' variant='secondary' onPress={skip} className='self-start' />
+        )}
       </ScrollView>
     </Sheet>
+  );
+}
+
+/** 추천이 어디서 왔는지(PRD 4.9). 전에 적은 가맹점이면 그 사실을, 기기 안 모델이면 확인을 부탁한다 */
+function SuggestionNote({
+  suggestion,
+  categories,
+}: {
+  suggestion: NonNullable<InboxItem['suggestion']>;
+  categories: CategoryRow[];
+}) {
+  const name = categories.find(c => c.id === suggestion.categoryId)?.name ?? '카테고리';
+  return (
+    <Prose size='sm' tone='muted'>
+      {suggestion.source === 'exact'
+        ? render('전에 이 가맹점을 {name}에 적었어요', { name })
+        : render('{name}{은/는} 기기 안 모델의 추천이에요. 맞는지 확인해 주세요', { name })}
+    </Prose>
   );
 }

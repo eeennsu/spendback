@@ -16,10 +16,11 @@ import { Meter } from '../ui/Meter';
 import { IconButton } from '../ui/chrome';
 import { Row, Section } from '../ui/layout';
 import { Prose } from '../ui/prose';
+import { CardInboxSection } from './CardInboxSection';
 
 /**
  * 홈(docs/DESIGN.md 4.2). 위에서부터 행동이 필요한 것 → 참고할 것 순서다: 남은 예산과 소비 속도, 기록하지 않은 고정비,
- * 카테고리 예산, 최근 지출. 오른쪽 아래 "기록"이 입력 시트를 연다
+ * 카드 알림, 카테고리 예산, 최근 지출. 오른쪽 아래 "기록"이 입력 시트를 연다
  */
 export function HomeScreen() {
   const navigation = useNavigation();
@@ -116,6 +117,8 @@ export function HomeScreen() {
             )}
           </Section>
         )}
+
+        <CardInboxSection today={today} />
 
         {status && status.categories.length > 0 && (
           <Section title='카테고리 예산'>

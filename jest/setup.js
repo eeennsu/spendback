@@ -43,6 +43,19 @@ jest.mock('../src/native/NativeSpendbackFiles', () => ({
   },
 }));
 
+// 카드 알림 받기(src/native/NativeSpendbackCards.ts). 대기열은 비어 있고 알림 접근은 꺼져 있다
+jest.mock('../src/native/NativeSpendbackCards', () => ({
+  __esModule: true,
+  default: {
+    isListenerEnabled: jest.fn(() => false),
+    openListenerSettings: jest.fn(),
+    setWatchedApps: jest.fn(),
+    readInbox: jest.fn(async () => []),
+    ackInbox: jest.fn(async () => {}),
+    onQueued: jest.fn(() => ({ remove: () => {} })),
+  },
+}));
+
 jest.mock(
   'react-native-safe-area-context',
   () => require('react-native-safe-area-context/jest/mock').default,

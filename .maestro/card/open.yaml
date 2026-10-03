@@ -1,0 +1,10 @@
+# 카드 알림 E2E의 첫 단계(scripts/e2e-card.mts가 부른다). 빈 앱을 연다. 지켜볼 앱(개발 빌드의 com.android.shell)은 앱이
+# 시작할 때 정한다
+appId: com.eeennsu.spendback
+name: 카드 알림 · 열기
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: '아직 예산이 없어요'
+    timeout: 60000

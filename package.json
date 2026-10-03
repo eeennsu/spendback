@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "e2e": "maestro test .maestro",
+    "e2e:card": "tsx scripts/e2e-card.mts",
     "prepare": "husky",
     "eval:models": "tsx scripts/eval/download.mts",
     "eval": "tsx scripts/eval/run.mts",

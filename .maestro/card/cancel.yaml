@@ -1,0 +1,15 @@
+# 같은 가맹점의 새 승인은 전에 적은 카테고리를 추천하고, 결제 취소는 저장한 거래를 확인받고 지운다(PRD 4.9)
+appId: com.eeennsu.spendback
+name: 카드 알림 · 추천과 취소
+---
+- scrollUntilVisible:
+    element: '스타벅스 역삼점 기록, 카페·간식 추천 · 오늘, 4,500원'
+    direction: DOWN
+- scrollUntilVisible:
+    element: '결제 취소 · 스타벅스 역삼점.*'
+    direction: DOWN
+- tapOn: '결제 취소 · 스타벅스 역삼점.*'
+- assertVisible: '이 기록을 지울까요?'
+- tapOn: '지우기'
+- assertNotVisible: '결제 취소 · 스타벅스 역삼점.*'
+- assertNotVisible: '스타벅스 역삼점, 카페·간식 · 오늘, 12,300원'

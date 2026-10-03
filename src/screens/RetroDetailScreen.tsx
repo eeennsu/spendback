@@ -20,6 +20,7 @@ import {
 } from '../domain/periods';
 import { hasModel } from '../native/files';
 import type { Output } from '../retro/check';
+import { pickFrames } from '../retro/frames';
 import { type KeyedFacts, factValues, keyFacts } from '../retro/keys';
 import { MODELS } from '../retro/models';
 import { MIN_RECORDS } from '../retro/narrate';
@@ -146,11 +147,18 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   const busiest = days.reduce((best, d) => (d.amount > best.amount ? d : best), days[0]);
   // 보일 회고. 방금 만든 회고가 DB 저장본보다 새롭다
   const shown = generation.state.status === 'saved' ? generation.state : (data.saved ?? undefined);
-  // 회고 문장이 총지출 묶음(변동비 증감 등)을 말하면 카드의 비교 줄을 빼 같은 사실을 두 번 말하지 않는다
-  const output = shown?.output;
-  const saidTotal =
-    output !== undefined &&
-    [output.headline, ...output.insights.map(i => i.text)].some(text => text.includes('{total.'));
+  // 폴백이면 코드가 고른 틀 문장을 보인다(PRD 4.6)
+  const picked = generation.state.status === 'fallback' ? pickFrames(keyed) : undefined;
+  // 회고 카드가 보이는 문장이 변동비 증감을 말하면 카드의 비교 줄을 빼 같은 사실을 두 번 말하지 않는다(PRD 4.6)
+  const told =
+    generation.state.status === 'writing' || (!picked && needsFixedCheck)
+      ? undefined
+      : (picked ?? shown?.output);
+  const saidChange =
+    told !== undefined &&
+    [told.headline, ...told.insights.map(i => i.text)].some(text =>
+      /\{total\.change(?:_rate)?_phrase\}/.test(text),
+    );
 
   return (
     <ScreenScroll>
@@ -164,7 +172,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
         <Text size='sm' tone='muted' className='tabular-nums'>
           {`변동비 ${formatWon(facts.variable)} · 고정비 ${formatWon(facts.fixed)}`}
         </Text>
-        {!saidTotal && (
+        {!saidChange && (
           <Prose className='tabular-nums'>
             {change === undefined
               ? `${before}와 비교할 기록이 없어요`
@@ -179,6 +187,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
         ongoing={ongoing}
         enough={enough}
         saved={shown}
+        picked={picked && { facts: keyed, output: picked }}
         generation={generation.state}
         unrecorded={
           needsFixedCheck
@@ -230,12 +239,15 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   );
 }
 
-/** 폴백 안내(PRD 4.6 표) */
+/** 폴백 안내(PRD 4.6 표). 폴백은 코드가 고른 틀 문장을 보인다 */
 const FALLBACK = {
-  'no-model': '모델을 받으면 회고 문장을 만들 수 있어요',
-  'load-failed': '모델을 불러오지 못했어요',
-  'check-failed': '회고 문장을 만들지 못했어요',
+  'no-model': '모델이 없어 앱이 고른 사실만 보여 줘요',
+  'load-failed': '모델을 불러오지 못해 앱이 고른 사실만 보여 줘요',
+  'check-failed': '회고를 엮지 못해 앱이 고른 사실만 보여 줘요',
 } as const;
+
+/** 회고 카드의 문장. 폴백에는 제안이 없다 */
+type Told = Pick<Output, 'headline' | 'insights'> & { suggestion?: string };
 
 /** 저장한 회고를 쓴 모델. 레지스트리에서 빠진 모델이면 이름 없이 쓴다 */
 function author(modelId: string) {
@@ -255,6 +267,7 @@ function Narrative({
   ongoing,
   enough,
   saved,
+  picked,
   generation,
   unrecorded,
   kind,
@@ -267,6 +280,8 @@ function Narrative({
   ongoing: boolean;
   enough: boolean;
   saved: { facts: KeyedFacts; output: Output; modelId: string } | undefined;
+  /** 폴백에서 코드가 고른 틀 문장 */
+  picked: { facts: KeyedFacts; output: Told } | undefined;
   generation: Generation;
   unrecorded: Array<{ id: number; name: string; amount: number; date: string }>;
   kind: PeriodKind;
@@ -313,12 +328,11 @@ function Narrative({
       </>
     );
   } else if (generation.status === 'fallback') {
-    status = { text: FALLBACK[generation.reason], lead: true };
+    // 상태 줄은 저장본의 "…가 기기 안에서 엮은 회고예요"처럼 문장 위의 흐린 머리말이다
+    status = { text: FALLBACK[generation.reason], lead: false };
     body = (
       <>
-        <Text size='sm' tone='muted'>
-          지표와 차트는 아래에 있어요
-        </Text>
+        {picked && <Sentences facts={picked.facts} output={picked.output} />}
         <Stack direction='row' wrap className='gap-3'>
           {generation.reason !== 'no-model' && (
             <Button
@@ -393,8 +407,8 @@ function Narrative({
   );
 }
 
-/** 저장한 회고. 값은 facts 스냅샷으로 채우고 brand 글자로 강조한다 */
-function Sentences({ facts, output }: { facts: KeyedFacts; output: Output }) {
+/** 회고 문장(저장본, 폴백). 값은 facts 스냅샷으로 채우고 brand 글자로 강조한다 */
+function Sentences({ facts, output }: { facts: KeyedFacts; output: Told }) {
   const fill = {
     values: factValues(facts),
     // 서술어 값("29,000원 늘었어요")은 숫자만 강조한다
@@ -410,9 +424,11 @@ function Sentences({ facts, output }: { facts: KeyedFacts; output: Output }) {
           <Emphasized key={insight.about} text={insight.text} fill={fill} className='text-md' />
         ))}
       </Stack>
-      <View className='rounded-lg bg-surface-muted px-4 py-3'>
-        <Emphasized text={output.suggestion} fill={fill} className='text-md' />
-      </View>
+      {output.suggestion ? (
+        <View className='rounded-lg bg-surface-muted px-4 py-3'>
+          <Emphasized text={output.suggestion} fill={fill} className='text-md' />
+        </View>
+      ) : null}
     </Stack>
   );
 }

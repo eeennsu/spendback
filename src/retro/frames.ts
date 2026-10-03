@@ -49,13 +49,18 @@ function framesOf(g: FactGroup, kind: KeyedFacts['kind']): Frame[] {
       }
       break;
     case 'budget': {
+      // 총예산은 "전체 예산"이라 쓴다. 카테고리 예산 문장("배달 예산의 71%를 써서 …") 뒤에 "예산이 …"가 오면 같은
+      // 예산으로 읽혔다(DESIGN.md 8.5 029)
       const phrase = value('balance_phrase');
-      add('balance', `${balanceLead(phrase, '예산이', '예산을')} ${k('balance_phrase')}.`, [
-        'balance_phrase',
-      ]);
-      if (phrase === '다 썼어요') add('usage', `예산의 ${k('usage')}{을/를} 썼어요.`, ['usage']);
-      else {
-        add('usage_balance', `예산의 ${k('usage')}{을/를} 써서 ${k('balance_phrase')}.`, [
+      add(
+        'balance',
+        `${balanceLead(phrase, '전체 예산이', '전체 예산을')} ${k('balance_phrase')}.`,
+        ['balance_phrase'],
+      );
+      if (phrase === '다 썼어요') {
+        add('usage', `전체 예산의 ${k('usage')}{을/를} 썼어요.`, ['usage']);
+      } else {
+        add('usage_balance', `전체 예산의 ${k('usage')}{을/를} 써서 ${k('balance_phrase')}.`, [
           'usage',
           'balance_phrase',
         ]);
@@ -173,6 +178,16 @@ export function buildFrames(keyed: KeyedFacts): Frame[] {
   return keyed.groups.flatMap(g => framesOf(g, keyed.kind));
 }
 
+/**
+ * insight로 고를 수 있는 틀(PRD 4.6). 총지출 묶음은 뺀다. 회고 상세의 카드가 총지출·변동비·고정비와 변동비 증감을
+ * 늘 보여 줘서 회고 문장이 같은 사실을 두 번 말했다(DESIGN.md 8.4 003). 총지출 묶음은 headline 후보로만 남는다.
+ * 총지출을 뺀 묶음이 셋보다 적으면 headline을 고른 뒤 insight 2개를 다른 묶음으로 채울 수 없어 그대로 둔다
+ */
+export function insightFrames(frames: Frame[]) {
+  const others = frames.filter(f => groupKind(f.group) !== 'total');
+  return new Set(others.map(f => f.group)).size >= 3 ? others : frames;
+}
+
 /** headline 후보. 채운 뒤 30자 안의 한 문장이다(PRD 6장 길이 한도) */
 export const HEADLINE_LIMIT = 30;
 /** 제안은 채운 뒤 45자까지다. 넘으면 사후 검사가 다시 쓰게 한다(PRD 6장 길이 한도) */
@@ -205,6 +220,34 @@ export function headlineFrames(
   });
 }
 
+/** 폴백 회고의 insight 수. LLM이 고르는 2~4개의 가운데다 */
+const FALLBACK_INSIGHTS = 3;
+
+/**
+ * 폴백 회고(PRD 4.6). 모델을 쓸 수 없으면 코드가 틀을 고른다. headline은 headline 후보의 첫 틀(가장 눈에 띄는
+ * 묶음의 까닭을 말하는 틀)이고, insight는 다른 묶음에서 눈에 띄는 순서로 묶음마다 하나씩(그 묶음의 까닭을 쓴 틀이
+ * 있으면 그 틀) 쓴다. 총지출 묶음을 빼는 규칙은 insight와 같다. 제안은 LLM이 쓰는 문장이라 없다
+ */
+export function pickFrames(keyed: KeyedFacts): Pick<Output, 'headline' | 'insights'> | undefined {
+  const frames = buildFrames(keyed);
+  const values = factValues(keyed);
+  const headline = headlineFrames(keyed, frames, text => render(text, values))[0] ?? frames[0];
+  if (!headline) return undefined;
+  const allowed = insightFrames(frames);
+  const focusOf = new Map(keyed.groups.map(g => [g.id, g.focus]));
+  const usesFocus = (f: Frame) =>
+    focusOf.get(f.group)?.some(name => f.text.includes(`{${f.group}.${name}}`)) ?? false;
+  const insights = keyed.groups
+    .filter(g => g.id !== headline.group)
+    .flatMap(g => {
+      const mine = allowed.filter(f => f.group === g.id);
+      const frame = mine.find(usesFocus) ?? mine[0];
+      return frame ? [{ about: frame.group, text: frame.text }] : [];
+    })
+    .slice(0, FALLBACK_INSIGHTS);
+  return { headline: headline.text, insights };
+}
+
 /** 제안에 쓸 수 있는 키. 값(금액·비율)은 쓰지 않고 이름만 쓴다 */
 export function nameKeys(keyed: KeyedFacts) {
   return keyed.groups.flatMap(g =>
@@ -234,8 +277,8 @@ export function frameFormat(keyed: KeyedFacts, frames: Frame[]) {
   const values = factValues(keyed);
 
   /**
-   * 한 묶음의 틀은 회고에 하나만 쓴다. 같은 묶음의 틀은 같은 값을 되풀이하므로("예산에서 92,700원 남았어요." 뒤에
-   * "예산의 67%를 써서 92,700원 남았어요.") headline이나 앞 insight와 묶음이 같은 insight는 버린다.
+   * 한 묶음의 틀은 회고에 하나만 쓴다. 같은 묶음의 틀은 같은 값을 되풀이하므로("전체 예산이 92,700원 남았어요." 뒤에
+   * "전체 예산의 67%를 써서 92,700원 남았어요.") headline이나 앞 insight와 묶음이 같은 insight는 버린다.
    * 남은 insight가 2개보다 적으면 읽기 실패로 본다
    */
   const expand = (

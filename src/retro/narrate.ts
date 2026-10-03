@@ -1,6 +1,6 @@
 import type { Facts } from '../domain/facts';
 import { type Field, type Output, type Problem, fieldsOf } from './check';
-import { buildFrames, frameFormat, headlineFrames, nameKeys } from './frames';
+import { buildFrames, frameFormat, headlineFrames, insightFrames, nameKeys } from './frames';
 import { buildGrammar } from './grammar';
 import { type KeyedFacts, type Names, factValues, keyFacts } from './keys';
 import { type Message, PROMPT_VERSION, type PromptVersion, buildMessages } from './prompt';
@@ -50,17 +50,21 @@ type Format = {
 
 /** 하네스로 프롬프트를 비교할 때 버전을 더한다(scripts/eval --prompt) */
 const FORMATS: Record<PromptVersion, (keyed: KeyedFacts) => Format> = {
-  /** 문장 틀. LLM은 틀 id를 고르고 제안만 쓴다. 코드가 id를 문장으로 펼친다(frames.ts) */
-  v4: keyed => {
+  /**
+   * 문장 틀. LLM은 틀 id를 고르고 제안만 쓴다. 코드가 id를 문장으로 펼친다(frames.ts). 총지출 묶음은 headline으로만
+   * 고른다(insightFrames)
+   */
+  v5: keyed => {
     const frames = buildFrames(keyed);
     const values = factValues(keyed);
     const names = nameKeys(keyed);
     const fit = headlineFrames(keyed, frames, text => render(text, values));
     const headlines = fit.length ? fit : frames;
+    const insights = insightFrames(frames);
     return {
       request: {
-        messages: buildMessages(keyed, frames, headlines, names),
-        grammar: buildGrammar(headlines, frames, names, keyed.kind),
+        messages: buildMessages(keyed, frames, headlines, names, insights),
+        grammar: buildGrammar(headlines, insights, names, keyed.kind),
       },
       ...frameFormat(keyed, frames),
     };

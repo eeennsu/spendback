@@ -13,7 +13,7 @@ pnpm eval qwen3.5-2b --runs 3          # 모델 하나, 스냅샷마다 3회
 pnpm eval --only week-base,month-base  # 스냅샷 일부
 pnpm eval --temp 0.3 --repeat 1        # 샘플링 비교(기본값은 src/retro/models.ts의 INFERENCE)
 pnpm eval qwen3.5-2b --temp 1 --top-p 1 --repeat 1 --presence 2  # 모델 카드 비추론 권장값
-pnpm eval --prompt v3                  # 프롬프트 버전(src/retro/prompt.ts PROMPT_VERSIONS). 비교할 때 버전을 더한다
+pnpm eval --prompt v5                  # 프롬프트 버전(src/retro/prompt.ts PROMPT_VERSIONS). 비교할 때 버전을 더한다
 pnpm exec tsx scripts/eval/rescore.mts scripts/eval/results/<시각>.json  # 저장한 결과를 지금의 점검으로 다시 센다
 pnpm exec tsx scripts/eval/compare.mts <결과.json> <결과.json> …     # 결과 여럿을 모델·버전별 한 표로 모은다
 ```
@@ -158,6 +158,22 @@ PRD 11장의 샘플링 비교. v4 그대로 Qwen만 스냅샷 20개 × 2회를 Q
 - 자동 점검은 비슷하다. 40회라 한두 개 차이는 우연과 가리기 어렵다
 - 모델 카드 값은 제안이 더 다양하지만("편의점 커피 지출을 회차마다 기록해 보세요"처럼 어색한 것도 늘었다) headline으로 가장 눈에 띄는 사실을 고른 회고가 12에서 9로 줄었다
 - 지금 값을 둔다. PRD 11장 순서대로 사람 채점(실기기)에서 두 값의 제안을 함께 읽고 다시 정한다
+
+### 2026-10-03 총지출 insight 제외와 전체 예산(v5)
+
+PRD 4.6의 v5다. 회고 상세의 카드가 총지출과 변동비 증감을 늘 보여 주는데, 총지출 insight가 같은 사실을 다시 말했다(DESIGN.md 8.4 003). 그래서 총지출 묶음은 headline 후보로만 쓰고 insight 후보에서 뺐다(`src/retro/frames.ts` insightFrames). 총예산 틀은 카테고리 예산 문장 뒤에서 같은 예산으로 읽혀(8.5 029) "전체 예산이 …"로 바꿨다. 앱 모델 둘을 스냅샷 20개 × 2회로 돌려 v4와 비교했다(Windows PC, Vulkan).
+
+| 모델 | 버전 | 완료 | 첫 시도 통과 | 걸린 데 없는 회고 | 놓친 사실 | headline 적중 | 총지출 insight | 프롬프트 토큰 | 폰 추정 첫 문장 / 전체(초) |
+|---|---|---|---|---|---|---|---|---|---|
+| Qwen3.5-2B | v4 | 39/40 | 31/40 | 39/40 | 6/22 | 12/22 | 14/39 | 1369 | 14.2 / 16.7 |
+| Qwen3.5-2B | [v5](results/2026-10-03T02-32-36.md) | 40/40 | 31/40 | 40/40 | 7/22 | 12/22 | 0/40 | 1342 | 14.0 / 16.6 |
+| Kanana-1.5-2.1B | v4 | 40/40 | 40/40 | 40/40 | 4/22 | 10/22 | 20/40 | 1432 | 27.3 / 31.1 |
+| Kanana-1.5-2.1B | v5 | 40/40 | 38/40 | 40/40 | 7/22 | 10/22 | 0/40 | 1416 | 27.3 / 31.0 |
+
+- v4에서는 회고의 약 절반이 총지출을 insight로 써서 카드와 같은 사실을 두 번 말했다. v5는 하나도 없다
+- 놓친 사실이 는 것은 대부분 Kanana의 week-down(0 → 2)이다. 이 스냅샷에서 꼭 말해야 할 사실은 총지출 증감(`total.change`)이라 v5에서는 headline으로만 말할 수 있다. 화면에서는 회고 문장이 말하지 않으면 카드의 비교 줄이 보여 준다. 나머지(Kanana week-regret 1, Qwen month-base 1)는 40회의 우연과 가리기 어렵다
+- Kanana 첫 시도 통과가 40에서 38로 준 것은 제안 길이 초과 2번이다. headline 적중과 걸린 데 없는 회고는 그대로다
+- headline 후보가 아닌 총지출 문장을 프롬프트에서 빼 프롬프트가 약 20토큰 줄었다
 
 ### 조정 기록
 

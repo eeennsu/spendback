@@ -1,7 +1,14 @@
 import { sampleFacts, sampleNames } from '../jest/facts';
 import { SNAPSHOTS } from '../scripts/eval/snapshots';
 import { checkSentence } from '../src/retro/check';
-import { buildFrames, frameFormat, headlineFrames } from '../src/retro/frames';
+import {
+  type Frame,
+  buildFrames,
+  frameFormat,
+  headlineFrames,
+  insightFrames,
+  pickFrames,
+} from '../src/retro/frames';
 import { factValues, keyFacts } from '../src/retro/keys';
 import { render } from '../src/retro/render';
 
@@ -32,7 +39,7 @@ describe('buildFrames', () => {
     expect(render(frame?.text ?? '', factValues(keyed))).toBe('변동비가 지난주와 같았어요.');
   });
 
-  test('예산을 넘으면 "예산을 …넘었어요"로 쓴다', () => {
+  test('총예산을 넘으면 "전체 예산을 …넘었어요"로 쓴다', () => {
     const over = SNAPSHOTS.find(s => s.id === 'week-over');
     if (!over) throw new Error('week-over');
     const keyed = keyedOf(over);
@@ -40,7 +47,10 @@ describe('buildFrames', () => {
     const texts = buildFrames(keyed)
       .filter(f => f.group === 'budget')
       .map(f => render(f.text, values));
-    expect(texts).toEqual(['예산을 33,600원 넘었어요.', '예산의 112%를 써서 33,600원 넘었어요.']);
+    expect(texts).toEqual([
+      '전체 예산을 33,600원 넘었어요.',
+      '전체 예산의 112%를 써서 33,600원 넘었어요.',
+    ]);
   });
 
   test('headline 후보는 채운 뒤 30자 안의 한 문장이고, 눈에 띄는 앞 묶음 셋에서만 고른다', () => {
@@ -57,7 +67,7 @@ describe('buildFrames', () => {
   });
 
   test.each([
-    ['week-base', 'budget.balance', '예산이 92,700원 남았어요.'],
+    ['week-base', 'budget.balance', '전체 예산이 92,700원 남았어요.'],
     ['week-base', 'no_spend.days', '지출이 없는 날이 하루 있었어요.'],
     ['week-no-spend', 'no_spend.days', '지출이 없는 날이 5일 있었어요.'],
     ['week-base', 'busiest.day_amount', '9월 26일 토요일에 71,500원으로 가장 많이 썼어요.'],
@@ -183,6 +193,68 @@ describe('headline 후보의 초점', () => {
 
   test('무지출일이 많은 주는 무지출일이 headline 후보다', () => {
     expect(candidates('week-no-spend')).toContain('no_spend.days');
+  });
+});
+
+describe('insightFrames', () => {
+  const frame = (id: string): Frame => ({
+    id,
+    group: id.split('.').slice(0, -1).join('.'),
+    text: '',
+  });
+
+  test('총지출 묶음은 insight 후보에서 뺀다', () => {
+    const keyed = keyFacts(sampleFacts, sampleNames);
+    const frames = buildFrames(keyed);
+    expect(frames.some(f => f.group === 'total')).toBe(true);
+    expect(insightFrames(frames).some(f => f.group === 'total')).toBe(false);
+  });
+
+  test('총지출을 뺀 묶음이 셋보다 적으면 그대로 둔다', () => {
+    const few = ['total.change', 'category.1.change', 'largest.memo'].map(frame);
+    expect(insightFrames(few)).toEqual(few);
+    const enough = [...few, frame('no_spend.days')];
+    expect(insightFrames(enough).map(f => f.id)).toEqual([
+      'category.1.change',
+      'largest.memo',
+      'no_spend.days',
+    ]);
+  });
+});
+
+describe('pickFrames(폴백)', () => {
+  test.each(SNAPSHOTS.map(s => [s.id, s] as const))(
+    '%s: headline 후보의 첫 틀과 다른 묶음의 틀 3개까지, 총지출은 insight에 없다',
+    (_, snapshot) => {
+      const keyed = keyedOf(snapshot);
+      const values = factValues(keyed);
+      const frames = buildFrames(keyed);
+      const picked = pickFrames(keyed);
+      const [first] = headlineFrames(keyed, frames, t => render(t, values));
+      expect(picked?.headline).toBe(first.text);
+      const abouts = picked?.insights.map(i => i.about) ?? [];
+      expect(abouts.length).toBeGreaterThanOrEqual(2);
+      expect(abouts.length).toBeLessThanOrEqual(3);
+      expect(new Set(abouts).size).toBe(abouts.length);
+      expect(abouts).not.toContain(first.group);
+      expect(abouts).not.toContain('total');
+    },
+  );
+
+  test('insight는 눈에 띄는 순서이고, 묶음의 까닭을 쓴 틀을 고른다', () => {
+    const snapshot = SNAPSHOTS.find(s => s.id === 'week-category-over');
+    if (!snapshot) throw new Error('week-category-over');
+    const keyed = keyedOf(snapshot);
+    const picked = pickFrames(keyed);
+    const order = keyed.groups.map(g => g.id);
+    const abouts = picked?.insights.map(i => i.about) ?? [];
+    expect([...abouts].sort((a, b) => order.indexOf(a) - order.indexOf(b))).toEqual(abouts);
+    // 카테고리 예산을 넘은 주는 그 카테고리의 예산 틀이 headline이다
+    expect(picked?.headline).toContain('{category.3.budget_balance_phrase}');
+  });
+
+  test('제안은 없다', () => {
+    expect(pickFrames(keyFacts(sampleFacts, sampleNames))).not.toHaveProperty('suggestion');
   });
 });
 

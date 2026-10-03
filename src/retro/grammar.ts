@@ -80,7 +80,7 @@ export type Choice = { id: string; group: string };
 
 /**
  * @param headlines headline으로 고를 수 있는 틀
- * @param frames insight로 고를 수 있는 틀
+ * @param frames insight로 고를 수 있는 틀. 총지출 묶음은 빠져 있다(frames.ts insightFrames)
  * @param names 제안에 쓸 수 있는 이름 키(frames.ts nameKeys)
  */
 export function buildGrammar(

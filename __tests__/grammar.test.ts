@@ -1,5 +1,5 @@
 import { sampleFacts, sampleNames } from '../jest/facts';
-import { buildFrames, headlineFrames, nameKeys } from '../src/retro/frames';
+import { buildFrames, headlineFrames, insightFrames, nameKeys } from '../src/retro/frames';
 import { buildGrammar } from '../src/retro/grammar';
 import { factValues, keyFacts } from '../src/retro/keys';
 import { buildMessages } from '../src/retro/prompt';
@@ -111,6 +111,23 @@ describe('buildMessages', () => {
       .filter(line => /^[a-z_]+(?:\.\d+)?\.[a-z_]+: /.test(line));
     expect(sentences).toHaveLength(frames.length);
     for (const line of sentences) expect(line).not.toContain('{');
+  });
+
+  test('총지출 묶음은 headline으로만 쓴다고 적고, headline 후보가 아닌 총지출 문장은 쓰지 않는다', () => {
+    const [system, user] = buildMessages(
+      keyed,
+      frames,
+      headlines,
+      nameKeys(keyed),
+      insightFrames(frames),
+    );
+    expect(system.content).toContain('[total] 묶음은 앱 화면이 따로 보여 줘서 headline으로만 쓴다');
+    expect(headlines.map(f => f.id)).toContain('total.change');
+    expect(user.content).toContain('total.change: ');
+    expect(user.content).not.toContain('total.split: ');
+    // insight 후보를 따로 주지 않으면 모든 문장을 쓰고, headline으로만 쓰는 묶음도 없다
+    const [plain] = buildMessages(keyed, frames, headlines, []);
+    expect(plain.content).not.toContain('headline으로만');
   });
 
   test('묶음은 눈에 띄는 순서로 쓴다', () => {

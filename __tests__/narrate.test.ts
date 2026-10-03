@@ -46,6 +46,14 @@ test('필드가 완성될 때마다 틀을 펼쳐 값을 채운 문장을 순서
   expect(calls[0].messages[1].content).toContain('{category.3.name} = 배달');
 });
 
+test('총지출 묶음은 headline으로만 고를 수 있다', async () => {
+  const { result, calls } = run([GOOD]);
+  await result;
+  const lines = calls[0].grammar.split('\n');
+  expect(lines.some(line => /^head-\d+ ::= \("\\"total\./.test(line))).toBe(true);
+  for (const line of lines.filter(l => l.startsWith('ins-'))) expect(line).not.toContain('total.');
+});
+
 test('사후 검사에 걸리면 생성을 끊고 전체를 다시 만든다', async () => {
   const { result, sentences, retries, calls } = run([NUMERAL, GOOD]);
   expect(await result).toMatchObject({ status: 'done', attempts: 2 });

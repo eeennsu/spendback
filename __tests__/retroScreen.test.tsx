@@ -15,8 +15,9 @@ import { narrate } from '../src/retro/narrate';
 import { RetroDetailScreen } from '../src/screens/RetroDetailScreen';
 
 /**
- * 회고 상세의 상태(PRD 9장 컴포넌트, 4.6): 진행 중, 기록 부족, 모델 없음 폴백, 생성 중과 취소, 저장본, 월간 고정비
- * 미기록 알림. 모델은 가짜 narrator로 바꾼다(PRD 6장 인터페이스). 오늘은 2026-09-24 목요일이다
+ * 회고 상세의 상태(PRD 9장 컴포넌트, 4.6): 진행 중, 기록 부족, 모델 없음 폴백(코드가 고른 틀 문장), 생성 중과 취소,
+ * 저장본과 카드의 비교 줄, 월간 고정비 미기록 알림. 모델은 가짜 narrator로 바꾼다(PRD 6장 인터페이스).
+ * 오늘은 2026-09-24 목요일이다
  */
 jest.mock('../src/db', () => {
   const { testDb } = jest.requireActual('../jest/db');
@@ -120,12 +121,16 @@ test('변동비 기록이 모자라면 회고를 만들지 않는다', async () 
   expect(llamaNarrator).not.toHaveBeenCalled();
 });
 
-test('모델이 없으면 폴백 안내와 모델 관리로 가는 버튼을 보인다', async () => {
+test('모델이 없으면 코드가 고른 틀 문장과 폴백 안내, 모델 관리로 가는 버튼을 보인다', async () => {
   await week(4);
   await mount('weekly', '2026-09-14');
 
-  expect(await screen.findByText('모델을 받으면 회고 문장을 만들 수 있어요')).toBeOnTheScreen();
-  expect(screen.getByText('지표와 차트는 아래에 있어요')).toBeOnTheScreen();
+  expect(await screen.findByText('모델이 없어 앱이 고른 사실만 보여 줘요')).toBeOnTheScreen();
+  // headline은 가장 눈에 띄는 묶음의 틀, insight는 다른 묶음의 틀이다. 제안은 없다(PRD 4.6 폴백)
+  expect(screen.getByText('가장 큰 지출은 식비에 쓴 13,000원이었어요.')).toBeOnTheScreen();
+  expect(screen.getByText('식비에 쓴 46,000원이 변동비의 100%를 차지했어요.')).toBeOnTheScreen();
+  expect(screen.getByText('지출이 없는 날이 2일 있었어요.')).toBeOnTheScreen();
+  expect(screen.queryByText(/^다음 주에는/)).toBeNull();
   await fireEvent.press(screen.getByRole('button', { name: '모델 관리로 이동' }));
   expect(mockNavigation.navigate).toHaveBeenCalledWith('Models');
   expect(llamaNarrator).not.toHaveBeenCalled();
@@ -178,7 +183,7 @@ test('저장본이 있으면 다시 만들지 않고, 코드가 채운 이름과
       suggestion: '다음 주에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.',
     },
     modelId: QWEN.id,
-    promptVersion: 'v4',
+    promptVersion: 'v5',
   });
   await mount('weekly', '2026-09-14');
 
@@ -187,7 +192,51 @@ test('저장본이 있으면 다시 만들지 않고, 코드가 채운 이름과
   expect(screen.getByText('29,000원')).toHaveStyle({ color: FG_BRAND });
   // 서술어("늘었어요")는 강조하지 않는다
   expect(screen.queryByText('29,000원 늘었어요')).toBeNull();
+  // 회고 문장이 변동비 증감을 말하지 않으면 카드의 비교 줄이 있다
+  expect(screen.getByText('지난주와 비교할 기록이 없어요')).toBeOnTheScreen();
   expect(llamaNarrator).not.toHaveBeenCalled();
+});
+
+test('회고 문장이 변동비 증감을 말하면 카드의 비교 줄을 뺀다', async () => {
+  withModel();
+  // 직전 주(9.7~9.13)가 첫 기록일 뒤라 증감을 비교한다
+  await addTransaction(db, expense({ date: '2026-09-01' }));
+  await addTransaction(db, expense({ amount: 20000, date: '2026-09-08' }));
+  await week(4);
+  await saveRetrospective(db, {
+    kind: 'weekly',
+    periodStart: '2026-09-14',
+    periodEnd: '2026-09-20',
+    facts: {
+      kind: 'weekly',
+      period: '9월 3주',
+      groups: [
+        {
+          id: 'total',
+          title: '총지출',
+          facts: [
+            {
+              key: 'total.change_phrase',
+              value: '26,000원 늘었어요',
+              kind: 'predicate',
+              note: '',
+            },
+          ],
+        },
+      ],
+    },
+    output: {
+      headline: '변동비가 지난주보다 {total.change_phrase}.',
+      insights: [],
+      suggestion: '다음 주에는 지출 전에 꼭 필요한지 생각해 보세요.',
+    },
+    modelId: QWEN.id,
+    promptVersion: 'v5',
+  });
+  await mount('weekly', '2026-09-14');
+
+  expect(await screen.findByText('변동비가 지난주보다 26,000원 늘었어요.')).toBeOnTheScreen();
+  expect(screen.queryByText('변동비가 지난주보다 26,000원 늘었어요')).toBeNull();
 });
 
 test('월간은 기록하지 않은 고정비를 먼저 알리고, "그대로 만들기"를 누르면 만든다', async () => {
@@ -209,7 +258,7 @@ test('월간은 기록하지 않은 고정비를 먼저 알리고, "그대로 �
   await fireEvent.press(screen.getByRole('button', { name: '그대로 만들기' }));
 
   // 모델이 없어 폴백까지 간다
-  expect(await screen.findByText('모델을 받으면 회고 문장을 만들 수 있어요')).toBeOnTheScreen();
+  expect(await screen.findByText('모델이 없어 앱이 고른 사실만 보여 줘요')).toBeOnTheScreen();
 });
 
 test('다 만들면 저장하고, 늘 있는 상태 줄(live region)이 쓴 모델을 알린다', async () => {

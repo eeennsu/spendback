@@ -108,8 +108,11 @@ function EditableRow({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
   const input = useRef<{ focus(): void; blur(): void }>(null);
+  // 연필을 누른 손이 떨어진 뒤에 포커스해야 키보드가 뜬다(바로 하면 칸만 포커스되고 키보드가 안 떴다, 에뮬레이터)
   useEffect(() => {
-    if (editing) input.current?.focus();
+    if (!editing) return;
+    const timer = setTimeout(() => input.current?.focus(), 250);
+    return () => clearTimeout(timer);
   }, [editing]);
   const trimmed = name.trim();
   const error = !trimmed ? '이름을 입력해 주세요' : taken(trimmed) ? '같은 이름이 있어요' : '';

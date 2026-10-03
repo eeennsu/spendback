@@ -8,8 +8,10 @@ import { saveRetrospective } from '../src/db/retrospectives';
 import { fixedCosts, retrospectives, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
 import Files from '../src/native/NativeSpendbackFiles';
+import { keyFacts } from '../src/retro/keys';
 import { llamaNarrator } from '../src/retro/llama';
 import { APP_MODELS } from '../src/retro/models';
+import { narrate } from '../src/retro/narrate';
 import { RetroDetailScreen } from '../src/screens/RetroDetailScreen';
 
 /**
@@ -32,6 +34,12 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 jest.mock('../src/retro/llama', () => ({ llamaNarrator: jest.fn() }));
+
+// 완료 흐름만 결과를 정해 준다. 나머지 테스트는 실제 narrate가 가짜 narrator를 부른다
+jest.mock('../src/retro/narrate', () => {
+  const actual = jest.requireActual('../src/retro/narrate');
+  return { ...actual, narrate: jest.fn(actual.narrate) };
+});
 
 /** 끝나지 않는 생성. 취소하면 그때까지의 출력(없음)으로 끝난다 */
 function pendingNarrator() {
@@ -202,4 +210,33 @@ test('월간은 기록하지 않은 고정비를 먼저 알리고, "그대로 �
 
   // 모델이 없어 폴백까지 간다
   expect(await screen.findByText('모델을 받으면 회고 문장을 만들 수 있어요')).toBeOnTheScreen();
+});
+
+test('다 만들면 저장하고, 늘 있는 상태 줄(live region)이 쓴 모델을 알린다', async () => {
+  withModel();
+  pendingNarrator();
+  jest.mocked(narrate).mockImplementationOnce(async ({ facts, names }) => ({
+    status: 'done',
+    keyed: keyFacts(facts, names),
+    output: {
+      headline: '변동비는 {total.variable}였어요.',
+      insights: [],
+      suggestion: '다음 주에는 지출 전에 꼭 필요한지 생각해 보세요.',
+    },
+    attempts: 1,
+  }));
+  await week(4);
+  await mount('weekly', '2026-09-14');
+
+  const status = await screen.findByText('Qwen3.5-2B가 기기 안에서 엮은 회고예요');
+  // 상태가 바뀌어도 같은 live region 안에서 글자만 바뀌어야 스크린 리더가 읽는다(DESIGN.md 3.7)
+  let node: { props: Record<string, unknown>; parent: unknown } | null = status;
+  while (node && node.props.accessibilityLiveRegion === undefined) {
+    node = node.parent as typeof node;
+  }
+  expect(node?.props.accessibilityLiveRegion).toBe('polite');
+  expect(node?.props.collapsable).toBe(false);
+  expect(screen.getByText('변동비는 46,000원였어요.')).toBeOnTheScreen();
+  expect(screen.queryByText('아직 회고가 없어요')).toBeNull();
+  expect(await db.select().from(retrospectives)).toHaveLength(1);
 });

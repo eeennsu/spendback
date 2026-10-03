@@ -1,4 +1,4 @@
-import { Card, Icon, Stack, Text } from '@eeennsu/native';
+import { Card, Stack, Text } from '@eeennsu/native';
 import { useNavigation } from '@react-navigation/native';
 import { Alert } from 'react-native';
 
@@ -43,7 +43,9 @@ export function SettingsScreen() {
         <Link
           label='예산'
           detail={
-            budget ? `월 ${formatWon(budget.total)} · 이번 달부터 적용` : '아직 정하지 않았어요'
+            budget
+              ? `월 ${formatWon(budget.total)} · ${Number(budget.effectiveFrom.slice(5))}월부터`
+              : '아직 정하지 않았어요'
           }
           onPress={() => navigation.navigate('Budget')}
         />
@@ -105,7 +107,7 @@ function Group({
 /** 하위 화면으로 가는 줄. 꺾쇠로 이동을 알린다 */
 function Link({ label, detail, onPress }: { label: string; detail?: string; onPress: () => void }) {
   return (
-    <Row label={detail ? `${label}, ${detail}` : label} onPress={onPress}>
+    <Row label={detail ? `${label}, ${detail}` : label} onPress={onPress} chevron>
       <Stack className='flex-1 gap-1'>
         <Text>{label}</Text>
         {detail !== undefined && (
@@ -114,7 +116,6 @@ function Link({ label, detail, onPress }: { label: string; detail?: string; onPr
           </Prose>
         )}
       </Stack>
-      <Icon name='chevron-right' tone='muted' />
     </Row>
   );
 }

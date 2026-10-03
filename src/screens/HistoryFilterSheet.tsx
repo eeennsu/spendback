@@ -1,4 +1,4 @@
-import { Button, Chip, Label, Stack, Text } from '@eeennsu/native';
+import { Button, Label, Stack, Text } from '@eeennsu/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
@@ -71,9 +71,22 @@ export function HistoryFilterSheet() {
           <Stack className='gap-2'>
             <Label>범위</Label>
             <Stack direction='row' wrap align='center' className='gap-3'>
-              <Chip label={md(from)} selected onPress={() => setPicking('from')} />
+              {/* 날짜 대화상자를 여는 버튼이다. 칩(선택됨)으로 두면 스크린 리더가 "선택됨"으로 읽었다(5차 027) */}
+              <Button
+                label={md(from)}
+                icon='calendar'
+                variant='secondary'
+                size='sm'
+                onPress={() => setPicking('from')}
+              />
               <Text tone='muted'>~</Text>
-              <Chip label={md(to)} selected onPress={() => setPicking('to')} />
+              <Button
+                label={md(to)}
+                icon='calendar'
+                variant='secondary'
+                size='sm'
+                onPress={() => setPicking('to')}
+              />
             </Stack>
           </Stack>
         )}

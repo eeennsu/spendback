@@ -30,9 +30,8 @@ name: 입력 → 내역
 - tapOn: '저장'
 - assertVisible: '.*지출 12,000원'
 
-# 삭제: 선택 항목을 펼쳐 지운다
+# 삭제: 수정 시트 아래쪽의 삭제로 지운다
 - tapOn: '식비, 지출 12,000원'
-- tapOn: '선택 항목 더 보기'
 - scrollUntilVisible:
     element: '삭제'
     direction: DOWN

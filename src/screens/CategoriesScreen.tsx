@@ -120,8 +120,10 @@ function EditableRow({
   if (editing) {
     return (
       <Stack className='gap-2 py-2'>
+        <Label htmlFor={`rename-${item.id}`}>새 이름</Label>
         <Input
           ref={input}
+          id={`rename-${item.id}`}
           label={`${item.name} 새 이름`}
           value={name}
           onValueChange={setName}

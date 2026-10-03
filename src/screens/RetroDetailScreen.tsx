@@ -1,6 +1,6 @@
 import { Button, Card, Stack, Text } from '@eeennsu/native';
 import { type StaticScreenProps, useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Text as RNText, View } from 'react-native-css/components';
 
 import { allBudgets } from '../db/budgets';
@@ -21,8 +21,9 @@ import {
 import { hasModel } from '../native/files';
 import type { Output } from '../retro/check';
 import { type KeyedFacts, factValues, keyFacts } from '../retro/keys';
+import { MODELS } from '../retro/models';
 import { MIN_RECORDS } from '../retro/narrate';
-import { renderParts } from '../retro/render';
+import { render, renderParts } from '../retro/render';
 import { useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { type Generation, modelFor, useGeneration } from '../state/retro';
@@ -143,8 +144,10 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
     return { date, amount };
   });
   const busiest = days.reduce((best, d) => (d.amount > best.amount ? d : best), days[0]);
+  // 보일 회고. 방금 만든 회고가 DB 저장본보다 새롭다
+  const shown = generation.state.status === 'saved' ? generation.state : (data.saved ?? undefined);
   // 회고 문장이 총지출 묶음(변동비 증감 등)을 말하면 카드의 비교 줄을 빼 같은 사실을 두 번 말하지 않는다
-  const output = data.saved?.output;
+  const output = shown?.output;
   const saidTotal =
     output !== undefined &&
     [output.headline, ...output.insights.map(i => i.text)].some(text => text.includes('{total.'));
@@ -175,7 +178,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
       <Narrative
         ongoing={ongoing}
         enough={enough}
-        saved={data.saved ?? undefined}
+        saved={shown}
         generation={generation.state}
         unrecorded={
           needsFixedCheck
@@ -199,7 +202,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
               <Row key={slice.label}>
                 <Swatch index={i} />
                 <Text className='flex-1'>{slice.label}</Text>
-                <Text size='sm' tone='muted' className='tabular-nums'>
+                {/* 금액 자릿수가 달라도 % 열이 곧게 서게 폭을 정한다 */}
+                <Text size='sm' tone='muted' className='w-12 text-right tabular-nums'>
                   {percents[i]}
                 </Text>
                 <Text className='tabular-nums'>{formatWon(slice.amount)}</Text>
@@ -226,7 +230,27 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   );
 }
 
-/** 회고 문장 영역의 상태(DESIGN.md 4.4): 진행 중, 기록 부족, 고정비 미기록 알림, 생성 중, 폴백, 저장본 */
+/** 폴백 안내(PRD 4.6 표) */
+const FALLBACK = {
+  'no-model': '모델을 받으면 회고 문장을 만들 수 있어요',
+  'load-failed': '모델을 불러오지 못했어요',
+  'check-failed': '회고 문장을 만들지 못했어요',
+} as const;
+
+/** 저장한 회고를 쓴 모델. 레지스트리에서 빠진 모델이면 이름 없이 쓴다 */
+function author(modelId: string) {
+  const name = MODELS.find(m => m.id === modelId)?.name;
+  return name
+    ? render('{name}{이/가} 기기 안에서 엮은 회고예요', { name })
+    : '기기 안에서 엮은 회고예요';
+}
+
+/**
+ * 회고 문장 영역의 상태(DESIGN.md 4.4): 진행 중, 기록 부족, 고정비 미기록 알림, 생성 중, 폴백, 저장본, 취소.
+ * 진행 중·기록 부족을 뺀 상태는 한 카드이고, 맨 위 상태 줄이 늘 있는 live region이다. 상태가 바뀌면 스크린 리더가 그
+ * 줄을 읽는다("쓰는 중" → "…가 기기 안에서 엮은 회고예요"). 카드를 상태마다 새로 붙이면 그 안의 live region은 처음
+ * 내용을 읽지 않는다(5차 검증 021)
+ */
 function Narrative({
   ongoing,
   enough,
@@ -242,7 +266,7 @@ function Narrative({
 }: {
   ongoing: boolean;
   enough: boolean;
-  saved: { facts: KeyedFacts; output: Output } | undefined;
+  saved: { facts: KeyedFacts; output: Output; modelId: string } | undefined;
   generation: Generation;
   unrecorded: Array<{ id: number; name: string; amount: number; date: string }>;
   kind: PeriodKind;
@@ -272,32 +296,26 @@ function Narrative({
       />
     );
   }
+
+  // 상태 줄: 생성 중과 저장본에서는 흐린 머리말, 나머지에서는 카드의 첫 문장이다
+  let status: { text: string; lead: boolean };
+  let body: ReactNode;
   if (generation.status === 'writing') {
-    return (
-      <Card className='gap-3'>
-        <View accessibilityLiveRegion='polite' collapsable={false}>
-          <Text size='sm' tone='muted'>
-            {generation.retrying ? '다시 쓰는 중' : '쓰는 중'}
-          </Text>
-        </View>
+    status = { text: generation.retrying ? '다시 쓰는 중' : '쓰는 중', lead: false };
+    body = (
+      <>
         {generation.sentences.map((sentence, i) => (
           <Prose key={sentence} size={i === 0 ? 'xl' : 'md'}>
             {sentence}
           </Prose>
         ))}
         <Button label='취소' variant='secondary' className='self-start' onPress={onCancel} />
-      </Card>
+      </>
     );
-  }
-  if (generation.status === 'fallback') {
-    const message = {
-      'no-model': '모델을 받으면 회고 문장을 만들 수 있어요',
-      'load-failed': '모델을 불러오지 못했어요',
-      'check-failed': '회고 문장을 만들지 못했어요',
-    }[generation.reason];
-    return (
-      <Card className='gap-3'>
-        <Prose>{message}</Prose>
+  } else if (generation.status === 'fallback') {
+    status = { text: FALLBACK[generation.reason], lead: true };
+    body = (
+      <>
         <Text size='sm' tone='muted'>
           지표와 차트는 아래에 있어요
         </Text>
@@ -313,49 +331,64 @@ function Narrative({
             <Button label='모델 관리로 이동' variant='secondary' onPress={onModels} />
           )}
         </Stack>
-      </Card>
+      </>
     );
-  }
-  if (unrecorded.length > 0) {
-    return (
-      <Card className='gap-3'>
-        <Text>기록하지 않은 고정비가 있어요</Text>
+  } else if (unrecorded.length > 0) {
+    status = { text: '기록하지 않은 고정비가 있어요', lead: true };
+    body = (
+      <>
         <Prose size='sm' tone='muted'>
           빠뜨리면 고정비 합계와 수입 대비 지출률이 틀려요. 기록하거나 그대로 만들 수 있어요
         </Prose>
-        {unrecorded.map(item => (
-          <Row
-            key={item.id}
-            label={`${item.name} 기록, ${Number(item.date.slice(8))}일 결제 · 예상 ${formatWon(item.amount)}`}
-            onPress={() => onRecordFixed(item.id)}
-          >
-            <Stack className='flex-1 gap-1'>
-              <Text>{item.name}</Text>
-              <Text size='sm' tone='muted' className='tabular-nums'>
-                {`${Number(item.date.slice(8))}일 결제 · 예상 ${formatWon(item.amount)}`}
+        {/* 줄 사이 간격은 줄 자신의 여백만 쓴다 */}
+        <View>
+          {unrecorded.map(item => (
+            <Row
+              key={item.id}
+              label={`${item.name} 기록, ${Number(item.date.slice(8))}일 결제 · 예상 ${formatWon(item.amount)}`}
+              onPress={() => onRecordFixed(item.id)}
+            >
+              <Stack className='flex-1 gap-1'>
+                <Text>{item.name}</Text>
+                <Text size='sm' tone='muted' className='tabular-nums'>
+                  {`${Number(item.date.slice(8))}일 결제 · 예상 ${formatWon(item.amount)}`}
+                </Text>
+              </Stack>
+              <Text size='sm' className='text-fg-brand'>
+                기록
               </Text>
-            </Stack>
-            <Text size='sm' className='text-fg-brand'>
-              기록
-            </Text>
-          </Row>
-        ))}
+            </Row>
+          ))}
+        </View>
         <Button
           label='그대로 만들기'
           variant='secondary'
           className='self-start'
           onPress={onSkipFixed}
         />
-      </Card>
+      </>
+    );
+  } else if (saved) {
+    status = { text: author(saved.modelId), lead: false };
+    body = <Sentences facts={saved.facts} output={saved.output} />;
+  } else {
+    status = {
+      text: generation.status === 'cancelled' ? '만들기를 취소했어요' : '아직 회고가 없어요',
+      lead: true,
+    };
+    body = (
+      <Button label='회고 만들기' variant='secondary' className='self-start' onPress={onGenerate} />
     );
   }
-  if (saved) return <Sentences facts={saved.facts} output={saved.output} />;
+
   return (
     <Card className='gap-3'>
-      <Text>
-        {generation.status === 'cancelled' ? '만들기를 취소했어요' : '아직 회고가 없어요'}
-      </Text>
-      <Button label='회고 만들기' variant='secondary' className='self-start' onPress={onGenerate} />
+      <View accessibilityLiveRegion='polite' collapsable={false}>
+        <Prose size={status.lead ? 'md' : 'sm'} tone={status.lead ? 'default' : 'muted'}>
+          {status.text}
+        </Prose>
+      </View>
+      {body}
     </Card>
   );
 }
@@ -370,7 +403,7 @@ function Sentences({ facts, output }: { facts: KeyedFacts; output: Output }) {
     ),
   };
   return (
-    <Card className='gap-4'>
+    <Stack className='gap-4'>
       <Emphasized text={output.headline} fill={fill} className='text-xl' heading />
       <Stack className='gap-3'>
         {output.insights.map(insight => (
@@ -380,7 +413,7 @@ function Sentences({ facts, output }: { facts: KeyedFacts; output: Output }) {
       <View className='rounded-lg bg-surface-muted px-4 py-3'>
         <Emphasized text={output.suggestion} fill={fill} className='text-md' />
       </View>
-    </Card>
+    </Stack>
   );
 }
 

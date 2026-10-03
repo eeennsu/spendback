@@ -90,6 +90,7 @@ export function RetroListScreen() {
           inset='screen'
           label={`${item.label}, ${item.ongoing ? '진행 중, ' : ''}${item.line}`}
           onPress={() => navigation.navigate('RetroDetail', { kind, start: item.period.start })}
+          chevron
         >
           <Stack className='flex-1 gap-1'>
             <Stack direction='row' align='center' className='gap-2'>

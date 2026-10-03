@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useCssElement } from 'react-native-css';
 import { View } from 'react-native-css/components';
-import Svg, { Circle, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Line, Rect, Text as SvgText } from 'react-native-svg';
 
 import { Prose } from './prose';
 
@@ -18,6 +18,10 @@ const fillMapping = { className: { target: false, nativeStyleMapping: { fill: 'f
 
 function Ring(props: React.ComponentProps<typeof Circle> & { className: string }) {
   return useCssElement(Circle, props, strokeMapping);
+}
+
+function Divider(props: React.ComponentProps<typeof Line> & { className: string }) {
+  return useCssElement(Line, props, strokeMapping);
 }
 
 function Bar(props: React.ComponentProps<typeof Rect> & { className: string }) {
@@ -49,6 +53,10 @@ export function Swatch({ index }: { index: number }) {
           fill='none'
           strokeWidth={6}
         />
+        {/* 옅은 회색 견본도 카드 바탕에서 보이게 테두리를 긋는다(5차 028) */}
+        {index > 0 && (
+          <Ring className='stroke-border' cx={6} cy={6} r={5.5} fill='none' strokeWidth={1} />
+        )}
       </Svg>
     </View>
   );
@@ -105,6 +113,22 @@ export function Donut({ slices, percents }: { slices: Slice[]; percents: string[
             ),
           ];
         })}
+        {/* 조각 사이에 카드 바탕색 틈을 둔다. 옅은 회색 조각끼리도 경계가 보인다(5차 028) */}
+        {slices.length > 1 &&
+          starts.map((start, i) => {
+            const a = -Math.PI / 2 + 2 * Math.PI * start;
+            return (
+              <Divider
+                key={`gap-${slices[i].label}`}
+                className='stroke-surface'
+                x1={size / 2 + (r - width / 2 - 1) * Math.cos(a)}
+                y1={size / 2 + (r - width / 2 - 1) * Math.sin(a)}
+                x2={size / 2 + (r + width / 2 + 1) * Math.cos(a)}
+                y2={size / 2 + (r + width / 2 + 1) * Math.sin(a)}
+                strokeWidth={2}
+              />
+            );
+          })}
       </Svg>
     </View>
   );

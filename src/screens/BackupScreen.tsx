@@ -134,13 +134,14 @@ export function BackupScreen() {
           )}
         </Stack>
       </Card>
-      {message !== '' && (
-        <Card>
-          <View accessibilityLiveRegion='polite' collapsable={false}>
-            <Text>{message}</Text>
-          </View>
-        </Card>
-      )}
+      {/* 결과 줄. live region을 늘 두고 안쪽만 바꿔야 처음 결과도 스크린 리더가 읽는다(5차 검증 021) */}
+      <View accessibilityLiveRegion='polite' collapsable={false}>
+        {message !== '' && (
+          <Card>
+            <Prose>{message}</Prose>
+          </Card>
+        )}
+      </View>
     </ScreenScroll>
   );
 }

@@ -120,6 +120,11 @@ function EntryForm({
   // 펼치면 펼친 줄을 시트 위쪽으로 올려 새로 생긴 항목이 보이게 한다(DESIGN.md 4.3)
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const toggleY = useRef(0);
+  // 가운데가 넘쳐 스크롤되는지. 키보드가 뜬 접힌 시트도 넘친다(날짜 줄이 잘린다, 5차 검증 020)
+  const scrollHeight = useRef(0);
+  const contentHeight = useRef(0);
+  const [overflow, setOverflow] = useState(false);
+  const measure = () => setOverflow(contentHeight.current > scrollHeight.current + 1);
   const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
   const amountRef = useRef<{ focus(): void; blur(): void }>(null);
@@ -237,19 +242,22 @@ function EntryForm({
     values.isFixed && (values.fixedCostId !== null ? '고정비 연결' : '고정비'),
   ].filter((s): s is string => typeof s === 'string');
 
+  // 저장할 수 있으면 어느 날짜로 저장하는지 쓴다. 키보드가 뜨면 날짜 칩이 가려져도 기본값(오늘)이 보인다
+  const dateText =
+    dateChoice === 'today' ? '오늘' : dateChoice === 'yesterday' ? '어제' : otherLabel;
+  const status = missing !== '' ? missing : `${dateText} 날짜로 저장해요`;
+
   const footer = (
-    // 펼친 시트는 가운데가 스크롤되므로 아래 버튼 영역과의 경계를 긋는다
-    <View className={cn('gap-2 px-6 pb-4 pt-3', more && 'border-t border-border')}>
+    // 가운데가 넘쳐 스크롤되면 아래 버튼 영역과의 경계를 긋는다. 잘린 칸이 없는 칸처럼 보이지 않게 한다
+    <View className={cn('gap-2 px-6 pb-4 pt-3', overflow && 'border-t border-border')}>
       {/*
         저장이 안 되는 이유가 바뀌면 스크린 리더가 조용히 알린다. 접근성 prop만 가진 View는 New Architecture가
         평탄화해 live region이 사라지므로 collapsable={false}로 네이티브 뷰를 남긴다(DESIGN.md 3.7)
       */}
       <View accessibilityLiveRegion='polite' collapsable={false}>
-        {missing !== '' && (
-          <Text size='sm' tone='muted'>
-            {missing}
-          </Text>
-        )}
+        <Text size='sm' tone='muted'>
+          {status}
+        </Text>
       </View>
       <Button
         label='저장'
@@ -265,6 +273,14 @@ function EntryForm({
     <Sheet title={title} onClose={() => navigation.goBack()} expanded={more} footer={footer}>
       <ScrollView
         ref={scrollRef}
+        onLayout={event => {
+          scrollHeight.current = event.nativeEvent.layout.height;
+          measure();
+        }}
+        onContentSizeChange={(_, height) => {
+          contentHeight.current = height;
+          measure();
+        }}
         className={more ? 'flex-1' : 'shrink grow-0'}
         contentContainerClassName='gap-6 px-6 pb-4 pt-2'
         keyboardShouldPersistTaps='handled'
@@ -448,10 +464,11 @@ function EntryForm({
                 optional
               />
             )}
-            {editingId !== undefined && (
-              <Button label='삭제' variant='danger' onPress={remove} className='self-start' />
-            )}
           </>
+        )}
+        {/* 수정할 때만. 선택 항목을 펼치지 않아도 찾을 수 있게 접힘 밖에 둔다(5차 030) */}
+        {editingId !== undefined && (
+          <Button label='삭제' variant='danger' onPress={remove} className='self-start' />
         )}
       </ScrollView>
     </Sheet>

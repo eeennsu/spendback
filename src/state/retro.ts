@@ -5,7 +5,8 @@ import { saveRetrospective } from '../db/retrospectives';
 import type { Facts } from '../domain/facts';
 import type { PeriodRef } from '../domain/periods';
 import { hasModel, modelPath } from '../native/files';
-import type { Names } from '../retro/keys';
+import type { Output } from '../retro/check';
+import type { KeyedFacts, Names } from '../retro/keys';
 import { llamaNarrator } from '../retro/llama';
 import { APP_MODELS, DEFAULT_MODEL_ID } from '../retro/models';
 import { type NarrateResult, narrate } from '../retro/narrate';
@@ -15,6 +16,8 @@ import { mutate } from './data';
 export type Generation =
   | { status: 'idle' }
   | { status: 'writing'; sentences: string[]; retrying: boolean }
+  /** 방금 만들어 저장했다. 화면의 DB 읽기가 따라오기 전에도 새 회고를 보인다 */
+  | { status: 'saved'; facts: KeyedFacts; output: Output; modelId: string }
   | { status: 'fallback'; reason: 'no-model' | 'load-failed' | 'check-failed' }
   | { status: 'cancelled' };
 
@@ -27,7 +30,8 @@ export const modelFor = (id: string | undefined) =>
 /**
  * 회고 문장 생성(PRD 4.6, 6장 실행 정책). 생성할 때만 모델을 올리고, 화면을 나가거나 앱이 백그라운드로 가면 생성을
  * 취소하고 모델을 내린다. 필드가 완성될 때마다 문장이 하나씩 나오고, 사후 검사에 걸리면 지우고 다시 쓴다.
- * 성공하면 저장하고 idle로 돌아간다(화면은 저장본을 그린다). 폴백은 저장하지 않는다
+ * 성공하면 저장하고 saved로 바뀐다. 저장 직후 화면이 DB를 다시 읽는 사이에 "아직 회고가 없어요"가 비치지 않게 새 회고를
+ * 상태에 들고 있는다. 폴백은 저장하지 않는다
  */
 export function useGeneration(period: PeriodRef) {
   const [state, setState] = useState<Generation>({ status: 'idle' });
@@ -108,7 +112,7 @@ export function useGeneration(period: PeriodRef) {
           promptVersion: PROMPT_VERSION,
         }),
       );
-      setState({ status: 'idle' });
+      setState({ status: 'saved', facts: keyed, output, modelId: model.id });
     } else if (result.status === 'fallback') {
       setState({ status: 'fallback', reason: result.reason });
     } else if (result.status === 'cancelled') {

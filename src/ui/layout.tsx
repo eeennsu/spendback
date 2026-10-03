@@ -1,4 +1,4 @@
-import { Card, Chip, Label, Stack, Text, cn } from '@eeennsu/native';
+import { Card, Chip, Icon, Label, Stack, Text, cn } from '@eeennsu/native';
 import type { ElementChildren } from '@eeennsu/tokens';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native-css/components';
@@ -59,11 +59,13 @@ export function Section({
 /**
  * 목록 한 줄. label을 주면 줄 전체가 버튼이 되고 스크린 리더는 label을 읽는다.
  * inset은 카드 안(좌우 24) 또는 화면 바로 위(좌우 16)의 눌림 배경 폭이다.
- * compact는 안쪽에 이미 48 높이의 누름 영역(이름 버튼, 스위치)이 있는 줄이라 위아래 여백을 4로 줄인다
+ * compact는 안쪽에 이미 48 높이의 누름 영역(이름 버튼, 스위치)이 있는 줄이라 위아래 여백을 4로 줄인다.
+ * chevron은 다른 화면으로 가는 줄이다(설정, 회고 목록, 고정비). 시트를 여는 줄(내역, 최근 지출)에는 달지 않는다
  */
 export function Row({
   column = false,
   compact = false,
+  chevron = false,
   label,
   onPress,
   inset = 'card',
@@ -71,6 +73,7 @@ export function Row({
 }: {
   column?: boolean;
   compact?: boolean;
+  chevron?: boolean;
   label?: string;
   onPress?: () => void;
   inset?: 'card' | 'screen';
@@ -91,6 +94,7 @@ export function Row({
       className={cn(className, 'active:bg-surface-hover')}
     >
       {children as ReactNode}
+      {chevron && <Icon name='chevron-right' tone='muted' />}
     </Pressable>
   );
 }
@@ -187,9 +191,9 @@ export function SwitchRow({
       <Stack className='flex-1 gap-1'>
         <Text>{label}</Text>
         {description !== undefined && (
-          <Text size='sm' tone='muted'>
+          <Prose size='sm' tone='muted'>
             {description}
-          </Text>
+          </Prose>
         )}
       </Stack>
       {children}

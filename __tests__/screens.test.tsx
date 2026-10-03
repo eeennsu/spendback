@@ -177,6 +177,8 @@ describe('입력 시트', () => {
 
     await fireEvent.press(chipIn('카테고리', '식비'));
     expect(save().props.accessibilityState).toMatchObject({ disabled: false });
+    // 저장할 수 있으면 어느 날짜로 저장하는지 쓴다. 키보드에 날짜 칩이 가려져도 보인다(DESIGN.md 4.3)
+    expect(screen.getByText('오늘 날짜로 저장해요')).toBeOnTheScreen();
 
     // 이유 글자를 감싼 조상 중 live region을 찾는다. 평탄화되면 기기에서 사라진다(collapsable)
     await fireEvent.changeText(screen.getByLabelText('금액'), '');
@@ -282,7 +284,7 @@ describe('입력 시트', () => {
 
     expect(await screen.findByText('지출 수정')).toBeOnTheScreen();
     expect(screen.getByLabelText('금액').props.value).toBe('4,500');
-    await fireEvent.press(screen.getByRole('button', { name: /선택 항목 더 보기/ }));
+    // 삭제는 선택 항목을 펼치지 않아도 있다
     expect(screen.getByRole('button', { name: '삭제' })).toBeOnTheScreen();
   });
 });

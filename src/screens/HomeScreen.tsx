@@ -90,26 +90,28 @@ export function HomeScreen() {
                 <Prose size='sm' tone='muted'>
                   결제일이 오늘이거나 지났는데 아직 기록하지 않았어요
                 </Prose>
-                {checklist.overdue.map(item => {
-                  const detail = `${Number(paymentDate(item.dayOfMonth, month).slice(8))}일 결제 · 예상 ${formatWon(item.amount)}`;
-                  return (
-                    <Row
-                      key={item.id}
-                      label={`${item.name} 기록, ${detail}`}
-                      onPress={() => navigation.navigate('Entry', { fixedCostId: item.id })}
-                    >
-                      <Stack className='flex-1 gap-1'>
-                        <Text>{item.name}</Text>
-                        <Text size='sm' tone='muted' className='tabular-nums'>
-                          {detail}
+                <View>
+                  {checklist.overdue.map(item => {
+                    const detail = `${Number(paymentDate(item.dayOfMonth, month).slice(8))}일 결제 · 예상 ${formatWon(item.amount)}`;
+                    return (
+                      <Row
+                        key={item.id}
+                        label={`${item.name} 기록, ${detail}`}
+                        onPress={() => navigation.navigate('Entry', { fixedCostId: item.id })}
+                      >
+                        <Stack className='flex-1 gap-1'>
+                          <Text>{item.name}</Text>
+                          <Text size='sm' tone='muted' className='tabular-nums'>
+                            {detail}
+                          </Text>
+                        </Stack>
+                        <Text size='sm' className='text-fg-brand'>
+                          기록
                         </Text>
-                      </Stack>
-                      <Text size='sm' className='text-fg-brand'>
-                        기록
-                      </Text>
-                    </Row>
-                  );
-                })}
+                      </Row>
+                    );
+                  })}
+                </View>
               </>
             )}
           </Section>
@@ -245,9 +247,9 @@ function BudgetHero({ status, onPress }: { status: Status; onPress: () => void }
             {`예산 ${formatWon(status.total)}`}
           </Text>
         </Stack>
-        <Text size='sm' tone='muted' className='tabular-nums'>
+        <Prose size='sm' tone='muted' className='tabular-nums'>
           {`세로선은 오늘이에요 · 이번 달 ${elapsed} 지남`}
-        </Text>
+        </Prose>
       </Card>
     </Pressable>
   );

@@ -1,5 +1,6 @@
 import { Button, Stack, Text } from '@eeennsu/native';
 import { useNavigation } from '@react-navigation/native';
+import { View } from 'react-native-css/components';
 
 import type { FixedCostRow } from '../db/lists';
 import { formatWon } from '../domain/format';
@@ -39,20 +40,24 @@ export function FixedCostsScreen() {
         />
       ) : (
         <Section title='쓰는 항목'>
-          {active.map(item => (
-            <Row
-              key={item.id}
-              label={`${item.name}, ${detail(item)}`}
-              onPress={() => navigation.navigate('FixedCostEdit', { id: item.id })}
-            >
-              <Stack className='flex-1 gap-1'>
-                <Text>{item.name}</Text>
-                <Text size='sm' tone='muted' className='tabular-nums'>
-                  {detail(item)}
-                </Text>
-              </Stack>
-            </Row>
-          ))}
+          {/* 줄 사이 간격은 줄 자신의 여백만 쓴다(Section gap은 제목과 내용 사이) */}
+          <View>
+            {active.map(item => (
+              <Row
+                key={item.id}
+                label={`${item.name}, ${detail(item)}`}
+                onPress={() => navigation.navigate('FixedCostEdit', { id: item.id })}
+                chevron
+              >
+                <Stack className='flex-1 gap-1'>
+                  <Text>{item.name}</Text>
+                  <Text size='sm' tone='muted' className='tabular-nums'>
+                    {detail(item)}
+                  </Text>
+                </Stack>
+              </Row>
+            ))}
+          </View>
         </Section>
       )}
       <Button
@@ -63,17 +68,20 @@ export function FixedCostsScreen() {
       />
       {hidden.length > 0 && (
         <Section title='해지한 항목'>
-          {hidden.map(item => (
-            <Row
-              key={item.id}
-              label={`${item.name}, 해지함`}
-              onPress={() => navigation.navigate('FixedCostEdit', { id: item.id })}
-            >
-              <Text tone='muted' className='flex-1'>
-                {item.name}
-              </Text>
-            </Row>
-          ))}
+          <View>
+            {hidden.map(item => (
+              <Row
+                key={item.id}
+                label={`${item.name}, 해지함`}
+                onPress={() => navigation.navigate('FixedCostEdit', { id: item.id })}
+                chevron
+              >
+                <Text tone='muted' className='flex-1'>
+                  {item.name}
+                </Text>
+              </Row>
+            ))}
+          </View>
         </Section>
       )}
     </ScreenScroll>

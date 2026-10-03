@@ -9,6 +9,8 @@ import { db } from '../src/db';
 import { cardInbox, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
 import Cards from '../src/native/NativeSpendbackCards';
+import Files from '../src/native/NativeSpendbackFiles';
+import { DEFAULT_MODEL_ID, MODELS } from '../src/retro/models';
 import { CardsScreen } from '../src/screens/CardsScreen';
 import { EntrySheet } from '../src/screens/EntrySheet';
 import { HomeScreen } from '../src/screens/HomeScreen';
@@ -82,6 +84,7 @@ afterAll(() => {
 
 beforeEach(async () => {
   jest.clearAllMocks();
+  jest.mocked(Files.fileSize).mockReturnValue(-1);
   await db.delete(cardInbox);
   await db.delete(transactions);
 });
@@ -100,6 +103,20 @@ describe('홈의 카드 알림', () => {
 
     await fireEvent.press(row);
     expect(mockNavigation.navigate).toHaveBeenCalledWith('Entry', { inboxId: expect.any(Number) });
+  });
+
+  test('모델이 없으면 처음 보는 가맹점은 카테고리 고르기다', async () => {
+    await notify('승인 20,000원 09/24 19:00 교촌치킨');
+    await mount(<HomeScreen />);
+    expect(await screen.findByText('카테고리 고르기 · 오늘')).toBeOnTheScreen();
+  });
+
+  test('모델이 있으면 처음 보는 가맹점은 추천 준비 중이다', async () => {
+    const model = MODELS.find(m => m.id === DEFAULT_MODEL_ID)!;
+    jest.mocked(Files.fileSize).mockReturnValue(model.sizeBytes);
+    await notify('승인 20,000원 09/24 19:00 교촌치킨');
+    await mount(<HomeScreen />);
+    expect(await screen.findByText('추천 준비 중 · 오늘')).toBeOnTheScreen();
   });
 
   test('같은 날 같은 금액을 직접 적었으면 이미 기록했을 수 있다고 알린다', async () => {

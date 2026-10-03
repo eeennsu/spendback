@@ -9,6 +9,7 @@ import { allCategories } from '../db/lists';
 import { getSetting } from '../db/settings';
 import { relativeDate } from '../domain/entry';
 import { formatWon } from '../domain/format';
+import { hasModel } from '../native/files';
 import { suggestCards } from '../state/cards';
 import { mutate, useQuery } from '../state/data';
 import { modelFor } from '../state/retro';
@@ -43,6 +44,8 @@ export function CardInboxSection({ today }: { today: string }) {
   );
 
   if (!data || data.items.length === 0) return null;
+  // 모델이 없으면 추천이 오지 않는다. "추천 준비 중"으로 기다리게 하지 않는다
+  const modelReady = hasModel(modelFor(data.modelId));
   const nameOf = (id: number) => data.categories.find(c => c.id === id)?.name ?? '카테고리';
 
   return (
@@ -54,6 +57,7 @@ export function CardInboxSection({ today }: { today: string }) {
             item={item}
             today={today}
             nameOf={nameOf}
+            modelReady={modelReady}
             open={() => navigation.navigate('Entry', { inboxId: item.id })}
           />
         ))}
@@ -66,11 +70,13 @@ function InboxRow({
   item,
   today,
   nameOf,
+  modelReady,
   open,
 }: {
   item: InboxItem;
   today: string;
   nameOf: (id: number) => string;
+  modelReady: boolean;
   open: () => void;
 }) {
   const amount = item.amount !== null ? formatWon(item.amount) : '';
@@ -130,7 +136,7 @@ function InboxRow({
 
   const suggestion = item.suggestion
     ? `${nameOf(item.suggestion.categoryId)} 추천`
-    : item.needsSuggestion
+    : item.needsSuggestion && modelReady
       ? '추천 준비 중'
       : '카테고리 고르기';
   const meta = [

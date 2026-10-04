@@ -18,7 +18,7 @@ import { cardInbox } from '../db/schema';
 import { type TransactionInput, addTransaction, deleteTransaction } from '../db/transactions';
 import { addDays } from '../domain/date';
 import { type Generate, NarratorError } from '../retro/narrate';
-import { knownMerchants, normalizeMerchant } from './merchant';
+import { isPaymentGateway, knownMerchants, normalizeMerchant } from './merchant';
 import { PAIR_DAYS, pairCancel } from './pair';
 import { type RawNotification, cardAppName, parseCardNotification } from './parse';
 import type { Category } from './prompt';
@@ -47,6 +47,8 @@ export type InboxItem = {
   suggestion?: Suggestion;
   /** 처음 보는 가맹점이라 LLM 추천을 기다린다(아직 묻지 않았다). 홈이 보이면 suggestPending을 돌린다 */
   needsSuggestion: boolean;
+  /** 가맹점명이 결제대행사라 가게를 알 수 없다. 추천하지 않는다(PRD 4.9) */
+  gateway: boolean;
   /** 같은 날 같은 금액의 지출이 이미 있다(직접 적었거나 같은 가맹점) */
   maybeDuplicate: boolean;
   /** 취소가 짝지은 저장한 거래 */
@@ -57,8 +59,10 @@ export type InboxItem = {
 export async function syncInbox(db: Db, raws: RawNotification[], now = Date.now()) {
   const inserted = await insertInbox(
     db,
-    raws.map(raw => {
+    raws.flatMap(raw => {
       const read = parseCardNotification(raw);
+      // 결제가 아닌 알림(광고, 혜택 안내)은 넣지 않는다(PRD 4.9)
+      if (read.kind === 'ignored') return [];
       return {
         fingerprint: `${raw.app}\n${raw.title}\n${raw.text}`,
         app: raw.app,
@@ -136,13 +140,16 @@ export async function inboxView(db: Db, categories: Category[]): Promise<InboxIt
       text: row.text,
       maybeDuplicate: false,
       needsSuggestion: false,
+      gateway: row.merchant !== null && isPaymentGateway(row.merchant),
     };
-    if (row.kind === 'approval' && row.merchant) {
+    if (row.kind === 'approval' && row.merchant && !item.gateway) {
       const exact = exactMatch(row.merchant, known, categories);
       if (exact !== undefined) item.suggestion = { categoryId: exact, source: 'exact' };
       else if (row.suggestedCategoryId !== null && visible.has(row.suggestedCategoryId))
         item.suggestion = { categoryId: row.suggestedCategoryId, source: 'llm' };
       item.needsSuggestion = exact === undefined && row.suggestedAt === null;
+    }
+    if (row.kind === 'approval' && row.merchant) {
       const name = normalizeMerchant(row.merchant);
       // 직접 적은 지출(가맹점 없음)이나 같은 가맹점의 지출만 겹친 것으로 본다. 다른 가맹점이면 다른 결제다
       item.maybeDuplicate = sameDay.some(
@@ -171,7 +178,11 @@ export async function suggestPending(
 ) {
   const known = knownMerchants(await merchantHistory(db));
   const todo = (await pendingInbox(db)).filter(
-    row => row.kind === 'approval' && row.merchant && row.suggestedAt === null,
+    row =>
+      row.kind === 'approval' &&
+      row.merchant &&
+      !isPaymentGateway(row.merchant) &&
+      row.suggestedAt === null,
   );
   for (const row of todo) {
     if (signal.aborted) return;

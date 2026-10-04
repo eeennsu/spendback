@@ -165,25 +165,25 @@ describe('홈의 카드 알림', () => {
   });
 
   test('읽지 못한 알림은 원문과 함께 보이고 넘길 수 있다', async () => {
-    await notify('이번 달 결제 예정 금액을 확인하세요');
+    await notify('승인 거절 · 한도를 확인하세요');
     await mount(<HomeScreen />);
 
     const row = await screen.findByRole('button', { name: /^읽지 못한 알림/ });
-    expect(within(row).getByText('이번 달 결제 예정 금액을 확인하세요')).toBeOnTheScreen();
+    expect(within(row).getByText('승인 거절 · 한도를 확인하세요')).toBeOnTheScreen();
     answerAlert('넘기기');
     await fireEvent.press(row);
     expect(await db.select().from(cardInbox)).toMatchObject([{ status: 'dismissed' }]);
   });
 
   test('읽지 못한 알림은 직접 기록할 수 있다. 빈 입력 시트를 열고 알림을 치운다', async () => {
-    await notify('이번 달 결제 예정 금액을 확인하세요');
+    await notify('승인 거절 · 한도를 확인하세요');
     await mount(<HomeScreen />);
     const row = await screen.findByRole('button', { name: /^읽지 못한 알림/ });
 
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     await fireEvent.press(row);
     // 본문은 원문만이다. 제목이 이미 카드 이름을 말한다(7차 046)
-    expect(alert.mock.calls[0][1]).toBe('이번 달 결제 예정 금액을 확인하세요');
+    expect(alert.mock.calls[0][1]).toBe('승인 거절 · 한도를 확인하세요');
     alert.mockRestore();
 
     answerAlert('직접 기록');
@@ -227,6 +227,15 @@ describe('카드 알림에서 연 입력 시트', () => {
       suggestionSource: 'exact',
     });
     expect(await db.select().from(cardInbox)).toMatchObject([{ status: 'done' }]);
+  });
+
+  test('결제대행사 결제면 가게를 알 수 없다고 쓰고 카테고리를 고르지 않은 채 연다', async () => {
+    await notify('승인 8,400원 09/24 13:45 비바리퍼블리카');
+    const [item] = await db.select().from(cardInbox);
+    await mount(entry({ inboxId: item.id }));
+
+    expect(await screen.findByText('결제대행사라 가게를 알 수 없어요')).toBeOnTheScreen();
+    expect(screen.getByText('카테고리를 골라 주세요')).toBeOnTheScreen();
   });
 
   test('기기 안 모델의 추천이면 확인해 달라고 쓴다', async () => {

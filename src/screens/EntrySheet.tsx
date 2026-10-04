@@ -365,6 +365,11 @@ function EntryForm({
             value={categoryId}
             onChange={categoryId => categoryId !== undefined && set({ categoryId })}
           />
+          {inbox?.gateway && (
+            <Prose size='sm' tone='muted'>
+              결제대행사라 가게를 알 수 없어요
+            </Prose>
+          )}
           {inbox?.suggestion && (
             <SuggestionNote suggestion={inbox.suggestion} categories={categories} />
           )}

@@ -24,7 +24,7 @@ name: 카드 알림 · 승인
     element: '읽지 못한 알림.*'
     direction: DOWN
 - tapOn: '읽지 못한 알림.*'
-- assertVisible: '.*결제 예정 금액 안내.*'
+- assertVisible: '.*승인 거절 안내.*'
 - tapOn: '넘기기'
 - assertNotVisible: '읽지 못한 알림.*'
 

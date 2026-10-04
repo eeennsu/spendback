@@ -65,14 +65,20 @@ describe('syncInbox', () => {
 
   test('읽지 못한 알림도 원문과 함께 넣는다', async () => {
     const db = testDb();
-    await syncInbox(db, [raw('이번 달 결제 예정 금액을 확인하세요')], NOW);
+    await syncInbox(db, [raw('승인 거절 · 한도를 확인하세요')], NOW);
     expect(await rows(db)).toEqual([
       expect.objectContaining({
         kind: 'unreadable',
         amount: null,
-        text: '이번 달 결제 예정 금액을 확인하세요',
+        text: '승인 거절 · 한도를 확인하세요',
       }),
     ]);
+  });
+
+  test('결제가 아닌 알림(광고 등)은 넣지 않는다', async () => {
+    const db = testDb();
+    expect(await syncInbox(db, [raw('이번 달 결제 예정 금액을 확인하세요')], NOW)).toBe(0);
+    expect(await rows(db)).toEqual([]);
   });
 
   test('취소가 대기 중인 승인과 짝이 맞으면 둘 다 처리한다', async () => {
@@ -168,6 +174,31 @@ describe('inboxView', () => {
     await syncInbox(db, [raw('취소 4,500원 10/03 14:30 스타벅스 역삼점')], NOW);
     const [item] = await inboxView(db, CATEGORIES);
     expect(item.paired).toMatchObject({ date: '2026-09-28', amount: 4500, memo: '스타벅스' });
+  });
+});
+
+describe('결제대행사', () => {
+  test('결제대행사 승인은 추천하지 않고 LLM에 묻지도 않는다. 시트가 이유를 쓸 수 있게 표시한다', async () => {
+    const db = testDb();
+    await addTransaction(
+      db,
+      expense({ merchant: '비바리퍼블리카', memo: '비바리퍼블리카', categoryId: 1 }),
+    );
+    await syncInbox(db, [raw('승인 8,400원 10/03 13:45 비바리퍼블리카')], NOW);
+    const [item] = await inboxView(db, CATEGORIES);
+    expect(item).toMatchObject({ gateway: true, needsSuggestion: false });
+    expect(item.suggestion).toBeUndefined();
+  });
+
+  test('결제대행사 결제를 메모로 고쳐 저장하면 그 메모가 다음 추천의 자료가 된다', async () => {
+    const db = testDb();
+    await addTransaction(
+      db,
+      expense({ merchant: '비바리퍼블리카', memo: '교보문고', categoryId: 8 }),
+    );
+    await syncInbox(db, [raw('승인 15,000원 10/03 18:00 교보문고')], NOW);
+    const [item] = await inboxView(db, [...CATEGORIES, { id: 8, name: '문화·여가' }]);
+    expect(item.suggestion).toEqual({ categoryId: 8, source: 'exact' });
   });
 });
 

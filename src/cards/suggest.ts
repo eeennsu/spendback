@@ -1,5 +1,5 @@
 import type { Generate } from '../retro/narrate';
-import { type Known, normalizeMerchant } from './merchant';
+import { type Known, isPaymentGateway, normalizeMerchant } from './merchant';
 import { type Category, categoryGrammar, categoryMessages, representatives } from './prompt';
 import { MIN_SCORE, findSimilar } from './similar';
 
@@ -17,8 +17,12 @@ export type Context = 'none' | 'similar' | 'representatives';
 /** 비슷한 가맹점을 몇 곳 넣을지 */
 export const EXAMPLES = 5;
 
-/** 1단계: 정규화한 이름이 전에 적은 가맹점과 같으면 그 가맹점의 가장 최근 카테고리. 숨긴 카테고리는 쓰지 않는다 */
+/**
+ * 1단계: 정규화한 이름이 전에 적은 가맹점과 같으면 그 가맹점의 가장 최근 카테고리. 숨긴 카테고리는 쓰지 않는다.
+ * 결제대행사는 가게를 알 수 없어 쓰지 않는다(PRD 4.9)
+ */
 export function exactMatch(merchant: string, known: Known[], categories: Category[]) {
+  if (isPaymentGateway(merchant)) return undefined;
   const name = normalizeMerchant(merchant);
   const visible = new Set(categories.map(c => c.id));
   return known.find(m => m.name === name && visible.has(m.categoryId))?.categoryId;
@@ -45,6 +49,8 @@ export async function suggestCategory({
   /** 예시로 넣을 최소 점수. 하네스가 비교한다 */
   minScore?: number;
 }): Promise<Suggestion | undefined> {
+  // 결제대행사는 가게를 알 수 없어 추천하지 않는다(PRD 4.9)
+  if (isPaymentGateway(merchant)) return undefined;
   const exact = exactMatch(merchant, known, categories);
   if (exact !== undefined) return { categoryId: exact, source: 'exact' };
   if (!generate) return undefined;

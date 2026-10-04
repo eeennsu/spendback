@@ -45,11 +45,12 @@ export function pruneInbox(db: Db, before: number) {
     .where(and(ne(cardInbox.status, 'pending'), lt(cardInbox.postedAt, before)));
 }
 
-/** 가맹점이 있는 지출(최근 것 먼저). 정확 일치와 검색의 자료다 */
+/** 가맹점이 있는 지출(최근 것 먼저). 정확 일치와 검색의 자료다. 결제대행사 결제는 메모를 가게 이름으로 쓴다 */
 export function merchantHistory(db: Db) {
   return db
     .select({
       merchant: sql<string>`${transactions.merchant}`,
+      memo: transactions.memo,
       categoryId: transactions.categoryId,
     })
     .from(transactions)

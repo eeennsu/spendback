@@ -2,16 +2,19 @@ import { daysInMonth } from '../domain/date';
 
 /**
  * 카드 알림 읽기(PRD 4.9). 금액·가맹점·날짜·승인/취소는 코드가 카드 앱마다 정한 형식으로 읽는다. LLM은 쓰지 않는다
- * (PRD 13장). 형식에 맞지 않는 알림은 버리지 않고 "읽지 못한 알림"으로 보여 준다. 카드사가 문구를 바꾸면 바로 드러난다.
+ * (PRD 13장). 결제가 아닌 알림(광고, 혜택 안내)은 버리고, 결제 알림인데 형식에 맞지 않으면 "읽지 못한 알림"으로 보여
+ * 준다. 카드사가 결제 알림의 문구를 바꾸면 바로 드러난다.
  *
- * 카드사 형식은 사용자의 실제 알림 샘플을 받아 FORMATS에 더한다(PRD 11장). 지금은 adb로 흉내 내는 개발용 형식만 있다.
+ * 카드사 형식은 사용자의 실제 알림 샘플을 받아 FORMATS에 더한다(PRD 11장).
  */
 
 /** 네이티브 서비스가 대기열에 적은 원문 */
 export type RawNotification = { app: string; title: string; text: string; postedAt: number };
 export type CardNotification =
   | { kind: 'approval' | 'cancel'; amount: number; merchant: string; date: string }
-  | { kind: 'unreadable' };
+  | { kind: 'unreadable' }
+  /** 결제 알림이 아니다. 대기열에 넣지 않는다 */
+  | { kind: 'ignored' };
 
 /** 형식이 읽은 값. 연도는 알림에 없어 받은 시각으로 정한다 */
 type Read = {
@@ -30,6 +33,22 @@ type Format = { name: string; read: (title: string, text: string) => Read | unde
 export const DEV_APP = 'com.android.shell';
 const DEV_FORMAT = /^(승인|취소) ([\d,]+)원 (\d{1,2})\/(\d{1,2}) \d{1,2}:\d{2} (.+)$/;
 
+/**
+ * 신한 SOL페이 앱 푸시(2026-10-04 실제 알림). 제목은 "[신한카드]"이고 본문은 줄마다 이름표가 붙어 있다.
+ *   [신한카드(1234)승인] 홍*동
+ *   - 승인금액: 8,400원(일시불)
+ *   - 승인일시: 10/04 13:45
+ *   - 가맹점명: 비바리퍼블리카
+ *   - 누적금액: 123,456원
+ * 누적금액도 "원"으로 끝나 이름표로만 결제 금액을 고른다. 취소는 샘플이 아직 없어 읽지 못한 알림으로 뜬다
+ */
+const SHINHAN = {
+  approval: /\[신한카드\(\d+\)승인\]/,
+  amount: /승인금액:\s*([\d,]+)원/,
+  date: /승인일시:\s*(\d{1,2})\/(\d{1,2})/,
+  merchant: /가맹점명:\s*(.+)/,
+};
+
 /** 카드 앱(패키지명)마다 형식 */
 const FORMATS: Record<string, Format> = {
   [DEV_APP]: {
@@ -45,6 +64,22 @@ const FORMATS: Record<string, Format> = {
             day: m[4],
           }
         : undefined;
+    },
+  },
+  'com.shcard.smartpay': {
+    name: '신한카드',
+    read: (_title, text) => {
+      const amount = SHINHAN.amount.exec(text);
+      const date = SHINHAN.date.exec(text);
+      const merchant = SHINHAN.merchant.exec(text);
+      if (!SHINHAN.approval.test(text) || !amount || !date || !merchant) return undefined;
+      return {
+        kind: 'approval',
+        amount: amount[1],
+        merchant: merchant[1],
+        month: date[1],
+        day: date[2],
+      };
     },
   },
 };
@@ -68,7 +103,14 @@ function dateOf(month: number, day: number, postedAt: number) {
   return `${year}-${pad(month)}-${pad(day)}`;
 }
 
+/** "(광고)"는 법으로 정해진 광고 표기다. 승인·취소 낱말이 없는 알림도 결제 알림이 아니다(명세서, 혜택 안내) */
+const AD = /^\s*\(광고\)/;
+const PAYMENT = /승인|취소/;
+const isPayment = (raw: RawNotification) =>
+  !AD.test(raw.title) && !AD.test(raw.text) && PAYMENT.test(`${raw.title}\n${raw.text}`);
+
 export function parseCardNotification(raw: RawNotification): CardNotification {
+  if (!isPayment(raw)) return { kind: 'ignored' };
   const read = FORMATS[raw.app]?.read(raw.title, raw.text);
   if (!read) return { kind: 'unreadable' };
   const amount = Number(read.amount.replace(/,/g, ''));

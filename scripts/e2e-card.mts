@@ -49,7 +49,7 @@ run('maestro', ['test', '.maestro/card/open.yaml']);
 run('adb', ['shell', 'cmd', 'notification', 'allow_listener', LISTENER]);
 await wait(3000);
 post('e2e-approve', `승인 12,300원 ${day} 12:00 스타벅스 역삼점`);
-post('e2e-unreadable', '결제 예정 금액 안내');
+post('e2e-unreadable', '승인 거절 안내');
 run('maestro', ['test', '.maestro/card/approve.yaml']);
 post('e2e-again', `승인 4,500원 ${day} 12:10 스타벅스 역삼점`);
 post('e2e-cancel', `취소 12,300원 ${day} 12:20 스타벅스 역삼점`);

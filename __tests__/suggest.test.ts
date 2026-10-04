@@ -1,6 +1,6 @@
 import { knownMerchants } from '../src/cards/merchant';
 import { categoryGrammar, categoryMessages, representatives } from '../src/cards/prompt';
-import { suggestCategory } from '../src/cards/suggest';
+import { exactMatch, suggestCategory } from '../src/cards/suggest';
 import { fakeGenerate } from '../src/retro/fake';
 
 const CATEGORIES = [
@@ -153,6 +153,26 @@ describe('suggestCategory', () => {
       generate: fake.generate,
     });
     expect(suggestion).toBeUndefined();
+  });
+
+  test('결제대행사면 정확 일치도 LLM도 쓰지 않고 추천하지 않는다', async () => {
+    const fake = fakeGenerate(['배달']);
+    const pg = knownMerchants([{ merchant: '쿠팡이츠', categoryId: 3 }]);
+    const suggestion = await suggestCategory({
+      merchant: '비바리퍼블리카',
+      known: pg,
+      categories: CATEGORIES,
+      generate: fake.generate,
+    });
+    expect(suggestion).toBeUndefined();
+    expect(fake.calls).toHaveLength(0);
+    expect(
+      exactMatch(
+        '비바리퍼블리카',
+        [{ name: '비바리퍼블리카', categoryId: 1, count: 3 }],
+        CATEGORIES,
+      ),
+    ).toBeUndefined();
   });
 
   test('모델이 없으면 처음 보는 가맹점은 추천하지 않는다', async () => {

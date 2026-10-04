@@ -1,4 +1,9 @@
-import { knownMerchants, nameGrams, normalizeMerchant } from '../src/cards/merchant';
+import {
+  isPaymentGateway,
+  knownMerchants,
+  nameGrams,
+  normalizeMerchant,
+} from '../src/cards/merchant';
 
 describe('normalizeMerchant', () => {
   test('앞뒤 공백을 지우고 사이 공백을 하나로 줄인다', () => {
@@ -58,5 +63,40 @@ describe('knownMerchants', () => {
 
   test('빈 이름은 뺀다', () => {
     expect(knownMerchants([{ merchant: ' (주) ', categoryId: 1 }])).toEqual([]);
+  });
+});
+
+describe('isPaymentGateway', () => {
+  test('결제대행사 이름이면 참이다. 법인 표기·띄어쓰기·대소문자는 보지 않는다', () => {
+    for (const name of [
+      '비바리퍼블리카',
+      '(주)비바리퍼블리카',
+      '네이버파이낸셜',
+      '카카오페이',
+      'KG이니시스',
+      'nhn kcp',
+    ]) {
+      expect(isPaymentGateway(name)).toBe(true);
+    }
+  });
+
+  test('가게 이름이면 거짓이다', () => {
+    for (const name of ['스타벅스 역삼점', '교촌치킨', '쿠팡'])
+      expect(isPaymentGateway(name)).toBe(false);
+  });
+});
+
+describe('knownMerchants와 결제대행사', () => {
+  test('가맹점이 결제대행사면 사용자가 고친 메모를 가게 이름으로 쓰고, 고치지 않았으면 뺀다', () => {
+    const known = knownMerchants([
+      { merchant: '비바리퍼블리카', memo: '교보문고', categoryId: 8 },
+      { merchant: '비바리퍼블리카', memo: '비바리퍼블리카', categoryId: 1 },
+      { merchant: '카카오페이', memo: null, categoryId: 2 },
+      { merchant: '스타벅스 역삼점', memo: '커피', categoryId: 2 },
+    ]);
+    expect(known).toEqual([
+      { name: '교보문고', categoryId: 8, count: 1 },
+      { name: '스타벅스 역삼점', categoryId: 2, count: 1 },
+    ]);
   });
 });

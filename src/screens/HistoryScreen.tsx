@@ -1,6 +1,6 @@
 import { Badge, Button, Chip, Stack, Text } from '@eeennsu/native';
 import { useNavigation, useScrollToTop } from '@react-navigation/native';
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { FlatList } from 'react-native';
 import { Text as RNText, View } from 'react-native-css/components';
 
@@ -37,7 +37,7 @@ type Entry = {
 };
 
 /**
- * 내역(PRD 4.5, docs/DESIGN.md 4.4). 위에 달 옮기기(‹ ›)와 기간 합계, 적용 중인 조건, 목록/카테고리 보기.
+ * 내역(PRD 4.5, docs/DESIGN.md 4.4). 헤더 가운데에 달 옮기기(‹ 10월 ›), 위에 기간 합계, 적용 중인 조건, 목록/카테고리 보기.
  * 목록은 날짜별 묶음이고 줄을 누르면 수정 시트다. 카테고리 보기는 도넛과 표이고 줄을 누르면 그 카테고리의 목록이다
  */
 export function HistoryScreen() {
@@ -63,13 +63,46 @@ export function HistoryScreen() {
     { keepPrevious: true },
   );
 
+  const month = viewedMonth(filter, today);
+  const label = rangeLabel(filter, today);
+  const first = data?.first;
+  // 달이나 조건이 바뀌면 새 목록을 맨 위에서 연다. 달 줄은 헤더라 깊이 내려간 채 옮길 수 있다
+  const toTop = () => list.current?.scrollToOffset({ offset: 0, animated: false });
+
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerTitle: () =>
+        filter.period === 'custom' ? (
+          <Text heading='2' size='md' className='tabular-nums'>
+            {label}
+          </Text>
+        ) : (
+          <MonthNav
+            month={month}
+            today={today}
+            first={first}
+            onChange={next => {
+              showMonth(next, today);
+              list.current?.scrollToOffset({ offset: 0, animated: false });
+            }}
+          />
+        ),
       headerRight: () => (
         <HeaderAction label='필터' onPress={() => navigation.navigate('HistoryFilter')} />
       ),
     });
-  }, [navigation]);
+  }, [navigation, filter.period, label, month, today, first, showMonth]);
+
+  // 내역 탭을 보고 있을 때 탭을 다시 누르면 맨 위(useScrollToTop)와 함께 이번 달로 돌아온다. 헤더에 "이번 달" 자리가 없다
+  useEffect(
+    () =>
+      navigation.addListener('tabPress' as never, () => {
+        const state = useHistoryFilter.getState();
+        if (navigation.isFocused() && state.filter.period === 'month' && state.filter.month)
+          state.showMonth(today.slice(0, 7), today);
+      }),
+    [navigation, today],
+  );
 
   if (!data || !lists) return <View className='flex-1 bg-canvas' />;
 
@@ -90,11 +123,6 @@ export function HistoryScreen() {
     ...filter.categoryIds.map(category),
     ...filter.reasonTagIds.map(id => lists.names.reasonTags.get(id) ?? '태그'),
   ].filter((s): s is string => s !== undefined);
-  const month = viewedMonth(filter, today);
-  const label = rangeLabel(filter, today);
-  // 달이나 조건이 바뀌면 새 목록을 맨 위에서 연다. 달 줄은 고정이라 깊이 내려간 채 옮길 수 있다
-  const toTop = () => list.current?.scrollToOffset({ offset: 0, animated: false });
-
   const header = (
     <Stack className='gap-3 pb-2'>
       {/* 보기 칩은 합계 오른쪽에 둬 머리를 한 단 줄인다. 큰 글자에서는 합계 아래로 내려간다 */}
@@ -147,26 +175,6 @@ export function HistoryScreen() {
   const thisMonth = month === today.slice(0, 7);
   return (
     <View className='flex-1 bg-canvas'>
-      {/* 달 줄은 목록 밖에 둬 스크롤해도 남는다. 끈적한 날짜 머리는 그 아래에 붙는다 */}
-      <View className='px-4'>
-        {filter.period === 'custom' ? (
-          <View className='min-h-12 justify-center'>
-            <Text heading='2' size='lg' className='tabular-nums'>
-              {label}
-            </Text>
-          </View>
-        ) : (
-          <MonthNav
-            month={month}
-            today={today}
-            first={data.first}
-            onChange={next => {
-              showMonth(next, today);
-              toTop();
-            }}
-          />
-        )}
-      </View>
       <FlatList
         ref={list}
         className='flex-1 bg-canvas'
@@ -242,9 +250,8 @@ export function HistoryScreen() {
 }
 
 /**
- * 달 이름과 ‹ ›(DESIGN.md 4.4). 머티리얼 날짜 선택기처럼 이름은 왼쪽, 화살표는 오른쪽 엄지 자리에 둔다.
- * 첫 기록의 달보다 앞, 이번 달보다 뒤로는 가지 않는다(입력 시트가 오늘 뒤의 날짜를 막는다).
- * 지난 달을 보는 중이면 "이번 달"로 한 번에 돌아온다
+ * 헤더 가운데의 ‹ 10월 ›(DESIGN.md 4.4). 첫 기록의 달보다 앞, 이번 달보다 뒤로는 가지 않는다(입력 시트가 오늘 뒤의
+ * 날짜를 막는다). 이번 달로 한 번에 돌아오는 것은 내역 탭 다시 누르기다
  */
 function MonthNav({
   month,
@@ -260,31 +267,26 @@ function MonthNav({
   const current = today.slice(0, 7);
   const earliest = first !== undefined && first.slice(0, 7) < current ? first.slice(0, 7) : current;
   return (
-    <Stack direction='row' align='center' className='gap-1'>
-      {/* 달이 바뀌면 스크린 리더가 새 달을 읽는다. live region은 늘 있는 View에서 글자만 바꾼다(DESIGN.md 3.7) */}
-      <View accessibilityLiveRegion='polite' collapsable={false} className='flex-1'>
-        <Text heading='2' size='lg'>
-          {monthLabel(month, today)}
-        </Text>
-      </View>
-      {month !== current && (
-        <Button label='이번 달' variant='ghost' size='sm' onPress={() => onChange(current)} />
-      )}
+    <Stack direction='row' align='center'>
       <IconButton
         icon='chevron-left'
         label='이전 달'
         disabled={month <= earliest}
         onPress={() => onChange(addMonths(month, -1))}
       />
-      {/* 화살표 그림의 오른쪽 끝을 화면 여백(16)에 맞춘다. 누름 영역 48의 안쪽 여백이 12다 */}
-      <View className='-mr-3'>
-        <IconButton
-          icon='chevron-right'
-          label='다음 달'
-          disabled={month >= current}
-          onPress={() => onChange(addMonths(month, 1))}
-        />
+      {/* 달이 바뀌면 스크린 리더가 새 달을 읽는다. live region은 늘 있는 View에서 글자만 바꾼다(DESIGN.md 3.7).
+          "9월"과 "10월"의 폭 차이로 화살표가 움직이지 않게 가장 흔한 폭을 잡는다 */}
+      <View accessibilityLiveRegion='polite' collapsable={false} className='min-w-16 items-center'>
+        <Text heading='2' size='lg' className='tabular-nums'>
+          {monthLabel(month, today)}
+        </Text>
       </View>
+      <IconButton
+        icon='chevron-right'
+        label='다음 달'
+        disabled={month >= current}
+        onPress={() => onChange(addMonths(month, 1))}
+      />
     </Stack>
   );
 }
@@ -419,20 +421,23 @@ function HistoryItem({
 }) {
   const item = entry.tx;
   if (!item) {
-    // 머리 위를 줄 사이(24)보다 넓게(36) 띄워 하루씩 묶여 보이게 한다. 합계는 줄 금액과 같은 오른쪽 열이다
+    // 하루마다 위에 구분선을 긋는다. 선 위 24(앞 줄 여백 12 + 12), 선 아래 16이라 선이 아래 날짜에 붙는다.
+    // 줄 사이에는 긋지 않는다. 합계는 줄 금액과 같은 오른쪽 열이다. 끈적하게 붙으면 선이 헤더 아래 경계가 된다
     return (
       <View
         accessible
         accessibilityRole='header'
         accessibilityLabel={sectionTitle(entry.section)}
-        className='flex-row justify-between gap-3 bg-canvas pb-1 pt-6'
+        className='bg-canvas pt-3'
       >
-        <Text size='sm' tone='muted'>
-          {formatDate(entry.section.date)}
-        </Text>
-        <Text size='sm' tone='muted' className='tabular-nums'>
-          {sectionAmount(entry.section)}
-        </Text>
+        <View className='flex-row justify-between gap-3 border-t border-border pb-1 pt-4'>
+          <Text size='sm' tone='muted'>
+            {formatDate(entry.section.date)}
+          </Text>
+          <Text size='sm' tone='muted' className='tabular-nums'>
+            {sectionAmount(entry.section)}
+          </Text>
+        </View>
       </View>
     );
   }

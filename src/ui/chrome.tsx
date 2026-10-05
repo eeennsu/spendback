@@ -57,7 +57,23 @@ export function HeaderAction({ label, onPress }: { label: string; onPress: () =>
   );
 }
 
-function Bar({ back, title, right }: { back?: () => void; title: string; right?: ReactNode }) {
+// 자신은 터치를 받지 않고 자식만 받는다. Tailwind에 box-none 클래스가 없다
+const PASS_THROUGH = { pointerEvents: 'box-none' } as const;
+
+/**
+ * center는 제목·오른쪽 버튼과 상관없이 화면 가운데에 둔다(내역의 ‹ 10월 ›). 스크린 리더는 제목 · 가운데 · 오른쪽 순서로 읽는다
+ */
+function Bar({
+  back,
+  title,
+  center,
+  right,
+}: {
+  back?: () => void;
+  title: string;
+  center?: ReactNode;
+  right?: ReactNode;
+}) {
   const insets = useSafeAreaInsets();
   return (
     <View className='bg-canvas' style={{ paddingTop: insets.top }}>
@@ -78,6 +94,12 @@ function Bar({ back, title, right }: { back?: () => void; title: string; right?:
             {title}
           </Text>
         </View>
+        {center !== undefined && (
+          // 줄 전체를 덮지만 가운데 내용 밖의 터치는 제목과 오른쪽 버튼으로 흘려보낸다
+          <View className='absolute inset-0 items-center justify-center' style={PASS_THROUGH}>
+            {center}
+          </View>
+        )}
         {right}
       </View>
     </View>
@@ -95,8 +117,18 @@ export function StackHeader({ navigation, options, route, back }: NativeStackHea
 }
 
 export function TabHeader({ options, route }: BottomTabHeaderProps) {
+  const title = options.title ?? route.name;
   return (
-    <Bar title={options.title ?? route.name} right={options.headerRight?.({ canGoBack: false })} />
+    <Bar
+      title={title}
+      // 화면이 headerTitle을 함수로 주면 제목은 그대로 두고 가운데에 그린다
+      center={
+        typeof options.headerTitle === 'function'
+          ? options.headerTitle({ children: title })
+          : undefined
+      }
+      right={options.headerRight?.({ canGoBack: false })}
+    />
   );
 }
 

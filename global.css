@@ -5,3 +5,33 @@
  * :root 와 @media (prefers-color-scheme: dark) { :root } 두 블록에 짝으로 쓴다(C-5b, DS 알려진 동작 15).
  */
 @import '@eeennsu/native/themes/base.css';
+
+/*
+ * 차트 색(docs/DESIGN.md 2장, 4.4). DS에 차트 색이 없어 앱이 새 토큰으로 더한다. DS 색을 재선언하는 것이 아니다.
+ * 카테고리 도넛의 2~5번째 조각이고, 1번째는 brand, "그 외"는 fg-muted다. dataviz 기준 팔레트의 주황 · 청록 · 노랑 · 분홍을
+ * 이 순서로 쓴다. brand와 함께 둘레를 따라 이웃한 쌍(5번째와 1번째 포함)을 검사기(validate_palette.js)로 쟀다:
+ * 라이트(카드 #ffffff) 색약 ΔE 9.1 이상 · 정상 시각 19.6 이상, 다크(카드 #18181b) 8.4 이상 · 19.3 이상, 다크 대비 모두 3:1 이상.
+ * 라이트의 청록 · 노랑 · 분홍은 카드와 3:1 미만이라 조각마다 %를 적고 같은 값의 표를 둔다
+ */
+:root {
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --chart-2: #d95926;
+    --chart-3: #199e70;
+    --chart-4: #c98500;
+    --chart-5: #d55181;
+  }
+}
+
+@theme {
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}

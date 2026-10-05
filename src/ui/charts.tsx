@@ -32,12 +32,23 @@ function Label(props: React.ComponentProps<typeof SvgText> & { className: string
   return useCssElement(SvgText, props, fillMapping);
 }
 
-/** 가장 큰 조각만 brand, 나머지는 회색 단계다. 순서대로 옅어진다 */
-const GRAY_STEPS = [0.75, 0.55, 0.4, 0.28, 0.18];
+/**
+ * 조각 색. 큰 순서로 brand · 주황 · 청록 · 노랑 · 분홍(global.css의 차트 색)이고, 6번째("그 외 N개")는 옅은 회색이다.
+ * 처음에는 가장 큰 조각만 brand이고 나머지를 회색 단계로 두었는데, 3번째부터 서로 구분되지 않았다(2026-10-05 사용자).
+ * Tailwind는 글자 그대로 있는 클래스만 만들어 표로 둔다
+ */
+const SLICE_CLASSES = [
+  'stroke-brand',
+  'stroke-chart-2',
+  'stroke-chart-3',
+  'stroke-chart-4',
+  'stroke-chart-5',
+] as const;
+/** "그 외"의 회색. 색 조각보다 물러나 보이게 옅게 둔다 */
+const REST_OPACITY = 0.45;
 
-const sliceClass = (i: number) => (i === 0 ? 'stroke-brand' : 'stroke-fg-muted');
-const sliceOpacity = (i: number) =>
-  i === 0 ? 1 : GRAY_STEPS[Math.min(i - 1, GRAY_STEPS.length - 1)];
+const sliceClass = (i: number) => SLICE_CLASSES[i] ?? 'stroke-fg-muted';
+const sliceOpacity = (i: number) => (i < SLICE_CLASSES.length ? 1 : REST_OPACITY);
 
 /** 조각 색 견본. 표의 줄 앞에 두어 조각과 줄을 잇는다(같은 %가 둘이어도 구분된다). 스크린 리더는 줄 글자를 읽는다 */
 export function Swatch({ index }: { index: number }) {
@@ -54,7 +65,7 @@ export function Swatch({ index }: { index: number }) {
           strokeWidth={6}
         />
         {/* 옅은 회색 견본도 카드 바탕에서 보이게 테두리를 긋는다(5차 028) */}
-        {index > 0 && (
+        {index >= SLICE_CLASSES.length && (
           <Ring className='stroke-border' cx={6} cy={6} r={5.5} fill='none' strokeWidth={1} />
         )}
       </Svg>
@@ -65,7 +76,10 @@ export function Swatch({ index }: { index: number }) {
 /** key는 이름이 아니라 카테고리 id로 만든다. 이름은 겹칠 수 있다 */
 export type Slice = { key: string; label: string; amount: number };
 
-/** 카테고리 도넛. 조각마다 바깥에 %를 적고, 같은 값의 표가 차트의 대체 텍스트다(DESIGN.md 4.4) */
+/**
+ * 카테고리 도넛. 조각마다 바깥에 %를 적고, 같은 값의 표가 차트의 대체 텍스트다(DESIGN.md 4.4). 색은 순위를 따른다:
+ * 카테고리가 열 개 넘게 있어 카테고리마다 색을 고정하면 다섯 색이 겹친다. 표의 견본이 조각과 이름을 잇는다
+ */
 export function Donut({ slices, percents }: { slices: Slice[]; percents: string[] }) {
   const size = 200;
   const width = 26;

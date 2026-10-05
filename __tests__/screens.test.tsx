@@ -1,6 +1,6 @@
 import { usePreventRemove } from '@react-navigation/native';
-import { fireEvent, render, screen, within } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
+import { type ReactElement, type ReactNode, useState } from 'react';
 
 import { registerGlobalCss } from '../jest/css';
 import { db } from '../src/db';
@@ -33,6 +33,8 @@ const mockNavigation = {
   goBack: jest.fn(),
   setOptions: jest.fn(),
   dispatch: jest.fn(),
+  addListener: jest.fn((_event: string, _listener: () => void) => () => undefined),
+  isFocused: jest.fn(() => true),
 };
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
@@ -332,6 +334,21 @@ describe('입력 시트', () => {
 
 describe('내역', () => {
   beforeEach(() => useHistoryFilter.getState().reset());
+  afterEach(() => mockNavigation.setOptions.mockReset());
+
+  /** 헤더 가운데(‹ 10월 ›)는 화면이 setOptions로 넘긴다. 내비게이터 대신 그 headerTitle을 화면 위에 그린다 */
+  function WithHeader() {
+    const [title, setTitle] = useState<() => ReactNode>();
+    mockNavigation.setOptions.mockImplementation((options: { headerTitle?: () => ReactNode }) => {
+      if (options.headerTitle) setTitle(() => options.headerTitle);
+    });
+    return (
+      <>
+        {title?.()}
+        <HistoryScreen />
+      </>
+    );
+  }
 
   test('이번 달이 비었으면 필터 결과가 아니라 달의 빈 상태와 지난 달 보기를 보인다', async () => {
     await addTransaction(db, expense({ memo: '점심 순대국', date: '2026-08-20' }));
@@ -346,14 +363,13 @@ describe('내역', () => {
     expect(screen.getByText('점심 순대국')).toBeOnTheScreen();
   });
 
-  test('‹ ›로 달을 옮기고, 첫 기록의 달과 이번 달에서 멈추고, "이번 달"로 돌아온다', async () => {
+  test('헤더의 ‹ ›로 달을 옮기고, 첫 기록의 달과 이번 달에서 멈추고, 탭을 다시 누르면 이번 달로 돌아온다', async () => {
     await addTransaction(db, expense({ memo: '점심 순대국', date: '2026-09-10' }));
     await addTransaction(db, expense({ memo: '다이소 수납함', amount: 7000, date: '2026-08-03' }));
-    await mount(<HistoryScreen />);
+    await mount(<WithHeader />);
 
     expect(await screen.findByLabelText('9월 지출 9,500원')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: '다음 달' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: '이번 달' })).toBeNull();
+    expect(await screen.findByRole('button', { name: '다음 달' })).toBeDisabled();
 
     await fireEvent.press(screen.getByRole('button', { name: '이전 달' }));
     expect(await screen.findByLabelText('8월 지출 7,000원')).toBeOnTheScreen();
@@ -364,7 +380,10 @@ describe('내역', () => {
     // 첫 기록의 달이라 더 앞으로 가지 않는다
     expect(screen.getByRole('button', { name: '이전 달' })).toBeDisabled();
 
-    await fireEvent.press(screen.getByRole('button', { name: '이번 달' }));
+    const tabPress = [...mockNavigation.addListener.mock.calls]
+      .reverse()
+      .find(([event]) => event === 'tabPress');
+    await act(async () => tabPress?.[1]());
     expect(await screen.findByLabelText('9월 지출 9,500원')).toBeOnTheScreen();
   });
 

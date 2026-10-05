@@ -2,6 +2,8 @@ import {
   amountText,
   editAmount,
   groupByDate,
+  leadingEmoji,
+  sectionAmount,
   relativeDate,
   sectionTitle,
 } from '../src/domain/entry';
@@ -64,6 +66,33 @@ describe('groupByDate', () => {
     expect(sectionTitle({ date: '2026-09-25', expense: 0, income: 3200000 })).toBe(
       '9월 25일 금요일 · +3,200,000원',
     );
+  });
+});
+
+describe('sectionAmount', () => {
+  test('지출이 있으면 지출, 수입만 있으면 +수입', () => {
+    expect(sectionAmount({ date: '2026-09-24', expense: 23400, income: 30000 })).toBe('23,400원');
+    expect(sectionAmount({ date: '2026-09-25', expense: 0, income: 3200000 })).toBe('+3,200,000원');
+  });
+});
+
+describe('leadingEmoji', () => {
+  test.each([
+    ['💰 개인 용돈', '💰', '개인 용돈'],
+    ['🚇교통비', '🚇', '교통비'],
+    ['🫂 친구', '🫂', '친구'],
+    ['🏠 월세 + 모든 관리비', '🏠', '월세 + 모든 관리비'],
+    ['☕️ 카페', '☕️', '카페'],
+    ['👨‍👩‍👧 가족', '👨‍👩‍👧', '가족'],
+    ['👍🏽 칭찬', '👍🏽', '칭찬'],
+  ])('%s → 이모지와 나머지', (name, emoji, rest) => {
+    expect(leadingEmoji(name)).toEqual({ emoji, rest });
+  });
+
+  test('앞에 이모지가 없거나 이모지뿐이면 그대로 둔다', () => {
+    expect(leadingEmoji('식비')).toEqual({ rest: '식비' });
+    expect(leadingEmoji('카페 ☕')).toEqual({ rest: '카페 ☕' });
+    expect(leadingEmoji('🍜')).toEqual({ rest: '🍜' });
   });
 });
 

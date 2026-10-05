@@ -19,17 +19,25 @@ export function IconButton({
   icon,
   label,
   onPress,
+  disabled = false,
 }: {
   icon: IconName;
   label: string;
   onPress: () => void;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole='button'
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      className='h-12 w-12 items-center justify-center rounded-full active:bg-surface-hover'
+      // 흐려 보이는 것은 DS Button의 비활성(opacity-50)과 같다
+      className={cn(
+        'h-12 w-12 items-center justify-center rounded-full active:bg-surface-hover',
+        disabled && 'opacity-50',
+      )}
     >
       <Icon name={icon} />
     </Pressable>

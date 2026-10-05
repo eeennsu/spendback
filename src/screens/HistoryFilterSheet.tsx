@@ -9,13 +9,14 @@ import { useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { type HistoryFilterState, filterRange, useHistoryFilter } from '../state/ui';
 import { Choices, MultiChoices } from '../ui/layout';
+import { Prose } from '../ui/prose';
 import { Sheet } from '../ui/sheet';
 
 const md = (date: string) => `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일`;
 
 /**
- * 내역 필터 시트(PRD 4.5, docs/DESIGN.md 4.4). 기간(이번 달 · 지난 달 · 직접), 지출/수입, 카테고리, 이유 태그를
- * 고르고 "적용"으로 내역에 건다
+ * 내역 필터 시트(PRD 4.5, docs/DESIGN.md 4.4). 기간(월별 · 직접), 지출/수입, 카테고리, 이유 태그를 고르고
+ * "적용"으로 내역에 건다. 어느 달을 볼지는 내역 위의 ‹ ›가 맡는다
  */
 export function HistoryFilterSheet() {
   const navigation = useNavigation();
@@ -73,13 +74,17 @@ export function HistoryFilterSheet() {
         <Choices
           label='기간'
           options={[
-            { value: 'thisMonth', label: '이번 달' },
-            { value: 'lastMonth', label: '지난 달' },
+            { value: 'month', label: '월별' },
             { value: 'custom', label: '직접' },
           ]}
           value={draft.period}
           onChange={period => period && set({ period })}
         />
+        {draft.period === 'month' && (
+          <Prose size='sm' tone='muted' className='-mt-4'>
+            내역 위의 화살표로 달을 옮겨요
+          </Prose>
+        )}
         {draft.period === 'custom' && (
           <Stack className='gap-2'>
             <Label>범위</Label>

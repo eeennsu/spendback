@@ -20,6 +20,13 @@ export function addDays(date: string, days: number) {
   return new Date(toUtc(date) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
+/** 달을 더하고 뺀다("2026-01", -1 → "2025-12") */
+export function addMonths(month: string, months: number) {
+  const [year, m] = month.split('-').map(Number);
+  const index = year * 12 + (m - 1) + months;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, '0')}`;
+}
+
 export function daysInMonth(month: string) {
   const [year, m] = month.split('-').map(Number);
   // 다음 달의 0일은 이번 달 말일이다

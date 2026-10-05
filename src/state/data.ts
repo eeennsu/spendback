@@ -38,9 +38,14 @@ export const read = <T>(query: (db: Db) => Promise<T>) => query(db);
 
 /**
  * DB를 읽는다. key가 바뀌거나 무언가 쓰이면 다시 읽고, 다시 읽는 동안에는 같은 key의 이전 값을 보인다.
+ * keepPrevious면 key가 바뀐 뒤에도 새 값이 올 때까지 앞 key의 값을 보인다(내역의 달 옮기기가 빈 화면을 거치지 않게).
  * 로컬 DB라 읽기는 금방 끝나므로 로딩 표시를 두지 않는다(docs/DESIGN.md 3.6)
  */
-export function useQuery<T>(key: string, read: (db: Db) => Promise<T>): T | undefined {
+export function useQuery<T>(
+  key: string,
+  read: (db: Db) => Promise<T>,
+  { keepPrevious = false }: { keepPrevious?: boolean } = {},
+): T | undefined {
   const version = useDataStore(state => state.version);
   const [result, setResult] = useState<{ key: string; data: T }>();
   const load = useEffectEvent(() => read(db));
@@ -56,7 +61,7 @@ export function useQuery<T>(key: string, read: (db: Db) => Promise<T>): T | unde
     };
   }, [key, version]);
 
-  return result?.key === key ? result.data : undefined;
+  return keepPrevious || result?.key === key ? result?.data : undefined;
 }
 
 /** 오늘 날짜. 앱이 앞으로 올 때마다 다시 읽어 자정을 넘겨도 맞는다 */

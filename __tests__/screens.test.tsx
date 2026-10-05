@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { registerGlobalCss } from '../jest/css';
 import { db } from '../src/db';
 import { setBudget } from '../src/db/budgets';
-import { addFixedCost } from '../src/db/lists';
+import { addFixedCost, renameCategory } from '../src/db/lists';
 import { budgets, fixedCosts, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
 import { EntrySheet } from '../src/screens/EntrySheet';
@@ -342,15 +342,76 @@ describe('내역', () => {
     expect(screen.getByRole('button', { name: '기록하기' })).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: '지난 달 보기' }));
-    expect(await screen.findByText('8월 지출 9,500원')).toBeOnTheScreen();
+    expect(await screen.findByLabelText('8월 지출 9,500원')).toBeOnTheScreen();
     expect(screen.getByText('점심 순대국')).toBeOnTheScreen();
+  });
+
+  test('‹ ›로 달을 옮기고, 첫 기록의 달과 이번 달에서 멈추고, "이번 달"로 돌아온다', async () => {
+    await addTransaction(db, expense({ memo: '점심 순대국', date: '2026-09-10' }));
+    await addTransaction(db, expense({ memo: '다이소 수납함', amount: 7000, date: '2026-08-03' }));
+    await mount(<HistoryScreen />);
+
+    expect(await screen.findByLabelText('9월 지출 9,500원')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: '다음 달' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: '이번 달' })).toBeNull();
+
+    await fireEvent.press(screen.getByRole('button', { name: '이전 달' }));
+    expect(await screen.findByLabelText('8월 지출 7,000원')).toBeOnTheScreen();
+    expect(screen.getByText('다이소 수납함')).toBeOnTheScreen();
+    expect(screen.queryByText('점심 순대국')).toBeNull();
+    // 달을 옮긴 것은 필터가 아니라 조건 요약과 초기화를 보이지 않는다
+    expect(screen.queryByRole('button', { name: '초기화' })).toBeNull();
+    // 첫 기록의 달이라 더 앞으로 가지 않는다
+    expect(screen.getByRole('button', { name: '이전 달' })).toBeDisabled();
+
+    await fireEvent.press(screen.getByRole('button', { name: '이번 달' }));
+    expect(await screen.findByLabelText('9월 지출 9,500원')).toBeOnTheScreen();
+  });
+
+  test('줄은 카테고리 이모지를 왼쪽 칸에 떼어 두고, 결제수단은 카드가 아닐 때만 쓴다', async () => {
+    await renameCategory(db, 2, '💰 개인 용돈');
+    try {
+      await addTransaction(db, expense({ memo: '햄버거', categoryId: 2, paymentMethod: 'card' }));
+      await addTransaction(db, expense({ memo: '붕어빵', amount: 3000, paymentMethod: 'cash' }));
+      await mount(<HistoryScreen />);
+
+      const burger = await screen.findByRole('button', { name: '햄버거, 개인 용돈, 지출 9,500원' });
+      expect(within(burger).getByText('💰')).toBeOnTheScreen();
+      expect(within(burger).getByText('개인 용돈')).toBeOnTheScreen();
+      expect(within(burger).queryByText(/카드/)).toBeNull();
+      const bread = screen.getByRole('button', { name: '붕어빵, 식비 · 현금, 지출 3,000원' });
+      expect(within(bread).getByText('식비 · 현금')).toBeOnTheScreen();
+      // 날짜 머리는 날짜와 합계를 양 끝에 두고 한 줄로 읽힌다
+      expect(screen.getByRole('header', { name: '9월 24일 목요일 · 12,500원' })).toBeOnTheScreen();
+    } finally {
+      await renameCategory(db, 2, '카페·간식');
+    }
+  });
+
+  test('카테고리 보기는 도넛과 같은 값의 표이고, 줄을 누르면 그 카테고리의 목록으로 간다', async () => {
+    await addTransaction(db, expense({ memo: '점심 순대국', categoryId: 1 }));
+    await addTransaction(db, expense({ memo: '편의점 커피', categoryId: 2, amount: 4500 }));
+    await mount(<HistoryScreen />);
+
+    await fireEvent.press(await screen.findByRole('button', { name: '카테고리' }));
+    expect(await screen.findByText('카테고리별 지출')).toBeOnTheScreen();
+    expect(screen.queryByText('점심 순대국')).toBeNull();
+    expect(
+      screen.getByRole('button', { name: '카페·간식 32%, 4,500원, 내역 보기' }),
+    ).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: '식비 68%, 9,500원, 내역 보기' }));
+    expect(await screen.findByText('점심 순대국')).toBeOnTheScreen();
+    expect(screen.queryByText('편의점 커피')).toBeNull();
+    expect(screen.getByLabelText('9월 지출 9,500원')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: '초기화' })).toBeOnTheScreen();
   });
 
   test('필터 결과가 비면 필터 초기화를 보인다', async () => {
     await addTransaction(db, expense({ memo: '점심 순대국' }));
     useHistoryFilter
       .getState()
-      .apply({ period: 'thisMonth', type: 'income', categoryIds: [], reasonTagIds: [] });
+      .apply({ period: 'month', type: 'income', categoryIds: [], reasonTagIds: [] });
     await mount(<HistoryScreen />);
 
     expect(await screen.findByText('조건에 맞는 기록이 없어요')).toBeOnTheScreen();

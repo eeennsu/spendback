@@ -55,11 +55,64 @@ export function groupByDate<T extends Dated>(rows: T[]) {
   return sections;
 }
 
-/** 날짜 묶음 머리("9월 24일 목요일 · 23,400원"). 수입만 있는 날은 "+"를 붙인다 */
-export function sectionTitle(section: { date: string; expense: number; income: number }) {
-  const amount =
-    section.expense > 0
-      ? amountText(String(section.expense))
-      : `+${amountText(String(section.income))}`;
-  return `${formatDate(section.date)} · ${amount}원`;
+/**
+ * 카테고리별 합계(내역의 카테고리 보기, docs/DESIGN.md 4.4). 큰 것부터 limit개를 두고 나머지는 others로 묶는다.
+ * 회고 도넛과 같이 상위 5개다. 금액이 같으면 카테고리 id 순서라 그릴 때마다 순서가 같다
+ */
+export function categoryShares<T extends { categoryId: number; amount: number }>(
+  rows: T[],
+  limit = 5,
+) {
+  const sums = new Map<number, number>();
+  for (const row of rows) sums.set(row.categoryId, (sums.get(row.categoryId) ?? 0) + row.amount);
+  const sorted = [...sums]
+    .map(([categoryId, amount]) => ({ categoryId, amount }))
+    .sort((a, b) => b.amount - a.amount || a.categoryId - b.categoryId);
+  return { top: sorted.slice(0, limit), others: sorted.slice(limit) };
+}
+
+type Section = { date: string; expense: number; income: number };
+
+/** 날짜 묶음의 합계("23,400원"). 수입만 있는 날은 "+"를 붙인다 */
+export function sectionAmount(section: Section) {
+  return section.expense > 0
+    ? `${amountText(String(section.expense))}원`
+    : `+${amountText(String(section.income))}원`;
+}
+
+/** 날짜 묶음 머리를 한 줄로 읽은 것("9월 24일 목요일 · 23,400원"). 화면은 날짜와 합계를 양 끝에 나눠 둔다 */
+export function sectionTitle(section: Section) {
+  return `${formatDate(section.date)} · ${sectionAmount(section)}`;
+}
+
+// 그림 문자: 기호·딩뱃(2600~27BF), 기술 기호(2300~23FF), 화살표·별(2B00~2BFF), 그림 문자 판(1F000~1FAFF)
+const isPictograph = (cp: number) =>
+  (cp >= 0x2300 && cp <= 0x23ff) ||
+  (cp >= 0x2600 && cp <= 0x27bf) ||
+  (cp >= 0x2b00 && cp <= 0x2bff) ||
+  (cp >= 0x1f000 && cp <= 0x1faff);
+// 앞 글자에 붙는 것: 이모지 표시(FE0F), 키캡(20E3), 피부색(1F3FB~1F3FF), 태그(E0020~E007F)
+const isModifier = (cp: number) =>
+  cp === 0xfe0f ||
+  cp === 0x20e3 ||
+  (cp >= 0x1f3fb && cp <= 0x1f3ff) ||
+  (cp >= 0xe0020 && cp <= 0xe007f);
+
+/**
+ * 이름 맨 앞의 이모지를 떼어 낸다("💰 개인 용돈" → 💰, "개인 용돈"). 내역 줄이 카테고리 이모지를 왼쪽 칸에 따로 세운다
+ * (docs/DESIGN.md 4.4). ZWJ로 이은 이모지(👨‍👩‍👧)는 하나로 본다. 이모지뿐인 이름은 떼지 않는다.
+ * Hermes의 정규식 유니코드 속성(p{...}) 지원을 믿지 않고 코드 포인트로 본다
+ */
+export function leadingEmoji(name: string): { emoji?: string; rest: string } {
+  const chars = Array.from(name);
+  const cp = (i: number) => chars[i]?.codePointAt(0) ?? 0;
+  if (!isPictograph(cp(0))) return { rest: name };
+  let end = 1;
+  while (end < chars.length) {
+    if (isModifier(cp(end))) end += 1;
+    else if (cp(end) === 0x200d && isPictograph(cp(end + 1))) end += 2;
+    else break;
+  }
+  const rest = chars.slice(end).join('').trim();
+  return rest === '' ? { rest: name } : { emoji: chars.slice(0, end).join(''), rest };
 }

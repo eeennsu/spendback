@@ -1,17 +1,33 @@
-import { Badge, Button, Stack, Text } from '@eeennsu/native';
+import { Badge, Button, Chip, Stack, Text } from '@eeennsu/native';
 import { useNavigation, useScrollToTop } from '@react-navigation/native';
 import { useLayoutEffect, useRef } from 'react';
 import { FlatList } from 'react-native';
 import { Text as RNText, View } from 'react-native-css/components';
 
 import { type TransactionRow, filterTransactions, firstRecordDate } from '../db/transactions';
-import { groupByDate, sectionTitle } from '../domain/entry';
-import { formatWon } from '../domain/format';
+import { addMonths } from '../domain/date';
+import {
+  categoryShares,
+  groupByDate,
+  leadingEmoji,
+  sectionAmount,
+  sectionTitle,
+} from '../domain/entry';
+import { formatDate, formatPercent, formatWon } from '../domain/format';
 import { useQuery, useToday } from '../state/data';
 import { paymentLabel, useLists } from '../state/lists';
-import { EMPTY_FILTER, filterRange, isFiltered, rangeLabel, useHistoryFilter } from '../state/ui';
-import { HeaderAction } from '../ui/chrome';
-import { Empty, Row } from '../ui/layout';
+import {
+  filterRange,
+  isFiltered,
+  monthLabel,
+  previousMonth,
+  rangeLabel,
+  useHistoryFilter,
+  viewedMonth,
+} from '../state/ui';
+import { Donut, Swatch } from '../ui/charts';
+import { HeaderAction, IconButton } from '../ui/chrome';
+import { Empty, Row, Section } from '../ui/layout';
 import { Prose } from '../ui/prose';
 
 type Entry = {
@@ -21,26 +37,31 @@ type Entry = {
 };
 
 /**
- * 내역(PRD 4.5, docs/DESIGN.md 4.4). 위에 기간 합계와 적용 중인 필터, 아래에 날짜별 묶음. 줄을 누르면 수정 시트다
+ * 내역(PRD 4.5, docs/DESIGN.md 4.4). 위에 달 옮기기(‹ ›)와 기간 합계, 적용 중인 조건, 목록/카테고리 보기.
+ * 목록은 날짜별 묶음이고 줄을 누르면 수정 시트다. 카테고리 보기는 도넛과 표이고 줄을 누르면 그 카테고리의 목록이다
  */
 export function HistoryScreen() {
   const navigation = useNavigation();
   const today = useToday();
   const lists = useLists();
-  const { filter, apply, reset } = useHistoryFilter();
+  const { filter, apply, clear, showMonth, view, setView } = useHistoryFilter();
   // 고른 탭을 다시 누르면 맨 위로 간다
   const list = useRef<FlatList<Entry>>(null);
   useScrollToTop(list);
-  const range = filterRange(filter, today);
-  const data = useQuery(`history:${JSON.stringify(filter)}:${today}`, async db => ({
-    rows: await filterTransactions(db, {
-      ...range,
-      type: filter.type,
-      categoryIds: filter.categoryIds,
-      reasonTagIds: filter.reasonTagIds,
+  const data = useQuery(
+    `history:${JSON.stringify(filter)}:${today}`,
+    async db => ({
+      rows: await filterTransactions(db, {
+        ...filterRange(filter, today),
+        type: filter.type,
+        categoryIds: filter.categoryIds,
+        reasonTagIds: filter.reasonTagIds,
+      }),
+      first: await firstRecordDate(db),
     }),
-    first: await firstRecordDate(db),
-  }));
+    // 달을 옮기는 동안 앞 달의 목록을 둬 화면이 비었다가 다시 그려지지 않는다
+    { keepPrevious: true },
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -62,25 +83,45 @@ export function HistoryScreen() {
   const expense = data.rows.filter(r => r.type === 'expense').reduce((n, r) => n + r.amount, 0);
   const income = data.rows.filter(r => r.type === 'income').reduce((n, r) => n + r.amount, 0);
   const category = (id: number) => lists.names.categories.get(id) ?? '카테고리';
+  // 이모지가 있는 카테고리가 하나라도 보이면 모든 줄에 같은 폭의 이모지 칸을 둬 글자의 왼쪽 끝을 맞춘다
+  const glyphs = data.rows.some(r => leadingEmoji(category(r.categoryId)).emoji !== undefined);
   const conditions = [
     filter.type === 'expense' ? '지출만' : filter.type === 'income' ? '수입만' : undefined,
     ...filter.categoryIds.map(category),
     ...filter.reasonTagIds.map(id => lists.names.reasonTags.get(id) ?? '태그'),
   ].filter((s): s is string => s !== undefined);
+  const month = viewedMonth(filter, today);
+  const label = rangeLabel(filter, today);
 
   const header = (
-    <Stack className='gap-2 pb-3'>
-      <Text className='tabular-nums'>
-        {`${rangeLabel(filter, today)} 지출 ${formatWon(expense)}${income > 0 ? ` · 수입 ${formatWon(income)}` : ''}`}
-      </Text>
+    <Stack className='gap-2 pb-2'>
+      {filter.period === 'custom' ? (
+        <View className='min-h-12 justify-center'>
+          <Text heading='2' size='lg' className='tabular-nums'>
+            {label}
+          </Text>
+        </View>
+      ) : (
+        <MonthNav
+          month={month}
+          today={today}
+          first={data.first}
+          onChange={next => showMonth(next, today)}
+        />
+      )}
+      <Total label={label} type={filter.type} expense={expense} income={income} />
       {isFiltered(filter) && (
         <Stack direction='row' align='center' justify='between' className='gap-3'>
           <Prose size='sm' tone='muted' className='flex-1'>
             {conditions.length > 0 ? conditions.join(' · ') : '기간만 바꿨어요'}
           </Prose>
-          <Button label='초기화' variant='ghost' size='sm' onPress={reset} />
+          <Button label='초기화' variant='ghost' size='sm' onPress={clear} />
         </Stack>
       )}
+      <Stack direction='row' className='gap-3 pt-2'>
+        <Chip label='목록' selected={view === 'list'} onPress={() => setView('list')} />
+        <Chip label='카테고리' selected={view === 'chart'} onPress={() => setView('chart')} />
+      </Stack>
     </Stack>
   );
 
@@ -103,17 +144,33 @@ export function HistoryScreen() {
     );
   }
 
+  const thisMonth = month === today.slice(0, 7);
   return (
     <FlatList
       ref={list}
       className='flex-1 bg-canvas'
       contentContainerClassName='px-4 pb-6 pt-1'
-      data={entries}
+      // 카테고리 보기는 목록을 비우고 빈 자리에 도넛을 그린다. 머리(달 옮기기, 합계)와 스크롤은 그대로다
+      data={view === 'list' ? entries : []}
       keyExtractor={entry => entry.key}
-      stickyHeaderIndices={sticky}
+      stickyHeaderIndices={view === 'list' ? sticky : []}
+      // Android FlatList는 화면 밖 줄을 네이티브에서 떼어 둔다(removeClippedSubviews 기본 켜짐). 그 상태로 빈 상태(카테고리
+      // 보기)와 끈적한 머리가 있는 목록을 오가면 Fabric이 줄을 없는 자리에 끼우다 죽었다("addViewAt: failed to insert
+      // view", 에뮬레이터). 한 달 기록은 수십 줄이라 떼어 두지 않아도 된다
+      removeClippedSubviews={false}
       ListHeaderComponent={header}
       ListEmptyComponent={
-        isFiltered(filter) ? (
+        view === 'chart' && data.rows.length > 0 ? (
+          <CategoryShare
+            rows={data.rows}
+            type={filter.type}
+            category={category}
+            onPick={categoryIds => {
+              apply({ ...filter, categoryIds });
+              setView('list');
+            }}
+          />
+        ) : isFiltered(filter) ? (
           <Empty
             title='조건에 맞는 기록이 없어요'
             action={
@@ -121,14 +178,14 @@ export function HistoryScreen() {
                 label='필터 초기화'
                 variant='secondary'
                 className='self-start'
-                onPress={reset}
+                onPress={clear}
               />
             }
           />
-        ) : (
+        ) : thisMonth ? (
           // 필터 없이 이번 달이 비었다. 달이 막 바뀌었을 때다(DESIGN.md 4.4)
           <Empty
-            title={`${rangeLabel(filter, today)}에는 아직 기록이 없어요`}
+            title={`${label}에는 아직 기록이 없어요`}
             action={
               <Stack direction='row' wrap className='gap-3'>
                 <Button
@@ -139,17 +196,21 @@ export function HistoryScreen() {
                 <Button
                   label='지난 달 보기'
                   variant='ghost'
-                  onPress={() => apply({ ...EMPTY_FILTER, period: 'lastMonth' })}
+                  onPress={() => showMonth(previousMonth(filter, today), today)}
                 />
               </Stack>
             }
           />
+        ) : (
+          // 지난 달을 넘기다 기록이 없는 달을 만났다. 옮기는 것은 위의 ‹ ›가 맡는다
+          <Empty title={`${label}에는 기록이 없어요`} />
         )
       }
       renderItem={({ item }) => (
         <HistoryItem
           entry={item}
           category={category}
+          glyphs={glyphs}
           onPress={id => navigation.navigate('Entry', { transactionId: id })}
         />
       )}
@@ -157,29 +218,203 @@ export function HistoryScreen() {
   );
 }
 
-/** 날짜 머리 또는 거래 한 줄. 수입은 +와 brand 글자, 고정비는 배지 하나(DESIGN.md 4.4) */
+/**
+ * 달 이름과 ‹ ›(DESIGN.md 4.4). 머티리얼 날짜 선택기처럼 이름은 왼쪽, 화살표는 오른쪽 엄지 자리에 둔다.
+ * 첫 기록의 달보다 앞, 이번 달보다 뒤로는 가지 않는다(입력 시트가 오늘 뒤의 날짜를 막는다).
+ * 지난 달을 보는 중이면 "이번 달"로 한 번에 돌아온다
+ */
+function MonthNav({
+  month,
+  today,
+  first,
+  onChange,
+}: {
+  month: string;
+  today: string;
+  first: string | undefined;
+  onChange: (month: string) => void;
+}) {
+  const current = today.slice(0, 7);
+  const earliest = first !== undefined && first.slice(0, 7) < current ? first.slice(0, 7) : current;
+  return (
+    <Stack direction='row' align='center' className='gap-1'>
+      {/* 달이 바뀌면 스크린 리더가 새 달을 읽는다. live region은 늘 있는 View에서 글자만 바꾼다(DESIGN.md 3.7) */}
+      <View accessibilityLiveRegion='polite' collapsable={false} className='flex-1'>
+        <Text heading='2' size='lg'>
+          {monthLabel(month, today)}
+        </Text>
+      </View>
+      {month !== current && (
+        <Button label='이번 달' variant='ghost' size='sm' onPress={() => onChange(current)} />
+      )}
+      <IconButton
+        icon='chevron-left'
+        label='이전 달'
+        disabled={month <= earliest}
+        onPress={() => onChange(addMonths(month, -1))}
+      />
+      {/* 화살표 그림의 오른쪽 끝을 화면 여백(16)에 맞춘다. 누름 영역 48의 안쪽 여백이 12다 */}
+      <View className='-mr-3'>
+        <IconButton
+          icon='chevron-right'
+          label='다음 달'
+          disabled={month >= current}
+          onPress={() => onChange(addMonths(month, 1))}
+        />
+      </View>
+    </Stack>
+  );
+}
+
+/**
+ * 기간 합계. 홈의 남은 예산과 같은 모양(작은 이름 + 2xl 금액)이라 아래 목록의 줄과 섞이지 않는다.
+ * 수입만 걸러 보면 수입이 큰 금액이다. 스크린 리더는 한 덩어리("10월 지출 288,100원, 수입 …")로 읽는다
+ */
+function Total({
+  label,
+  type,
+  expense,
+  income,
+}: {
+  label: string;
+  type: 'expense' | 'income' | undefined;
+  expense: number;
+  income: number;
+}) {
+  const kind = type === 'income' ? '수입' : '지출';
+  const amount = formatWon(type === 'income' ? income : expense);
+  const extra = type === undefined && income > 0 ? `수입 ${formatWon(income)}` : undefined;
+  return (
+    <View
+      accessible
+      accessibilityLabel={[`${label} ${kind} ${amount}`, extra].filter(Boolean).join(', ')}
+      className='gap-1'
+    >
+      <Text size='sm' tone='muted'>
+        {kind}
+      </Text>
+      <Text size='2xl' className='tabular-nums'>
+        {amount}
+      </Text>
+      {extra !== undefined && (
+        <Text size='sm' tone='muted' className='tabular-nums'>
+          {extra}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+/**
+ * 카테고리 몫(DESIGN.md 4.4). 회고의 카테고리 도넛과 같은 그림(가장 큰 조각만 brand, 나머지는 회색 단계, 상위 5개 +
+ * "그 외 N개")과 같은 값의 표다. 표가 차트의 대체 텍스트이고, 줄을 누르면 그 카테고리(그 외는 묶인 카테고리들)의
+ * 목록으로 간다. 고정비도 넣어 조각의 합이 위의 합계와 같다
+ */
+function CategoryShare({
+  rows,
+  type,
+  category,
+  onPick,
+}: {
+  rows: TransactionRow[];
+  type: 'expense' | 'income' | undefined;
+  category: (id: number) => string;
+  onPick: (categoryIds: number[]) => void;
+}) {
+  const kind = type === 'income' ? 'income' : 'expense';
+  const target = rows.filter(r => r.type === kind);
+  const total = target.reduce((n, r) => n + r.amount, 0);
+  if (total === 0) return <Empty title={kind === 'income' ? '수입이 없어요' : '지출이 없어요'} />;
+  const { top, others } = categoryShares(target);
+  const slices = [
+    ...top.map(c => ({
+      key: `category-${c.categoryId}`,
+      label: category(c.categoryId),
+      amount: c.amount,
+      ids: [c.categoryId],
+    })),
+    // 나머지 묶음은 기본 카테고리 "기타"와 이름이 겹치지 않게 개수로 부른다(회고와 같다)
+    ...(others.length > 0
+      ? [
+          {
+            key: 'rest',
+            label: `그 외 ${others.length}개`,
+            amount: others.reduce((n, c) => n + c.amount, 0),
+            ids: others.map(c => c.categoryId),
+          },
+        ]
+      : []),
+  ];
+  const percents = slices.map(slice => formatPercent(slice.amount, total));
+  return (
+    <Section title={kind === 'income' ? '카테고리별 수입' : '카테고리별 지출'}>
+      <Donut slices={slices} percents={percents} />
+      {/* 줄 사이 간격은 줄 자신의 여백만 쓴다(Section gap은 제목과 내용 사이) */}
+      <View>
+        {slices.map((slice, i) => (
+          <Row
+            key={slice.key}
+            label={`${slice.label} ${percents[i]}, ${formatWon(slice.amount)}, 내역 보기`}
+            onPress={() => onPick(slice.ids)}
+          >
+            <Swatch index={i} />
+            <Text className='flex-1'>{slice.label}</Text>
+            {/* 금액 자릿수가 달라도 % 열이 곧게 서게 폭을 정한다 */}
+            <Text size='sm' tone='muted' className='w-12 text-right tabular-nums'>
+              {percents[i]}
+            </Text>
+            <Text className='min-w-24 text-right tabular-nums'>{formatWon(slice.amount)}</Text>
+          </Row>
+        ))}
+      </View>
+      <Prose size='sm' tone='muted'>
+        카테고리를 누르면 그 내역만 보여요
+      </Prose>
+    </Section>
+  );
+}
+
+/**
+ * 날짜 머리 또는 거래 한 줄(DESIGN.md 4.4). 줄은 두 칸이다: 윗줄은 제목과 금액이 같은 줄에, 아랫줄은 카테고리.
+ * 카테고리 이모지는 왼쪽 칸에 따로 세운다. 수입은 +와 brand 글자, 고정비는 배지 하나
+ */
 function HistoryItem({
   entry,
   category,
+  glyphs,
   onPress,
 }: {
   entry: Entry;
   category: (id: number) => string;
+  glyphs: boolean;
   onPress: (id: number) => void;
 }) {
   const item = entry.tx;
   if (!item) {
+    // 머리 위를 줄 사이(24)보다 넓게(36) 띄워 하루씩 묶여 보이게 한다. 합계는 줄 금액과 같은 오른쪽 열이다
     return (
-      <View className='bg-canvas pb-1 pt-3'>
-        <Text size='sm' tone='muted' heading='2' className='tabular-nums'>
-          {sectionTitle(entry.section)}
+      <View
+        accessible
+        accessibilityRole='header'
+        accessibilityLabel={sectionTitle(entry.section)}
+        className='flex-row justify-between gap-3 bg-canvas pb-1 pt-6'
+      >
+        <Text size='sm' tone='muted'>
+          {formatDate(entry.section.date)}
+        </Text>
+        <Text size='sm' tone='muted' className='tabular-nums'>
+          {sectionAmount(entry.section)}
         </Text>
       </View>
     );
   }
-  const title = item.memo || category(item.categoryId);
-  // 메모가 없으면 제목이 카테고리라 아랫줄에 다시 쓰지 않는다
-  const meta = [item.memo ? category(item.categoryId) : undefined, paymentLabel(item.paymentMethod)]
+  const name = leadingEmoji(category(item.categoryId));
+  const title = item.memo || name.rest;
+  // 메모가 없으면 제목이 카테고리라 아랫줄에 다시 쓰지 않는다. 결제수단은 거의 모든 줄이 카드라 카드가 아닐 때만 쓴다
+  const meta = [
+    item.memo ? name.rest : undefined,
+    item.paymentMethod === 'card' ? undefined : paymentLabel(item.paymentMethod),
+  ]
     .filter(Boolean)
     .join(' · ');
   const income = item.type === 'income';
@@ -198,10 +433,18 @@ function HistoryItem({
         .join(', ')}
       onPress={() => onPress(item.id)}
     >
+      {glyphs && (
+        <View className='w-8 items-center'>
+          {name.emoji !== undefined && <Text size='xl'>{name.emoji}</Text>}
+        </View>
+      )}
       <Stack className='flex-1 gap-1'>
-        <RNText numberOfLines={1} className='font-sans text-md text-fg'>
-          {title}
-        </RNText>
+        <Stack direction='row' className='gap-3'>
+          <RNText numberOfLines={1} className='flex-1 font-sans text-md text-fg'>
+            {title}
+          </RNText>
+          <Text className={income ? 'text-fg-brand tabular-nums' : 'tabular-nums'}>{amount}</Text>
+        </Stack>
         {(meta !== '' || item.isFixed) && (
           <Stack direction='row' align='center' className='gap-2'>
             {meta !== '' && (
@@ -217,7 +460,6 @@ function HistoryItem({
           </Stack>
         )}
       </Stack>
-      <Text className={income ? 'text-fg-brand tabular-nums' : 'tabular-nums'}>{amount}</Text>
     </Row>
   );
 }

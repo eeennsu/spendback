@@ -1,4 +1,11 @@
-import { addDays, daysInMonth, toLocalDate, weekStart, weekday } from '../src/domain/date';
+import {
+  addDays,
+  addMonths,
+  daysInMonth,
+  toLocalDate,
+  weekStart,
+  weekday,
+} from '../src/domain/date';
 
 describe('toLocalDate', () => {
   test('UTC가 아니라 기기 로컬 시간의 날짜다', () => {
@@ -20,6 +27,15 @@ describe('addDays', () => {
   test('윤년 2월 29일을 지난다', () => {
     expect(addDays('2028-02-28', 1)).toBe('2028-02-29');
     expect(addDays('2028-02-29', 1)).toBe('2028-03-01');
+  });
+});
+
+describe('addMonths', () => {
+  test('해를 넘어 더하고 뺀다', () => {
+    expect(addMonths('2026-09', 1)).toBe('2026-10');
+    expect(addMonths('2026-01', -1)).toBe('2025-12');
+    expect(addMonths('2025-12', 1)).toBe('2026-01');
+    expect(addMonths('2026-10', -17)).toBe('2025-05');
   });
 });
 

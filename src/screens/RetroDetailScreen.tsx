@@ -8,7 +8,7 @@ import { findRetrospective } from '../db/retrospectives';
 import { getSetting } from '../db/settings';
 import { firstRecordDate, transactionsBetween } from '../db/transactions';
 import { addDays } from '../domain/date';
-import { computeFacts } from '../domain/facts';
+import { changeDriver, computeFacts } from '../domain/facts';
 import { fixedCostChecklist, paymentDate } from '../domain/fixedCost';
 import { formatPercent, formatWon } from '../domain/format';
 import {
@@ -20,7 +20,8 @@ import {
 } from '../domain/periods';
 import { hasModel } from '../native/files';
 import type { Output } from '../retro/check';
-import { pickFrames } from '../retro/frames';
+import { followTarget } from '../retro/follow';
+import { followSentence, pickFrames } from '../retro/frames';
 import { type KeyedFacts, factValues, keyFacts } from '../retro/keys';
 import { MODELS } from '../retro/models';
 import { MIN_RECORDS } from '../retro/narrate';
@@ -52,6 +53,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
     first: await firstRecordDate(db),
     budgets: await allBudgets(db),
     saved: await findRetrospective(db, kind, start),
+    // 지난달 회고의 제안을 이번 달 회고가 따라간다(PRD 4.6)
+    previous: await findRetrospective(db, kind, previousStart(kind, start)),
     modelId: await getSetting(db, 'model'),
   }));
   const generation = useGeneration(period);
@@ -71,6 +74,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
           firstRecordDate: data.first,
           budgets: data.budgets,
           categories: lists.categories,
+          follow: followTarget(data.previous ?? undefined),
         })
       : undefined;
   const enough = facts !== undefined && facts.variableCount >= MIN_RECORDS;
@@ -145,6 +149,21 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
     .find(g => g.id === 'total')
     ?.facts.find(f => f.key === 'total.change_phrase')?.value;
   const before = '지난달';
+  // 변동비 증감의 원인(PRD 4.6). LLM이 고르지 않고 카드가 지금 기록으로 쓴다
+  const driver = changeDriver(facts);
+  const driverLine =
+    driver &&
+    render(
+      driver.part === driver.total
+        ? '{way} {total}{은/는} 모두 {name}{이에요/예요}'
+        : '{way} {total} 중 {part}{이/가} {name}{이에요/예요}',
+      {
+        way: driver.total > 0 ? '늘어난' : '줄어든',
+        total: formatWon(Math.abs(driver.total)),
+        part: formatWon(Math.abs(driver.part)),
+        name: categoryName(driver.categoryId),
+      },
+    );
   const top = facts.categories.slice(0, 5);
   const others = facts.categories.slice(5);
   const rest = others.reduce((n, c) => n + c.amount, 0);
@@ -217,6 +236,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
                 : `변동비가 ${before}보다 ${change}`}
           </Prose>
         )}
+        {/* 회고 문장이 증감을 말해 비교 줄을 뺐어도 원인은 회고 문장에 없어 늘 쓴다 */}
+        {driverLine ? <Prose className='tabular-nums'>{driverLine}</Prose> : null}
       </Card>
 
       <Narrative
@@ -457,6 +478,7 @@ function Narrative({
 
 /** 회고 문장(저장본, 폴백). 값은 facts 스냅샷으로 채우고 brand 글자로 강조한다 */
 function Sentences({ facts, output }: { facts: KeyedFacts; output: Told }) {
+  const follow = followSentence(facts);
   const fill = {
     values: factValues(facts),
     // 서술어 값("29,000원 늘었어요")은 숫자만 강조한다
@@ -471,6 +493,8 @@ function Sentences({ facts, output }: { facts: KeyedFacts; output: Told }) {
         {output.insights.map(insight => (
           <Emphasized key={insight.about} text={insight.text} fill={fill} className='text-md' />
         ))}
+        {/* 지난달 제안이 어떻게 됐는지는 LLM이 고르지 않고 늘 이번 제안 위에 쓴다(PRD 4.6) */}
+        {follow ? <Emphasized text={follow} fill={fill} className='text-md' /> : null}
       </Stack>
       {output.suggestion ? (
         <View className='rounded-lg bg-surface-muted px-4 py-3'>

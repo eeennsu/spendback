@@ -202,3 +202,36 @@ describe('눈에 띄는 순서', () => {
     expect(order(over)[0]).toBe('category.2');
   });
 });
+
+describe('지난달 제안 따라가기(PRD 4.6)', () => {
+  const follow = (
+    target: NonNullable<Facts['follow']>['target'],
+    amount: number,
+    previous: number,
+  ) => values({ ...base, follow: { target, amount, previous } });
+
+  test('대상의 이름과 지난달 대비 증감', () => {
+    expect(follow({ kind: 'category', id: 3 }, 28000, 40000)).toMatchObject({
+      'follow.category.name': '배달',
+      'follow.category.change_phrase': '12,000원 줄었어요',
+    });
+    expect(follow({ kind: 'tag', id: 2 }, 9000, 4000)).toMatchObject({
+      'follow.tag.name': '충동',
+      'follow.tag.change_phrase': '5,000원 늘었어요',
+    });
+  });
+
+  test('이번 달에 없으면 "없었어요", 같으면 "지난달과 같았어요"', () => {
+    expect(follow({ kind: 'memo', memo: '야식 치킨' }, 0, 7000)).toMatchObject({
+      'follow.memo.name': '야식 치킨',
+      'follow.memo.change_phrase': '없었어요',
+    });
+    expect(follow({ kind: 'memo', memo: '야식 치킨' }, 7000, 7000)).toMatchObject({
+      'follow.memo.change_phrase': '지난달과 같았어요',
+    });
+  });
+
+  test('지난달 제안이 없으면 묶음이 없다', () => {
+    expect(keyFacts(base, names).groups.some(g => g.id.startsWith('follow'))).toBe(false);
+  });
+});

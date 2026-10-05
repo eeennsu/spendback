@@ -31,6 +31,7 @@ import {
  * | memo.<n> | text, count, amount | 편의점 커피, 5번, 12,500원 |
  * | income | amount, expense_rate | 3,200,000원, 85% |
  * | income | balance_phrase(서술어) | 480,000원 남았어요, 214,000원 더 썼어요 |
+ * | follow.<category·tag·memo> | name, change_phrase(서술어). LLM에 주지 않고 화면이 쓴다 | 배달, 12,000원 줄었어요, 없었어요 |
  */
 
 /** 명사 값 뒤에는 조사 쌍을 붙일 수 있고, 서술어 값은 문장을 끝낸다(grammar.ts) */
@@ -81,6 +82,13 @@ function incomePhrase(income: number, expense: number) {
   return expense < income
     ? `${formatWon(income - expense)} 남았어요`
     : `${formatWon(expense - income)} 더 썼어요`;
+}
+
+/** 지난달 제안 대상의 증감. 이번 달에 없으면 "없었어요"다 */
+function followPhrase(amount: number, previous: number) {
+  if (amount === 0) return '없었어요';
+  if (amount === previous) return '지난달과 같았어요';
+  return changePhrase(amount - previous);
 }
 
 /**
@@ -207,6 +215,14 @@ export function keyFacts(facts: Facts, names: Names): KeyedFacts {
   ];
 
   const largest = facts.largest;
+  const follow = facts.follow;
+  const followName =
+    follow &&
+    (follow.target.kind === 'category'
+      ? names.categories.get(follow.target.id)
+      : follow.target.kind === 'tag'
+        ? names.reasonTags.get(follow.target.id)
+        : follow.target.memo);
 
   const groups: FactGroup[] = [
     ...group('total', '총지출', [
@@ -303,6 +319,17 @@ export function keyFacts(facts: Facts, names: Names): KeyedFacts {
             'balance_phrase',
             incomePhrase(facts.incomeRatio.income, facts.incomeRatio.expense),
             '수입에서(고정비 포함)',
+            'predicate',
+          ],
+        ])
+      : []),
+    ...(follow && followName
+      ? group(`follow.${follow.target.kind}`, '지난달 제안', [
+          ['name', followName, '지난달 회고의 제안이 가리킨 것'],
+          [
+            'change_phrase',
+            followPhrase(follow.amount, follow.previous),
+            '그 지출이 지난달보다',
             'predicate',
           ],
         ])

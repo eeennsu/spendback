@@ -1,4 +1,4 @@
-import { type FactsInput, computeFacts } from '../src/domain/facts';
+import { type FactsInput, changeDriver, computeFacts } from '../src/domain/facts';
 import type { Budget } from '../src/domain/types';
 
 type Tx = FactsInput['transactions'][number];
@@ -341,5 +341,48 @@ describe('수입 대비 지출률(수입 기록이 있을 때만)', () => {
     expect(
       facts({ period: AUGUST, transactions: transactions.slice(2) }).incomeRatio,
     ).toBeUndefined();
+  });
+});
+
+describe('changeDriver: 변동비 증감의 원인(PRD 4.6, 회고 상세의 총지출 카드)', () => {
+  const base = facts({ transactions: [] });
+  const withChange = (total: number, changes: Array<[number, number]>) => ({
+    ...base,
+    change: { previous: 154900, amount: total },
+    topCategoryChanges: changes.map(([categoryId, change]) => ({
+      categoryId,
+      current: 0,
+      previous: 0,
+      change,
+    })),
+  });
+
+  test('같은 방향으로 가장 크게 변한 카테고리가 절반 이상이면 그 카테고리다', () => {
+    // 변동비 +32,400원 중 배달 +29,000원. 반대로 움직인 −30,000원은 원인이 아니다
+    expect(
+      changeDriver(
+        withChange(32400, [
+          [TRANSPORT, -30000],
+          [DELIVERY, 29000],
+        ]),
+      ),
+    ).toEqual({
+      categoryId: DELIVERY,
+      total: 32400,
+      part: 29000,
+    });
+    expect(changeDriver(withChange(-20000, [[FOOD, -15000]]))).toMatchObject({ part: -15000 });
+  });
+
+  test.each([
+    ['전체보다 크다(다른 카테고리가 반대로 움직였다)', 10000, 29000],
+    ['절반이 안 된다', 32400, 10000],
+    ['변동비 증감이 직전 달의 5%보다 작다', 5000, 4000],
+  ])('%s면 없다', (_, total, part) => {
+    expect(changeDriver(withChange(total, [[DELIVERY, part]]))).toBeUndefined();
+  });
+
+  test('비교할 수 없으면 없다', () => {
+    expect(changeDriver(base)).toBeUndefined();
   });
 });

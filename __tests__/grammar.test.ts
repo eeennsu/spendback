@@ -119,13 +119,29 @@ describe('buildMessages', () => {
       nameKeys(keyed),
       insightFrames(frames),
     );
-    expect(system.content).toContain('[total] 묶음은 앱 화면이 따로 보여 줘서 headline으로만 쓴다');
+    expect(user.content).toContain('[total] 묶음은 앱 화면이 따로 보여 줘서 headline으로만 쓴다');
+    expect(system.content).not.toContain('headline으로만');
     expect(headlines.map(f => f.id)).toContain('total.change');
     expect(user.content).toContain('total.change: ');
     expect(user.content).not.toContain('total.split: ');
     // insight 후보를 따로 주지 않으면 모든 문장을 쓰고, headline으로만 쓰는 묶음도 없다
-    const [plain] = buildMessages(keyed, frames, headlines, []);
+    const [, plain] = buildMessages(keyed, frames, headlines, []);
     expect(plain.content).not.toContain('headline으로만');
+  });
+
+  test('v6의 지시문은 facts와 상관없이 늘 같다. 앞부분 처리 결과를 세션 파일로 다시 쓴다(PRD 6장)', () => {
+    const [withOnly] = buildMessages(
+      keyed,
+      frames,
+      headlines,
+      nameKeys(keyed),
+      insightFrames(frames),
+    );
+    const [without] = buildMessages(keyed, frames, headlines, []);
+    expect(withOnly.content).toBe(without.content);
+    // v5는 headline 전용 묶음 안내를 지시문에 썼다
+    const [v5] = buildMessages(keyed, frames, headlines, [], insightFrames(frames), 'v5');
+    expect(v5.content).toContain('[total] 묶음은 앱 화면이 따로 보여 줘서 headline으로만 쓴다');
   });
 
   test('묶음은 눈에 띄는 순서로 쓴다', () => {

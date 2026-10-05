@@ -10,6 +10,7 @@ import {
   insightFrames,
   pickFrames,
 } from '../src/retro/frames';
+import { followSentence } from '../src/retro/frames';
 import { type FactGroup, type KeyedFacts, factValues, keyFacts } from '../src/retro/keys';
 import { render } from '../src/retro/render';
 
@@ -235,6 +236,7 @@ describe('headline 후보의 초점', () => {
     busiestWeekday: { weekday: 5, amount: 40000 },
     repeatedMemos: [],
     incomeRatio: undefined,
+    follow: undefined,
   };
   const longNames = {
     categories: new Map([
@@ -417,4 +419,35 @@ test('제안이 채운 뒤 45자를 넘으면 걸린다', () => {
       text: '다음 달에는 {category.3.name} 지출을 줄여 보세요.',
     }),
   ).toEqual([]);
+});
+
+describe('followSentence: 지난달 제안 따라가기 문장(PRD 4.6)', () => {
+  const sentence = (target: NonNullable<Facts['follow']>['target'], amount: number) => {
+    const keyed = keyFacts(
+      { ...sampleFacts, follow: { target, amount, previous: 40000 } },
+      sampleNames,
+    );
+    return render(followSentence(keyed) ?? '', factValues(keyed));
+  };
+
+  test('증감만 말한다. 이번 달에 없으면 "없었어요", 태그는 "태그가 붙은 지출"이다', () => {
+    expect(sentence({ kind: 'category', id: 3 }, 28000)).toBe(
+      '지난달 제안 뒤 배달 지출이 12,000원 줄었어요.',
+    );
+    expect(sentence({ kind: 'memo', memo: '야식 치킨' }, 0)).toBe(
+      '지난달 제안 뒤 야식 치킨 지출이 없었어요.',
+    );
+    expect(sentence({ kind: 'tag', id: 2 }, 28000)).toBe(
+      '지난달 제안 뒤 충동 태그가 붙은 지출이 12,000원 줄었어요.',
+    );
+  });
+
+  test('LLM과 폴백이 고르는 틀에는 없다. 화면이 늘 제안 위에 쓴다', () => {
+    const keyed = keyFacts(
+      { ...sampleFacts, follow: { target: { kind: 'category', id: 3 }, amount: 1, previous: 2 } },
+      sampleNames,
+    );
+    expect(buildFrames(keyed).some(f => f.group.startsWith('follow'))).toBe(false);
+    expect(followSentence(keyFacts(sampleFacts, sampleNames))).toBeUndefined();
+  });
 });

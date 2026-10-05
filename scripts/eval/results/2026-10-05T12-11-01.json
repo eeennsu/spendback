@@ -1,0 +1,5255 @@
+{
+  "meta": {
+    "date": "2026-10-05T12-11-01",
+    "promptVersion": "v6",
+    "inference": "{\"threads\":6,\"contextSize\":4096,\"maxTokens\":768,\"temperature\":0.7,\"topK\":20,\"topP\":0.9,\"minP\":0,\"repeatPenalty\":1.1,\"repeatLastTokens\":64,\"presencePenalty\":0}",
+    "node-llama-cpp": "llama.cpp v0.4.0, vulkan",
+    "runs": "2"
+  },
+  "runs": [
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-spike",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 427.8170000000009,
+      "totalMs": 1190.5887000000002,
+      "promptTokens": 1453,
+      "attempts": [
+        {
+          "ms": 1180.6831999999995,
+          "firstTokenMs": 262.85379999999896,
+          "tokens": 54,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\", \"memo.1.count\"], \"suggestion\": \"다음 달에는 {memo.1.text} 예산을 주 단위로 나눠 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {memo.1.text} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 편의점 커피 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-spike",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 400.34120000000075,
+      "totalMs": 1626.7417000000005,
+      "promptTokens": 1453,
+      "attempts": [
+        {
+          "ms": 1618.6486000000004,
+          "firstTokenMs": 224.8775999999998,
+          "tokens": 65,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"regret.amount_share\",\n\"budget.usage_balance\",\n\"tag.2.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {tag.1.name} 지출이 없는 날을 만들어 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.1.name} 지출이 없는 날을 만들어 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "후회한 지출은 188,000원으로 변동비의 25%였어요.",
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 필요 지출이 없는 날을 만들어 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-previous",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 316.3140999999996,
+      "totalMs": 1468.351999999999,
+      "promptTokens": 1254,
+      "attempts": [
+        {
+          "ms": 1459.8410999999996,
+          "firstTokenMs": 204.90869999999995,
+          "tokens": 58,
+          "headlineTokens": 7,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"total.variable\", \"insights\": [\"category.1.budget\", \"tag.2.amount_share\", \"no_spend.days\"], \"suggestion\": \"다음 달에는 {category.3.name} 카테고리를 회복하기 위해 한 일로 정해 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "이번 달 변동비는 {total.variable}{이었어요/였어요}.",
+        "insights": [
+          {
+            "about": "category.1",
+            "text": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 카테고리를 회복하기 위해 한 일로 정해 보세요."
+      },
+      "rendered": {
+        "headline": "이번 달 변동비는 749,200원이었어요.",
+        "insights": [
+          "식비 예산의 59%를 써서 115,200원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "지출이 없는 날이 4일 있었어요."
+        ],
+        "suggestion": "다음 달에는 배달 카테고리를 회복하기 위해 한 일로 정해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-previous",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 350.5580000000009,
+      "totalMs": 1587.6861000000008,
+      "promptTokens": 1254,
+      "attempts": [
+        {
+          "ms": 1578.3014000000003,
+          "firstTokenMs": 200.80040000000008,
+          "tokens": 63,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.variable\",\n\"insights\": [\n\"tag.3.amount_share\",\n\"largest.category\",\n\"memo.1.count\"\n],\n\"suggestion\": \"다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "이번 달 변동비는 {total.variable}{이었어요/였어요}.",
+        "insights": [
+          {
+            "about": "tag.3",
+            "text": "{tag.3.name} 태그가 붙은 지출은 {tag.3.amount}{으로/로} 변동비의 {tag.3.share}{이었어요/였어요}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.category}에 쓴 {largest.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "이번 달 변동비는 749,200원이었어요.",
+        "insights": [
+          "보상·스트레스 태그가 붙은 지출은 154,000원으로 변동비의 21%였어요.",
+          "가장 큰 지출은 배달에 쓴 42,000원이었어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 쇼핑 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-few",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 261.5743000000002,
+      "totalMs": 1114.856499999998,
+      "promptTokens": 942,
+      "attempts": [
+        {
+          "ms": 1108.4411999999975,
+          "firstTokenMs": 152.6439999999966,
+          "tokens": 52,
+          "headlineTokens": 7,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"total.change\", \"insights\": [\"budget.usage_balance\", \"category.2.amount_share\"], \"suggestion\": \"다음 달에는 {category.1.name} 지출 전까지 변동비 예산을 주 단위로 나눠 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "category.2",
+            "text": "{category.2.name}에 쓴 {category.2.amount}{이/가} 변동비의 {category.2.share}{을/를} 차지했어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전까지 변동비 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 62,000원 줄었어요.",
+        "insights": [
+          "전체 예산의 13%를 써서 974,000원 남았어요.",
+          "카페·간식에 쓴 50,000원이 변동비의 34%를 차지했어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전까지 변동비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-few",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 294.1144999999997,
+      "totalMs": 1058.1602999999996,
+      "promptTokens": 942,
+      "attempts": [
+        {
+          "ms": 1051.3615000000027,
+          "firstTokenMs": 152.66540000000168,
+          "tokens": 53,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.change\",\n\"insights\": [\"budget.usage_balance\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.2.name} 지출을 줄여야 할지 확인하세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.2.name} 지출을 줄여야 할지 확인하세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 62,000원 줄었어요.",
+        "insights": [
+          "전체 예산의 13%를 써서 974,000원 남았어요.",
+          "요일별로는 수요일에 72,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 카페·간식 지출을 줄여야 할지 확인하세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-over",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 343.056700000001,
+      "totalMs": 1141.8878000000004,
+      "promptTokens": 1424,
+      "attempts": [
+        {
+          "ms": 1134.3037000000004,
+          "firstTokenMs": 216.3690999999999,
+          "tokens": 55,
+          "headlineTokens": 8,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"budget.usage_balance\", \"insights\": [\"category.1.change_share\", \"tag.2.amount_share\", \"memo.1.count\"], \"suggestion\": \"다음 달에는 편의점 커피 지출을 하루 더 줄이세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "category.1",
+            "text": "{category.1.name} 지출이 지난달보다 {category.1.change_phrase}. 변동비의 {category.1.share}{을/를} 차지했어요."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 편의점 커피 지출을 하루 더 줄이세요."
+      },
+      "rendered": {
+        "headline": "전체 예산의 112%를 써서 134,400원 넘었어요.",
+        "insights": [
+          "식비 지출이 지난달보다 86,000원 늘었어요. 변동비의 24%를 차지했어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 17%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 편의점 커피 지출을 하루 더 줄이세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-over",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 379.10789999999906,
+      "totalMs": 1173.2151000000013,
+      "promptTokens": 1424,
+      "attempts": [
+        {
+          "ms": 1165.3173000000024,
+          "firstTokenMs": 220.02030000000013,
+          "tokens": 57,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"budget.usage_balance\",\n\"insights\": [\"category.3.change_share\", \"tag.2.amount_share\", \"largest.memo\"],\n\"suggestion\": \"다음 달에는 {memo.1.text} 지출을 줄이세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "category.3",
+            "text": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}. 변동비의 {category.3.share}{을/를} 차지했어요."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.memo}에 쓴 {largest.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {memo.1.text} 지출을 줄이세요."
+      },
+      "rendered": {
+        "headline": "전체 예산의 112%를 써서 134,400원 넘었어요.",
+        "insights": [
+          "배달 지출이 지난달보다 184,000원 늘었어요. 변동비의 27%를 차지했어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 17%였어요.",
+          "가장 큰 지출은 야식 치킨에 쓴 42,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 편의점 커피 지출을 줄이세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-budget",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 355.8737000000001,
+      "totalMs": 1351.0483999999997,
+      "promptTokens": 1367,
+      "attempts": [
+        {
+          "ms": 1343.4467000000004,
+          "firstTokenMs": 213.48530000000028,
+          "tokens": 50,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"regret.amount_share\", \"tag.2.amount_share\"], \"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "후회한 지출은 188,000원으로 변동비의 25%였어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-budget",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 388.7946000000011,
+      "totalMs": 1862.1116000000002,
+      "promptTokens": 1367,
+      "attempts": [
+        {
+          "ms": 1854.3990999999987,
+          "firstTokenMs": 213.6234000000004,
+          "tokens": 66,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"regret.amount_share\",\n\"tag.2.amount_share\",\n\"memo.1.count\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 확인하세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "후회한 지출은 188,000원으로 변동비의 25%였어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-fixed-heavy",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 2072.952300000001,
+      "totalMs": 3309.3050000000003,
+      "promptTokens": 1255,
+      "attempts": [
+        {
+          "ms": 1485.6584000000003,
+          "firstTokenMs": 198.71570000000065,
+          "tokens": 64,
+          "headlineTokens": 7,
+          "aborted": true,
+          "problems": [
+            "too-long"
+          ],
+          "raw": "{\"headline\": \"total.fixed\", \"insights\": [\"category.2.change\", \"tag.1.amount_share\"], \"suggestion\": \"다음 달에는 {memo.1.text} 지출은 한 번도 없었어요, 대신 {tag.3.name} 태그로 인한 지출을 줄이세요.\""
+        },
+        {
+          "ms": 1815.7344000000012,
+          "firstTokenMs": 202.22469999999885,
+          "tokens": 64,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.2.change\",\n\"insights\": [\n\"budget.usage_balance\",\n\"tag.3.amount_share\",\n\"largest.memo\"\n],\n\"suggestion\": \"다음 달에는 {category.2.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.2.name} 지출이 지난달보다 {category.2.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.3",
+            "text": "{tag.3.name} 태그가 붙은 지출은 {tag.3.amount}{으로/로} 변동비의 {tag.3.share}{이었어요/였어요}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.memo}에 쓴 {largest.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.2.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "카페·간식 지출이 지난달보다 16,000원 줄었어요.",
+        "insights": [
+          "전체 예산의 35%를 써서 728,000원 남았어요.",
+          "보상·스트레스 태그가 붙은 지출은 60,000원으로 변동비의 15%였어요.",
+          "가장 큰 지출은 가족 외식에 쓴 48,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 카페·간식 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.fixed"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-fixed-heavy",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 388.4520999999986,
+      "totalMs": 1944.839399999997,
+      "promptTokens": 1255,
+      "attempts": [
+        {
+          "ms": 1937.6563000000024,
+          "firstTokenMs": 202.4961000000003,
+          "tokens": 67,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.2.change\",\n\"insights\": [\n\"tag.1.amount_share\",\n\"regret.amount_share\",\n\"busiest.weekday_amount\"\n],\n\"suggestion\": \"다음 달에는 {category.2.name} 지출 전에 꼭 필요한지 확인하세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.2.name} 지출이 지난달보다 {category.2.change_phrase}.",
+        "insights": [
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.2.name} 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "rendered": {
+        "headline": "카페·간식 지출이 지난달보다 16,000원 줄었어요.",
+        "insights": [
+          "필요 태그가 붙은 지출은 52,000원으로 변동비의 13%였어요.",
+          "후회한 지출은 190,000원으로 변동비의 48%였어요.",
+          "요일별로는 목요일에 104,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 카페·간식 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.fixed"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-down",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 376.1363999999994,
+      "totalMs": 1127.9860000000008,
+      "promptTokens": 1427,
+      "attempts": [
+        {
+          "ms": 1119.9519,
+          "firstTokenMs": 227.36320000000342,
+          "tokens": 49,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\"], \"suggestion\": \"다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 180,000원 줄었어요.",
+        "insights": [
+          "전체 예산의 51%를 써서 550,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 38%였어요."
+        ],
+        "suggestion": "다음 달에는 쇼핑 지출 전에 꼭 필요한지 생각해보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.change"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-down",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 417.4975999999988,
+      "totalMs": 1712.4680000000008,
+      "promptTokens": 1427,
+      "attempts": [
+        {
+          "ms": 1704.390199999998,
+          "firstTokenMs": 228.3104999999996,
+          "tokens": 65,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"regret.amount_share\",\n\"tag.2.amount_share\",\n\"budget.usage_balance\"\n],\n\"suggestion\": \"다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 180,000원 줄었어요.",
+        "insights": [
+          "후회한 지출은 188,000원으로 변동비의 33%였어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 38%였어요.",
+          "전체 예산의 51%를 써서 550,800원 남았어요."
+        ],
+        "suggestion": "다음 달에는 쇼핑 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.change"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-prev-zero",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 357.7021999999997,
+      "totalMs": 1172.8184999999976,
+      "promptTokens": 1384,
+      "attempts": [
+        {
+          "ms": 1165.4486000000034,
+          "firstTokenMs": 212.5511000000006,
+          "tokens": 55,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"budget.usage_balance\", \"regret.amount_share\", \"tag.2.amount_share\"], \"suggestion\": \"다음 달에는 {tag.1.name} 태그의 지출을 줄이세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.1.name} 태그의 지출을 줄이세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 272,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 필요 태그의 지출을 줄이세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-prev-zero",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 399.9464000000007,
+      "totalMs": 1672.2367000000013,
+      "promptTokens": 1384,
+      "attempts": [
+        {
+          "ms": 1663.0511000000042,
+          "firstTokenMs": 214.36759999999776,
+          "tokens": 65,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"tag.2.amount_share\",\n\"budget.usage_balance\",\n\"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 확인하세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 272,000원 늘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-dominant",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 306.29030000000057,
+      "totalMs": 1138.8767000000007,
+      "promptTokens": 1212,
+      "attempts": [
+        {
+          "ms": 1132.2699999999968,
+          "firstTokenMs": 194.56759999999485,
+          "tokens": 54,
+          "headlineTokens": 7,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"total.change\", \"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\", \"regret.amount_share\"], \"suggestion\": \"다음 달에는 {category.3.name} 지출을 한 번 더 줄이세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출을 한 번 더 줄이세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 432,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 75%를 써서 280,000원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 26%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 22%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출을 한 번 더 줄이세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "category.3."
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-dominant",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 340.1716000000015,
+      "totalMs": 1564.1844999999958,
+      "promptTokens": 1212,
+      "attempts": [
+        {
+          "ms": 1557.237000000001,
+          "firstTokenMs": 193.28169999999955,
+          "tokens": 63,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.change\",\n\"insights\": [\n\"budget.usage_balance\",\n\"tag.3.amount_share\",\n\"memo.1.count\"\n],\n\"suggestion\": \"다음 달에는 {category.2.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.3",
+            "text": "{tag.3.name} 태그가 붙은 지출은 {tag.3.amount}{으로/로} 변동비의 {tag.3.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.2.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 432,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 75%를 써서 280,000원 남았어요.",
+          "보상·스트레스 태그가 붙은 지출은 154,000원으로 변동비의 18%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 카페·간식 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "category.3."
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-spread",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 326.80689999999595,
+      "totalMs": 989.3611999999994,
+      "promptTokens": 1446,
+      "attempts": [
+        {
+          "ms": 981.6547999999966,
+          "firstTokenMs": 217.91489999999612,
+          "tokens": 46,
+          "headlineTokens": 7,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"total.change\", \"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\"], \"suggestion\": \"다음 달에는 {memo.1.text} 지출을 하루 더 만들어 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {memo.1.text} 지출을 하루 더 만들어 보세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 134,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 70%를 써서 336,000원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 28%였어요."
+        ],
+        "suggestion": "다음 달에는 편의점 커피 지출을 하루 더 만들어 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-spread",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 363.2324000000008,
+      "totalMs": 1887.591800000002,
+      "promptTokens": 1446,
+      "attempts": [
+        {
+          "ms": 1879.2498999999953,
+          "firstTokenMs": 220.95330000000104,
+          "tokens": 71,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.change\",\n\"insights\": [\n\"budget.usage_balance\",\n\"tag.2.amount_share\",\n\"largest.memo\"\n],\n\"suggestion\": \"다음 달에는 {memo.1.text} 지출을 줄이고, {category.5.name} 소비를 달래세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.memo}에 쓴 {largest.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {memo.1.text} 지출을 줄이고, {category.5.name} 소비를 달래세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 134,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 70%를 써서 336,000원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 28%였어요.",
+          "가장 큰 지출은 야식 치킨에 쓴 42,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 편의점 커피 지출을 줄이고, 쇼핑 소비를 달래세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-sparse",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 338.82890000000043,
+      "totalMs": 1592.9537999999957,
+      "promptTokens": 1167,
+      "attempts": [
+        {
+          "ms": 1585.9939000000013,
+          "firstTokenMs": 194.45390000000043,
+          "tokens": 51,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"budget.usage_balance\", \"busiest.weekday_amount\"], \"suggestion\": \"다음 달에는 {category.1.name} 카테고리에 할애할 예산을 미리 만들어 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 카테고리에 할애할 예산을 미리 만들어 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "요일별로는 토요일에 196,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 식비 카테고리에 할애할 예산을 미리 만들어 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-sparse",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 367.0524000000005,
+      "totalMs": 1576.5175999999992,
+      "promptTokens": 1167,
+      "attempts": [
+        {
+          "ms": 1569.6573999999964,
+          "firstTokenMs": 193.31349999999657,
+          "tokens": 64,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.usage_balance\",\n\"largest.category\",\n\"busiest.weekday_amount\"\n],\n\"suggestion\": \"다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.category}에 쓴 {largest.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.5.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "가장 큰 지출은 배달에 쓴 42,000원이었어요.",
+          "요일별로는 토요일에 196,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 쇼핑 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-regret",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 380.46360000000277,
+      "totalMs": 1125.1497999999992,
+      "promptTokens": 1404,
+      "attempts": [
+        {
+          "ms": 1116.3840999999957,
+          "firstTokenMs": 228.93999999999505,
+          "tokens": 51,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\"], \"suggestion\": \"다음 달에는 {tag.2.name} 지출을 줄이는 습관을 고쳐 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.2.name} 지출을 줄이는 습관을 고쳐 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 336,000원으로 변동비의 45%였어요."
+        ],
+        "suggestion": "다음 달에는 충동 지출을 줄이는 습관을 고쳐 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "regret."
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-regret",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 419.950499999999,
+      "totalMs": 1725.5515999999989,
+      "promptTokens": 1404,
+      "attempts": [
+        {
+          "ms": 1717.8050000000003,
+          "firstTokenMs": 233.43820000000414,
+          "tokens": 65,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"regret.amount_share\",\n\"tag.2.amount_share\",\n\"budget.usage_balance\"\n],\n\"suggestion\": \"다음 달에는 {tag.2.name} 지출을 줄이는 방법을 해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.2.name} 지출을 줄이는 방법을 해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "후회한 지출은 384,000원으로 변동비의 51%였어요.",
+          "충동 태그가 붙은 지출은 336,000원으로 변동비의 45%였어요.",
+          "전체 예산의 67%를 써서 370,800원 남았어요."
+        ],
+        "suggestion": "다음 달에는 충동 지출을 줄이는 방법을 해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-names",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 370.24550000000454,
+      "totalMs": 1155.950300000004,
+      "promptTokens": 1464,
+      "attempts": [
+        {
+          "ms": 1147.8626000000004,
+          "firstTokenMs": 224.90969999999652,
+          "tokens": 55,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\", \"regret.amount_share\"], \"suggestion\": \"다음 달에는 {memo.1.text} 지출 전에 꼭 필요한지 생각해 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {memo.1.text} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "GS25 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 1순위 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 GS25 커피 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-names",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 400.9514999999956,
+      "totalMs": 1706.6195000000007,
+      "promptTokens": 1464,
+      "attempts": [
+        {
+          "ms": 1697.9732999999978,
+          "firstTokenMs": 225.74869999999646,
+          "tokens": 65,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"regret.amount_share\",\n\"budget.usage_balance\",\n\"tag.2.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "GS25 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "후회한 지출은 188,000원으로 변동비의 25%였어요.",
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 1순위 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-spend",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 1677.4775000000009,
+      "totalMs": 2392.245999999999,
+      "promptTokens": 1186,
+      "attempts": [
+        {
+          "ms": 1231.9413000000059,
+          "firstTokenMs": 200.76750000000175,
+          "tokens": 48,
+          "headlineTokens": 7,
+          "aborted": true,
+          "problems": [
+            "direction"
+          ],
+          "raw": "{\"headline\": \"total.change\", \"insights\": [\"category.3.change\", \"tag.2.amount_share\"], \"suggestion\": \"다음 달에는 {category.1.name} 지출이 지난달보다 줄어든지세요.\""
+        },
+        {
+          "ms": 1151.2309999999998,
+          "firstTokenMs": 194.66939999999886,
+          "tokens": 50,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.change\",\n\"insights\": [\"budget.balance\", \"category.1.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "category.1",
+            "text": "{category.1.name}에 쓴 {category.1.amount}{이/가} 변동비의 {category.1.share}{을/를} 차지했어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 375,600원 줄었어요.",
+        "insights": [
+          "전체 예산이 876,000원 남았어요.",
+          "식비에 쓴 152,000원이 변동비의 62%를 차지했어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "no_spend."
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-spend",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 341.5722999999998,
+      "totalMs": 1689.807200000003,
+      "promptTokens": 1186,
+      "attempts": [
+        {
+          "ms": 1682.7527999999947,
+          "firstTokenMs": 195.41909999999916,
+          "tokens": 63,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.change\",\n\"insights\": [\n\"category.2.change\",\n\"tag.1.amount_share\",\n\"largest.memo\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "category.2",
+            "text": "{category.2.name} 지출이 지난달보다 {category.2.change_phrase}."
+          },
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.memo}에 쓴 {largest.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 375,600원 줄었어요.",
+        "insights": [
+          "카페·간식 지출이 지난달보다 78,000원 줄었어요.",
+          "필요 태그가 붙은 지출은 90,000원으로 변동비의 37%였어요.",
+          "가장 큰 지출은 가족 외식에 쓴 42,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "no_spend."
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-category-over",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 402.2358000000022,
+      "totalMs": 1110.315499999997,
+      "promptTokens": 1484,
+      "attempts": [
+        {
+          "ms": 1101.570599999999,
+          "firstTokenMs": 233.55539999999746,
+          "tokens": 49,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.budget\", \"insights\": [\"regret.amount_share\", \"tag.2.amount_share\"], \"suggestion\": \"다음 달에는 {memo.1.text} 지출을 줄여보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 예산의 {category.3.budget_usage}{을/를} 써서 {category.3.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {memo.1.text} 지출을 줄여보세요."
+      },
+      "rendered": {
+        "headline": "배달 예산의 170%를 써서 112,000원 넘었어요.",
+        "insights": [
+          "후회한 지출은 188,000원으로 변동비의 25%였어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 편의점 커피 지출을 줄여보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-category-over",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 442.4827000000005,
+      "totalMs": 2156.9428000000044,
+      "promptTokens": 1484,
+      "attempts": [
+        {
+          "ms": 2148.8199999999997,
+          "firstTokenMs": 242.36529999999766,
+          "tokens": 67,
+          "headlineTokens": 12,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.budget\",\n\"insights\": [\n\"tag.2.amount_share\",\n\"memo.1.count\",\n\"largest.memo\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각 해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 예산의 {category.3.budget_usage}{을/를} 써서 {category.3.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.memo}에 쓴 {largest.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각 해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 예산의 170%를 써서 112,000원 넘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요.",
+          "가장 큰 지출은 야식 치킨에 쓴 42,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 생각 해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-same",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 393.12749999999505,
+      "totalMs": 1310.1866999999984,
+      "promptTokens": 1382,
+      "attempts": [
+        {
+          "ms": 1302.7318999999989,
+          "firstTokenMs": 242.9349000000002,
+          "tokens": 62,
+          "headlineTokens": 9,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.3.change\", \"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\", \"memo.1.count\"], \"suggestion\": \"다음 달에는 {tag.2.name} 태그의 지출을 한 번 더 줄여서 일정을 계획해 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.2.name} 태그의 지출을 한 번 더 줄여서 일정을 계획해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 충동 태그의 지출을 한 번 더 줄여서 일정을 계획해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-same",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 391.0994999999966,
+      "totalMs": 1691.1376999999993,
+      "promptTokens": 1382,
+      "attempts": [
+        {
+          "ms": 1681.4402000000046,
+          "firstTokenMs": 212.7853000000032,
+          "tokens": 65,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"tag.2.amount_share\",\n\"budget.usage_balance\",\n\"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 확인하세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 확인하세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-base",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 420.40179999999964,
+      "totalMs": 1607.370600000002,
+      "promptTokens": 1591,
+      "attempts": [
+        {
+          "ms": 1599.3029999999999,
+          "firstTokenMs": 255.74169999999867,
+          "tokens": 52,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.1.budget\", \"insights\": [\"regret.amount_share\", \"memo.2.count\"], \"suggestion\": \"다음 달에는 {tag.4.name} 지출이 없는 날을 하루 더 만들어 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.2",
+            "text": "{memo.2.text} 지출은 {memo.2.count} 있었고 합계는 {memo.2.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.4.name} 지출이 없는 날을 하루 더 만들어 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "후회한 지출은 96,000원으로 변동비의 8%였어요.",
+          "점심 도시락 지출은 9번 있었고 합계는 58,500원이었어요."
+        ],
+        "suggestion": "다음 달에는 약속·사교 지출이 없는 날을 하루 더 만들어 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-base",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 2998.2845000000016,
+      "totalMs": 5070.8879000000015,
+      "promptTokens": 1591,
+      "attempts": [
+        {
+          "ms": 2328.8295999999973,
+          "firstTokenMs": 259.5659000000014,
+          "tokens": 86,
+          "headlineTokens": 12,
+          "aborted": true,
+          "problems": [
+            "too-long"
+          ],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\n\"budget.usage_balance\",\n\"regret.amount_share\",\n\"tag.4.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {memo.3.text} 지출 전에 꼭 필요한지 생각해보고, {largest.memo}처럼 큰 지출은 한 번에 하지 않는 게 어떨까세요.\""
+        },
+        {
+          "ms": 2728.362099999991,
+          "firstTokenMs": 274.72929999999906,
+          "tokens": 65,
+          "headlineTokens": 12,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\n\"budget.balance\",\n\"tag.2.amount_share\",\n\"no_spend.days\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "전체 예산이 16,000원 남았어요.",
+          "충동 태그가 붙은 지출은 188,000원으로 변동비의 16%였어요.",
+          "지출이 없는 날이 3일 있었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-deficit",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 411.41599999999744,
+      "totalMs": 1171.7880000000005,
+      "promptTokens": 1520,
+      "attempts": [
+        {
+          "ms": 1163.9602000000014,
+          "firstTokenMs": 252.3747000000003,
+          "tokens": 55,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"category.1.budget\", \"insights\": [\"tag.2.amount_share\", \"budget.usage_balance\", \"largest.memo\"], \"suggestion\": \"다음 달에는 {tag.2.name} 태그로 지출을 줄이세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.memo}에 쓴 {largest.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.2.name} 태그로 지출을 줄이세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 188,000원으로 변동비의 16%였어요.",
+          "전체 예산의 99%를 써서 16,000원 남았어요.",
+          "가장 큰 지출은 콘서트에 쓴 89,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 충동 태그로 지출을 줄이세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "income."
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-deficit",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 416.80019999999786,
+      "totalMs": 1762.923299999995,
+      "promptTokens": 1520,
+      "attempts": [
+        {
+          "ms": 1754.7799999999988,
+          "firstTokenMs": 227.30419999999867,
+          "tokens": 70,
+          "headlineTokens": 12,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\n\"income.rate\",\n\"budget.usage_balance\",\n\"tag.2.amount_share\",\n\"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "income",
+            "text": "지출이 수입 {income.amount}의 {income.expense_rate}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "지출이 수입 1,750,000원의 112%였어요.",
+          "전체 예산의 99%를 써서 16,000원 남았어요.",
+          "충동 태그가 붙은 지출은 188,000원으로 변동비의 16%였어요.",
+          "후회한 지출은 96,000원으로 변동비의 8%였어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-income",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 354.29320000000007,
+      "totalMs": 1139.6775999999954,
+      "promptTokens": 1510,
+      "attempts": [
+        {
+          "ms": 1131.7707999999984,
+          "firstTokenMs": 229.1082999999926,
+          "tokens": 54,
+          "headlineTokens": 8,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"budget.usage_balance\", \"insights\": [\"tag.2.amount_share\", \"memo.3.count\", \"category.5.change\"], \"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.3",
+            "text": "{memo.3.text} 지출은 {memo.3.count} 있었고 합계는 {memo.3.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "category.5",
+            "text": "{category.5.name} 지출이 지난달보다 {category.5.change_phrase}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "전체 예산의 118%를 써서 184,000원 넘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 188,000원으로 변동비의 16%였어요.",
+          "택시 지출은 6번 있었고 합계는 71,400원이었어요.",
+          "쇼핑 지출이 지난달보다 84,000원 늘었어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-no-income",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 385.02700000000186,
+      "totalMs": 1356.2130000000034,
+      "promptTokens": 1510,
+      "attempts": [
+        {
+          "ms": 1348.1195000000007,
+          "firstTokenMs": 225.57679999999527,
+          "tokens": 67,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"budget.usage_balance\",\n\"insights\": [\"tag.1.amount_share\", \"category.3.change\", \"regret.amount_share\"],\n\"suggestion\": \"다음 달에는 {memo.2.text} 지출을 줄이면서 다른 요일에도 지출을 계획해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "category.3",
+            "text": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {memo.2.text} 지출을 줄이면서 다른 요일에도 지출을 계획해 보세요."
+      },
+      "rendered": {
+        "headline": "전체 예산의 118%를 써서 184,000원 넘었어요.",
+        "insights": [
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요.",
+          "배달 지출이 지난달보다 37,000원 늘었어요.",
+          "후회한 지출은 96,000원으로 변동비의 8%였어요."
+        ],
+        "suggestion": "다음 달에는 점심 도시락 지출을 줄이면서 다른 요일에도 지출을 계획해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-first",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 338.89899999999034,
+      "totalMs": 1121.4284999999945,
+      "promptTokens": 1343,
+      "attempts": [
+        {
+          "ms": 1113.5149000000092,
+          "firstTokenMs": 209.84219999999914,
+          "tokens": 53,
+          "headlineTokens": 8,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\"headline\": \"budget.usage_balance\", \"insights\": [\"income.rate\", \"regret.amount_share\", \"largest.category\"], \"suggestion\": \"다음 달에는 {tag.2.name} 지출이 없는 날을 하루 더 만들어 보세요.\"}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "income",
+            "text": "수입 {income.amount} 중 {income.expense_rate}{을/를} 썼어요."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "largest",
+            "text": "가장 큰 지출은 {largest.category}에 쓴 {largest.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.2.name} 지출이 없는 날을 하루 더 만들어 보세요."
+      },
+      "rendered": {
+        "headline": "전체 예산의 99%를 써서 16,000원 남았어요.",
+        "insights": [
+          "수입 3,200,000원 중 61%를 썼어요.",
+          "후회한 지출은 96,000원으로 변동비의 8%였어요.",
+          "가장 큰 지출은 문화·여가에 쓴 89,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 충동 지출이 없는 날을 하루 더 만들어 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "qwen3.5-2b",
+      "snapshot": "month-first",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 364.178899999999,
+      "totalMs": 1562.7734999999957,
+      "promptTokens": 1343,
+      "attempts": [
+        {
+          "ms": 1555.555800000002,
+          "firstTokenMs": 208.09490000001097,
+          "tokens": 63,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"budget.usage_balance\",\n\"insights\": [\n\"tag.1.amount_share\",\n\"income.rate\",\n\"no_spend.days\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "income",
+            "text": "수입 {income.amount} 중 {income.expense_rate}{을/를} 썼어요."
+          },
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "전체 예산의 99%를 써서 16,000원 남았어요.",
+        "insights": [
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요.",
+          "수입 3,200,000원 중 61%를 썼어요.",
+          "지출이 없는 날이 3일 있었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-spike",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 728.3087000000087,
+      "totalMs": 1303.5791000000027,
+      "promptTokens": 1525,
+      "attempts": [
+        {
+          "ms": 1297.468399999998,
+          "firstTokenMs": 558.0458999999973,
+          "tokens": 55,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-spike",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 403.17729999999574,
+      "totalMs": 1207.8772000000026,
+      "promptTokens": 1525,
+      "attempts": [
+        {
+          "ms": 1201.6101999999955,
+          "firstTokenMs": 236.72369999998773,
+          "tokens": 63,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.usage_balance\",\n\"tag.2.amount_share\",\n\"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-previous",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 467.9146000000037,
+      "totalMs": 1091.6684000000096,
+      "promptTokens": 1324,
+      "attempts": [
+        {
+          "ms": 1086.3697000000102,
+          "firstTokenMs": 206.39790000001085,
+          "tokens": 60,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"budget.balance\", \"tag.2.amount_share\", \"memo.1.count\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 59%를 써서 115,200원 남았어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-previous",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 471.4588000000076,
+      "totalMs": 1058.7171999999991,
+      "promptTokens": 1324,
+      "attempts": [
+        {
+          "ms": 1052.9370000000054,
+          "firstTokenMs": 205.74000000000524,
+          "tokens": 57,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"tag.2.amount_share\", \"category.3.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "category.3",
+            "text": "{category.3.name}에 쓴 {category.3.amount}{이/가} 변동비의 {category.3.share}{을/를} 차지했어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 59%를 써서 115,200원 남았어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "배달에 쓴 272,000원이 변동비의 36%를 차지했어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-few",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 423.70109999999113,
+      "totalMs": 1039.6603000000032,
+      "promptTokens": 1010,
+      "attempts": [
+        {
+          "ms": 1035.2041999999929,
+          "firstTokenMs": 175.504099999991,
+          "tokens": 59,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"no_spend.days\",\n\"insights\": [\"category.1.change\", \"budget.balance\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "지출이 없는 날이 {no_spend.days} 있었어요.",
+        "insights": [
+          {
+            "about": "category.1",
+            "text": "{category.1.name} 지출이 지난달보다 {category.1.change_phrase}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "지출이 없는 날이 27일 있었어요.",
+        "insights": [
+          "식비 지출이 지난달보다 68,000원 줄었어요.",
+          "전체 예산이 974,000원 남았어요.",
+          "요일별로는 수요일에 72,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전에 꼭 필요한지 다시 한번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-few",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 396.5590999999986,
+      "totalMs": 1025.2673000000068,
+      "promptTokens": 1010,
+      "attempts": [
+        {
+          "ms": 1020.1371999999974,
+          "firstTokenMs": 175.2551000000094,
+          "tokens": 60,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"no_spend.days\",\n\"insights\": [\"category.1.change\", \"budget.balance\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "지출이 없는 날이 {no_spend.days} 있었어요.",
+        "insights": [
+          {
+            "about": "category.1",
+            "text": "{category.1.name} 지출이 지난달보다 {category.1.change_phrase}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "지출이 없는 날이 27일 있었어요.",
+        "insights": [
+          "식비 지출이 지난달보다 68,000원 줄었어요.",
+          "전체 예산이 974,000원 남았어요.",
+          "요일별로는 수요일에 72,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-over",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 403.10779999999795,
+      "totalMs": 1033.9891999999963,
+      "promptTokens": 1498,
+      "attempts": [
+        {
+          "ms": 1027.8812000000034,
+          "firstTokenMs": 236.4386000000086,
+          "tokens": 59,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\", \"regret.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 184,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 112%를 써서 134,400원 넘었어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 17%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 15%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-over",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 397.40669999999227,
+      "totalMs": 1170.8299999999872,
+      "promptTokens": 1498,
+      "attempts": [
+        {
+          "ms": 1165.0092000000004,
+          "firstTokenMs": 233.23609999999462,
+          "tokens": 62,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.balance\",\n\"tag.2.amount_share\",\n\"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산을 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 184,000원 늘었어요.",
+        "insights": [
+          "전체 예산을 134,400원 넘었어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 17%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 15%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-budget",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 383.0932999999932,
+      "totalMs": 1162.7102000000014,
+      "promptTokens": 1450,
+      "attempts": [
+        {
+          "ms": 1156.6396999999997,
+          "firstTokenMs": 218.04210000000603,
+          "tokens": 62,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"tag.2.amount_share\", \"memo.1.count\"],\n\"suggestion\": \"다음 달에는 {tag.2.name} 태그가 붙은 지출을 기록하며 충동구매를 줄여 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.2.name} 태그가 붙은 지출을 기록하며 충동구매를 줄여 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 충동 태그가 붙은 지출을 기록하며 충동구매를 줄여 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-budget",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 380.07450000000244,
+      "totalMs": 1384.818699999989,
+      "promptTokens": 1450,
+      "attempts": [
+        {
+          "ms": 1379.2102000000014,
+          "firstTokenMs": 216.97460000000137,
+          "tokens": 58,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"tag.2.amount_share\", \"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-fixed-heavy",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 368.47260000000824,
+      "totalMs": 1106.3601999999955,
+      "promptTokens": 1320,
+      "attempts": [
+        {
+          "ms": 1100.861499999999,
+          "firstTokenMs": 205.24830000000657,
+          "tokens": 60,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.2.change\",\n\"insights\": [\n\"budget.balance\",\n\"tag.3.amount_share\",\n\"no_spend.days\"\n],\n\"suggestion\": \"다음 달에는 {category.2.name} 지출을 주 단위로 계획해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.2.name} 지출이 지난달보다 {category.2.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.3",
+            "text": "{tag.3.name} 태그가 붙은 지출은 {tag.3.amount}{으로/로} 변동비의 {tag.3.share}{이었어요/였어요}."
+          },
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.2.name} 지출을 주 단위로 계획해 보세요."
+      },
+      "rendered": {
+        "headline": "카페·간식 지출이 지난달보다 16,000원 줄었어요.",
+        "insights": [
+          "전체 예산이 728,000원 남았어요.",
+          "보상·스트레스 태그가 붙은 지출은 60,000원으로 변동비의 15%였어요.",
+          "지출이 없는 날이 4일 있었어요."
+        ],
+        "suggestion": "다음 달에는 카페·간식 지출을 주 단위로 계획해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.fixed"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-fixed-heavy",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 372.2103999999963,
+      "totalMs": 982.687699999995,
+      "promptTokens": 1320,
+      "attempts": [
+        {
+          "ms": 977.1932000000088,
+          "firstTokenMs": 209.0100000000093,
+          "tokens": 58,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.2.change\",\n\"insights\": [\"budget.balance\", \"tag.2.amount_share\", \"no_spend.days\"],\n\"suggestion\": \"다음 달에는 {category.2.name} 지출을 주 단위로 계획해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.2.name} 지출이 지난달보다 {category.2.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.2.name} 지출을 주 단위로 계획해 보세요."
+      },
+      "rendered": {
+        "headline": "카페·간식 지출이 지난달보다 16,000원 줄었어요.",
+        "insights": [
+          "전체 예산이 728,000원 남았어요.",
+          "충동 태그가 붙은 지출은 84,000원으로 변동비의 21%였어요.",
+          "지출이 없는 날이 4일 있었어요."
+        ],
+        "suggestion": "다음 달에는 카페·간식 지출을 주 단위로 계획해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.fixed"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-down",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 404.4103000000032,
+      "totalMs": 982.5908999999956,
+      "promptTokens": 1501,
+      "attempts": [
+        {
+          "ms": 976.367499999993,
+          "firstTokenMs": 234.72060000000056,
+          "tokens": 55,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 180,000원 줄었어요.",
+        "insights": [
+          "전체 예산의 51%를 써서 550,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 38%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.change"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-down",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 398.90469999999914,
+      "totalMs": 1169.255400000009,
+      "promptTokens": 1501,
+      "attempts": [
+        {
+          "ms": 1163.0668000000005,
+          "firstTokenMs": 233.36110000000917,
+          "tokens": 61,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.usage_balance\",\n\"tag.2.amount_share\",\n\"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 180,000원 줄었어요.",
+        "insights": [
+          "전체 예산의 51%를 써서 550,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 38%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 33%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "total.change"
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-prev-zero",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 384.2505999999994,
+      "totalMs": 949.5004999999946,
+      "promptTokens": 1449,
+      "attempts": [
+        {
+          "ms": 943.6175999999978,
+          "firstTokenMs": 217.2338000000018,
+          "tokens": 54,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.balance\", \"tag.2.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 272,000원 늘었어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-prev-zero",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 380.37450000000536,
+      "totalMs": 1271.0244999999995,
+      "promptTokens": 1449,
+      "attempts": [
+        {
+          "ms": 1264.5610000000015,
+          "firstTokenMs": 217.21089999999094,
+          "tokens": 56,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.balance\", \"tag.2.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 272,000원 늘었어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-dominant",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 408.02240000000165,
+      "totalMs": 1267.275099999999,
+      "promptTokens": 1279,
+      "attempts": [
+        {
+          "ms": 1261.675000000003,
+          "firstTokenMs": 198.0237999999954,
+          "tokens": 69,
+          "headlineTokens": 8,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.change\",\n\"insights\": [\n\"category.3.change_share\",\n\"regret.amount_share\",\n\"tag.2.amount_share\",\n\"memo.1.count\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 확인해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "category.3",
+            "text": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}. 변동비의 {category.3.share}{을/를} 차지했어요."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 확인해 보세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 432,000원 늘었어요.",
+        "insights": [
+          "배달 지출이 지난달보다 432,000원 늘었어요. 변동비의 81%를 차지했어요.",
+          "후회한 지출은 188,000원으로 변동비의 22%였어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 26%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 확인해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-dominant",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 409.0341000000044,
+      "totalMs": 1636.3352999999915,
+      "promptTokens": 1279,
+      "attempts": [
+        {
+          "ms": 1631.214399999997,
+          "firstTokenMs": 203.00860000000102,
+          "tokens": 60,
+          "headlineTokens": 8,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"total.change\",\n\"insights\": [\n\"category.3.amount_share\", \"category.3.change\", \"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "변동비가 지난달보다 {total.change_phrase}.",
+        "insights": [
+          {
+            "about": "category.3",
+            "text": "{category.3.name}에 쓴 {category.3.amount}{이/가} 변동비의 {category.3.share}{을/를} 차지했어요."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "변동비가 지난달보다 432,000원 늘었어요.",
+        "insights": [
+          "배달에 쓴 680,000원이 변동비의 81%를 차지했어요.",
+          "후회한 지출은 188,000원으로 변동비의 22%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-spread",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 461.8246999999974,
+      "totalMs": 1125.4688999999926,
+      "promptTokens": 1520,
+      "attempts": [
+        {
+          "ms": 1119.4772999999986,
+          "firstTokenMs": 237.23070000000007,
+          "tokens": 63,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"tag.2.amount_share\", \"memo.1.count\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 40%를 써서 168,000원 남았어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 28%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요.",
+          "요일별로는 토요일에 196,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-spread",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 414.4302000000025,
+      "totalMs": 1082.1296999999904,
+      "promptTokens": 1520,
+      "attempts": [
+        {
+          "ms": 1075.9821999999986,
+          "firstTokenMs": 237.63490000000456,
+          "tokens": 63,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"tag.2.amount_share\", \"memo.1.count\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 40%를 써서 168,000원 남았어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 28%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요.",
+          "요일별로는 토요일에 196,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-sparse",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 361.0095999999903,
+      "totalMs": 976.1833999999944,
+      "promptTokens": 1242,
+      "attempts": [
+        {
+          "ms": 970.7836000000098,
+          "firstTokenMs": 196.96959999999672,
+          "tokens": 51,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.balance\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출을 계획적으로 조절해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출을 계획적으로 조절해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "요일별로는 토요일에 196,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출을 계획적으로 조절해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-sparse",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 364.2924999999959,
+      "totalMs": 1331.5306999999884,
+      "promptTokens": 1242,
+      "attempts": [
+        {
+          "ms": 1326.287599999996,
+          "firstTokenMs": 202.03590000000258,
+          "tokens": 60,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.balance\", \"no_spend.days\", \"busiest.weekday_amount\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출을 주기적으로 점검해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출을 주기적으로 점검해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "지출이 없는 날이 4일 있었어요.",
+          "요일별로는 토요일에 196,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출을 주기적으로 점검해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-regret",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 395.16079999999783,
+      "totalMs": 1028.9530999999988,
+      "promptTokens": 1477,
+      "attempts": [
+        {
+          "ms": 1022.8304999999964,
+          "firstTokenMs": 221.32129999999597,
+          "tokens": 60,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.balance\", \"tag.2.amount_share\", \"memo.1.count\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 336,000원으로 변동비의 45%였어요.",
+          "편의점 커피 지출은 18번 있었고 합계는 45,000원이었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [
+            "regret."
+          ],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-regret",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 387.7438000000111,
+      "totalMs": 1153.7609999999986,
+      "promptTokens": 1477,
+      "attempts": [
+        {
+          "ms": 1148.0130000000063,
+          "firstTokenMs": 218.80930000000808,
+          "tokens": 61,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.usage_balance\",\n\"tag.2.amount_share\",\n\"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 336,000원으로 변동비의 45%였어요.",
+          "후회한 지출은 384,000원으로 변동비의 51%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-names",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 405.56759999999485,
+      "totalMs": 1034.3332999999984,
+      "promptTokens": 1521,
+      "attempts": [
+        {
+          "ms": 1027.629700000005,
+          "firstTokenMs": 236.80320000000938,
+          "tokens": 59,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.usage_balance\", \"tag.2.amount_share\", \"regret.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "GS25 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "충동 1순위 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 GS25 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-names",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 409.5310000000027,
+      "totalMs": 1655.0108000000037,
+      "promptTokens": 1521,
+      "attempts": [
+        {
+          "ms": 1648.0997000000061,
+          "firstTokenMs": 242.96240000000398,
+          "tokens": 63,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.usage_balance\", \"category.1.amount_share\", \"tag.2.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산의 {budget.usage}{을/를} 써서 {budget.balance_phrase}."
+          },
+          {
+            "about": "category.1",
+            "text": "{category.1.name}에 쓴 {category.1.amount}{이/가} 변동비의 {category.1.share}{을/를} 차지했어요."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "GS25 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산의 67%를 써서 370,800원 남았어요.",
+          "식비에 쓴 164,800원이 변동비의 22%를 차지했어요.",
+          "충동 1순위 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 GS25 지출 전에 꼭 필요한지 다시 한번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-spend",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 367.18060000000696,
+      "totalMs": 1602.6108999999997,
+      "promptTokens": 1252,
+      "attempts": [
+        {
+          "ms": 1597.6573000000062,
+          "firstTokenMs": 197.14960000000428,
+          "tokens": 59,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"no_spend.days\", \"category.1.amount_share\", \"tag.2.amount_share\"\n],\n\"suggestion\": \"다음 달에는 불필요한 배달 지출을 줄여 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          },
+          {
+            "about": "category.1",
+            "text": "{category.1.name}에 쓴 {category.1.amount}{이/가} 변동비의 {category.1.share}{을/를} 차지했어요."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 불필요한 배달 지출을 줄여 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 156,000원 줄었어요.",
+        "insights": [
+          "지출이 없는 날이 15일 있었어요.",
+          "식비에 쓴 152,000원이 변동비의 62%를 차지했어요.",
+          "충동 태그가 붙은 지출은 60,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 불필요한 배달 지출을 줄여 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-spend",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 365.2801000000036,
+      "totalMs": 1064.374800000005,
+      "promptTokens": 1252,
+      "attempts": [
+        {
+          "ms": 1059.3719000000128,
+          "firstTokenMs": 197.36650000000373,
+          "tokens": 58,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"tag.1.amount_share\", \"no_spend.days\", \"regret.amount_share\"],\n\"suggestion\": \"다음 달에는 배달 지출을 줄이기 위해 미리 계획해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "no_spend",
+            "text": "지출이 없는 날이 {no_spend.days} 있었어요."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 배달 지출을 줄이기 위해 미리 계획해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 156,000원 줄었어요.",
+        "insights": [
+          "필요 태그가 붙은 지출은 90,000원으로 변동비의 37%였어요.",
+          "지출이 없는 날이 15일 있었어요.",
+          "후회한 지출은 48,000원으로 변동비의 20%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출을 줄이기 위해 미리 계획해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-category-over",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 430.5478999999905,
+      "totalMs": 1136.2387000000017,
+      "promptTokens": 1553,
+      "attempts": [
+        {
+          "ms": 1130.4203999999881,
+          "firstTokenMs": 252.56629999999132,
+          "tokens": 57,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.budget\",\n\"insights\": [\"tag.2.amount_share\", \"regret.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 예산의 {category.3.budget_usage}{을/를} 써서 {category.3.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 예산의 170%를 써서 112,000원 넘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-category-over",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 476.613400000002,
+      "totalMs": 1355.5360999999975,
+      "promptTokens": 1553,
+      "attempts": [
+        {
+          "ms": 1349.4861999999994,
+          "firstTokenMs": 254.36909999999625,
+          "tokens": 62,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.budget\",\n\"insights\": [\"tag.2.amount_share\", \"budget.balance\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 예산의 {category.3.budget_usage}{을/를} 써서 {category.3.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 예산의 170%를 써서 112,000원 넘었어요.",
+        "insights": [
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "전체 예산이 370,800원 남았어요.",
+          "요일별로는 토요일에 196,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-same",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 382.0155000000086,
+      "totalMs": 949.391300000003,
+      "promptTokens": 1449,
+      "attempts": [
+        {
+          "ms": 943.6831999999995,
+          "firstTokenMs": 215.87790000000678,
+          "tokens": 54,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\"budget.balance\", \"tag.2.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-same",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 382.4458000000013,
+      "totalMs": 1326.5992000000115,
+      "promptTokens": 1449,
+      "attempts": [
+        {
+          "ms": 1320.9661999999953,
+          "firstTokenMs": 219.2514000000083,
+          "tokens": 62,
+          "headlineTokens": 10,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.3.change\",\n\"insights\": [\n\"budget.balance\", \"tag.2.amount_share\", \"regret.amount_share\"\n],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.2",
+            "text": "{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "배달 지출이 지난달보다 116,000원 늘었어요.",
+        "insights": [
+          "전체 예산이 370,800원 남았어요.",
+          "충동 태그가 붙은 지출은 216,000원으로 변동비의 29%였어요.",
+          "후회한 지출은 188,000원으로 변동비의 25%였어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-base",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 437.63400000000547,
+      "totalMs": 1000.9749000000011,
+      "promptTokens": 1666,
+      "attempts": [
+        {
+          "ms": 994.608899999992,
+          "firstTokenMs": 257.45269999999437,
+          "tokens": 55,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"budget.balance\", \"tag.1.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "전체 예산이 16,000원 남았어요.",
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-base",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 481.0149999999994,
+      "totalMs": 1048.7782000000007,
+      "promptTokens": 1666,
+      "attempts": [
+        {
+          "ms": 1042.2658000000083,
+          "firstTokenMs": 260.93940000000293,
+          "tokens": 55,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"budget.balance\", \"tag.1.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "전체 예산이 16,000원 남았어요.",
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-deficit",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 479.9233999999997,
+      "totalMs": 1104.9559000000008,
+      "promptTokens": 1587,
+      "attempts": [
+        {
+          "ms": 1098.8769999999931,
+          "firstTokenMs": 254.0857999999862,
+          "tokens": 60,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"income.balance\", \"memo.1.count\", \"busiest.weekday_amount\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "income",
+            "text": "수입보다 {income.balance_phrase}."
+          },
+          {
+            "about": "memo.1",
+            "text": "{memo.1.text} 지출은 {memo.1.count} 있었고 합계는 {memo.1.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "busiest",
+            "text": "요일별로는 {busiest.weekday}에 {busiest.amount}{으로/로} 가장 많이 썼어요."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "수입보다 214,000원 더 썼어요.",
+          "편의점 커피 지출은 14번 있었고 합계는 35,000원이었어요.",
+          "요일별로는 토요일에 312,000원으로 가장 많이 썼어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-deficit",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 474.9167000000016,
+      "totalMs": 1029.937300000005,
+      "promptTokens": 1587,
+      "attempts": [
+        {
+          "ms": 1023.9744000000064,
+          "firstTokenMs": 250.6712000000116,
+          "tokens": 54,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"income.balance\", \"tag.4.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "income",
+            "text": "수입보다 {income.balance_phrase}."
+          },
+          {
+            "about": "tag.4",
+            "text": "{tag.4.name} 태그가 붙은 지출은 {tag.4.amount}{으로/로} 변동비의 {tag.4.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 예산을 주 단위로 나눠 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "수입보다 214,000원 더 썼어요.",
+          "약속·사교 태그가 붙은 지출은 142,000원으로 변동비의 12%였어요."
+        ],
+        "suggestion": "다음 달에는 식비 예산을 주 단위로 나눠 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": false
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-income",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 395.6396999999997,
+      "totalMs": 1454.4033999999956,
+      "promptTokens": 1594,
+      "attempts": [
+        {
+          "ms": 1448.2835999999952,
+          "firstTokenMs": 251.136599999998,
+          "tokens": 65,
+          "headlineTokens": 8,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"budget.balance\",\n\"insights\": [\n\"tag.1.amount_share\", \"memo.3.count\", \"category.3.change\"\n],\n\"suggestion\": \"다음 달에는 {tag.1.name} 태그가 붙은 지출을 주기적으로 점검해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산을 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.3",
+            "text": "{memo.3.text} 지출은 {memo.3.count} 있었고 합계는 {memo.3.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "category.3",
+            "text": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}."
+          }
+        ],
+        "suggestion": "다음 달에는 {tag.1.name} 태그가 붙은 지출을 주기적으로 점검해 보세요."
+      },
+      "rendered": {
+        "headline": "전체 예산을 184,000원 넘었어요.",
+        "insights": [
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요.",
+          "택시 지출은 6번 있었고 합계는 71,400원이었어요.",
+          "배달 지출이 지난달보다 37,000원 늘었어요."
+        ],
+        "suggestion": "다음 달에는 필요 태그가 붙은 지출을 주기적으로 점검해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-no-income",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 395.2809000000125,
+      "totalMs": 1063.016300000003,
+      "promptTokens": 1594,
+      "attempts": [
+        {
+          "ms": 1055.9976999999926,
+          "firstTokenMs": 253.0414000000019,
+          "tokens": 60,
+          "headlineTokens": 8,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"budget.balance\",\n\"insights\": [\"tag.1.amount_share\", \"memo.3.count\", \"category.3.change\"],\n\"suggestion\": \"다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "전체 예산을 {budget.balance_phrase}.",
+        "insights": [
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "memo.3",
+            "text": "{memo.3.text} 지출은 {memo.3.count} 있었고 합계는 {memo.3.amount}{이었어요/였어요}."
+          },
+          {
+            "about": "category.3",
+            "text": "{category.3.name} 지출이 지난달보다 {category.3.change_phrase}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "전체 예산을 184,000원 넘었어요.",
+        "insights": [
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요.",
+          "택시 지출은 6번 있었고 합계는 71,400원이었어요.",
+          "배달 지출이 지난달보다 37,000원 늘었어요."
+        ],
+        "suggestion": "다음 달에는 배달 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        },
+        "salient": {
+          "missed": [],
+          "headline": true
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-first",
+      "run": 1,
+      "status": "done",
+      "firstSentenceMs": 391.6796000000031,
+      "totalMs": 1001.8282999999938,
+      "promptTokens": 1410,
+      "attempts": [
+        {
+          "ms": 995.7067999999999,
+          "firstTokenMs": 214.59379999998782,
+          "tokens": 59,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"budget.balance\", \"tag.1.amount_share\", \"regret.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          },
+          {
+            "about": "regret",
+            "text": "후회한 지출은 {regret.amount}{으로/로} 변동비의 {regret.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "전체 예산이 16,000원 남았어요.",
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요.",
+          "후회한 지출은 96,000원으로 변동비의 8%였어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전에 꼭 필요한지 다시 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    },
+    {
+      "model": "kanana-1.5-2.1b",
+      "snapshot": "month-first",
+      "run": 2,
+      "status": "done",
+      "firstSentenceMs": 402.77090000000317,
+      "totalMs": 989.1116000000038,
+      "promptTokens": 1410,
+      "attempts": [
+        {
+          "ms": 983.5844999999972,
+          "firstTokenMs": 218.51330000000598,
+          "tokens": 55,
+          "headlineTokens": 11,
+          "aborted": false,
+          "problems": [],
+          "raw": "{\n\"headline\": \"category.1.budget\",\n\"insights\": [\"budget.balance\", \"tag.1.amount_share\"],\n\"suggestion\": \"다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요.\"\n}"
+        }
+      ],
+      "output": {
+        "headline": "{category.1.name} 예산의 {category.1.budget_usage}{을/를} 써서 {category.1.budget_balance_phrase}.",
+        "insights": [
+          {
+            "about": "budget",
+            "text": "전체 예산이 {budget.balance_phrase}."
+          },
+          {
+            "about": "tag.1",
+            "text": "{tag.1.name} 태그가 붙은 지출은 {tag.1.amount}{으로/로} 변동비의 {tag.1.share}{이었어요/였어요}."
+          }
+        ],
+        "suggestion": "다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "rendered": {
+        "headline": "식비 예산의 104%를 써서 12,000원 넘었어요.",
+        "insights": [
+          "전체 예산이 16,000원 남았어요.",
+          "필요 태그가 붙은 지출은 410,000원으로 변동비의 35%였어요."
+        ],
+        "suggestion": "다음 달에는 식비 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요."
+      },
+      "auto": {
+        "tooLong": [],
+        "tooManySentences": [],
+        "banned": [],
+        "repeatedGroups": 0,
+        "misattributed": [],
+        "quality": {
+          "brokenDirection": [],
+          "directionSynonym": [],
+          "numeralLeak": [],
+          "promptLeak": [],
+          "notPolite": [],
+          "vowOrQuestion": [],
+          "wordRepeat": [],
+          "glued": []
+        }
+      }
+    }
+  ]
+}

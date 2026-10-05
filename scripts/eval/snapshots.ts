@@ -103,6 +103,7 @@ const spike: Facts = {
   busiestWeekday: { weekday: 5, amount: 196000 },
   repeatedMemos: [{ memo: '편의점 커피', count: 18, amount: 45000 }],
   incomeRatio: undefined,
+  follow: undefined,
 };
 
 /** 8월 한 달 */
@@ -149,6 +150,7 @@ const month: Facts = {
     { memo: '택시', count: 6, amount: 71400 },
   ],
   incomeRatio: { income: 3200000, expense: 1964000 },
+  follow: undefined,
 };
 
 const snapshot = (id: string, note: string, facts: Facts, override?: Partial<Names>): Snapshot => ({

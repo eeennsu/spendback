@@ -399,6 +399,52 @@ test('카테고리 표의 나머지 묶음은 기본 카테고리 "기타"와 �
   error.mockRestore();
 });
 
+test('지난달 회고의 제안이 가리킨 지출의 변화를 코드가 판정해 문장으로 쓴다(PRD 4.6)', async () => {
+  // 7월에 식비 30,000원, 7월 회고는 식비를 두고 제안했다. 8월 식비는 46,000원이다
+  await addTransaction(db, expense({ amount: 30000, date: '2026-07-10' }));
+  await august(4);
+  await saveRetrospective(db, {
+    kind: 'monthly',
+    periodStart: '2026-07-01',
+    periodEnd: '2026-07-31',
+    facts: { kind: 'monthly', period: '7월', groups: [] },
+    output: {
+      headline: '7월',
+      insights: [],
+      suggestion: '다음 달에는 {category.1.name} 지출 전에 꼭 필요한지 생각해 보세요.',
+    },
+    modelId: QWEN.id,
+    promptVersion: 'v6',
+  });
+  await mount('2026-08-01');
+
+  // LLM이 고르지 않고 화면이 늘 쓴다. 모델이 없어도 나온다
+  expect(await screen.findByText('모델이 없어 앱이 고른 사실만 보여 줘요')).toBeOnTheScreen();
+  expect(screen.getByText('지난달 제안 뒤 식비 지출이 16,000원 늘었어요.')).toBeOnTheScreen();
+});
+
+test('총지출 카드는 변동비 증감의 원인이 된 카테고리를 코드로 쓴다(PRD 4.6)', async () => {
+  // 7월 식비 30,000원·배달 10,000원 → 8월 식비 46,000원·배달 12,000원. 늘어난 18,000원 중 16,000원이 식비다
+  // 직전 달(7월)이 첫 기록일 뒤라야 비교한다
+  await addTransaction(db, expense({ amount: 1000, date: '2026-06-20' }));
+  await addTransaction(db, expense({ amount: 30000, date: '2026-07-10' }));
+  await addTransaction(db, expense({ amount: 10000, date: '2026-07-11', categoryId: 3 }));
+  await august(4);
+  await addTransaction(db, expense({ amount: 12000, date: '2026-08-20', categoryId: 3 }));
+  await mount('2026-08-01');
+
+  expect(await screen.findByText('늘어난 18,000원 중 16,000원이 식비예요')).toBeOnTheScreen();
+});
+
+test('한 카테고리만 변했으면 "모두"라고 쓴다', async () => {
+  await addTransaction(db, expense({ amount: 1000, date: '2026-06-20' }));
+  await addTransaction(db, expense({ amount: 30000, date: '2026-07-10' }));
+  await august(4);
+  await mount('2026-08-01');
+
+  expect(await screen.findByText('늘어난 16,000원은 모두 식비예요')).toBeOnTheScreen();
+});
+
 describe('저장한 뒤 그 달 기록이 바뀌면 낡은 회고라고 알린다(PRD 4.6 생성 조건)', () => {
   /** 실제 facts 스냅샷으로 8월 회고를 만들어 저장하고 화면을 내린다 */
   async function saveAugust() {

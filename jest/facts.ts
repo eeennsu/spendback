@@ -44,6 +44,7 @@ export const sampleFacts: Facts = {
   busiestWeekday: { weekday: 5, amount: 71500 },
   repeatedMemos: [{ memo: '편의점 커피', count: 5, amount: 12500 }],
   incomeRatio: undefined,
+  follow: undefined,
 };
 
 export const sampleNames = {

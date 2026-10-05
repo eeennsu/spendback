@@ -56,26 +56,30 @@ type Format = {
 
 /** 하네스로 프롬프트를 비교할 때 버전을 더한다(scripts/eval --prompt) */
 const FORMATS: Record<PromptVersion, (keyed: KeyedFacts) => Format> = {
-  /**
-   * 문장 틀. LLM은 틀 id를 고르고 제안만 쓴다. 코드가 id를 문장으로 펼친다(frames.ts). 총지출 묶음은 headline으로만
-   * 고른다(insightFrames)
-   */
-  v5: keyed => {
-    const frames = buildFrames(keyed);
-    const values = factValues(keyed);
-    const names = nameKeys(keyed);
-    const fit = headlineFrames(keyed, frames, text => render(text, values));
-    const headlines = fit.length ? fit : frames;
-    const insights = insightFrames(frames);
-    return {
-      request: {
-        messages: buildMessages(keyed, frames, headlines, names, insights),
-        grammar: buildGrammar(headlines, insights, names, keyed.kind),
-      },
-      ...frameFormat(keyed, frames),
-    };
-  },
+  v5: keyed => frameFormatOf(keyed, 'v5'),
+  /** v5에서 headline 전용 묶음 안내를 user 메시지로 옮겼다. 지시문이 늘 같아 세션 파일로 다시 쓴다(PRD 6장) */
+  v6: keyed => frameFormatOf(keyed, 'v6'),
 };
+
+/**
+ * 문장 틀. LLM은 틀 id를 고르고 제안만 쓴다. 코드가 id를 문장으로 펼친다(frames.ts). 총지출 묶음은 headline으로만
+ * 고른다(insightFrames)
+ */
+function frameFormatOf(keyed: KeyedFacts, version: PromptVersion): Format {
+  const frames = buildFrames(keyed);
+  const values = factValues(keyed);
+  const names = nameKeys(keyed);
+  const fit = headlineFrames(keyed, frames, text => render(text, values));
+  const headlines = fit.length ? fit : frames;
+  const insights = insightFrames(frames);
+  return {
+    request: {
+      messages: buildMessages(keyed, frames, headlines, names, insights, version),
+      grammar: buildGrammar(headlines, insights, names, keyed.kind),
+    },
+    ...frameFormat(keyed, frames),
+  };
+}
 
 export const formatFor = (keyed: KeyedFacts, version: PromptVersion = PROMPT_VERSION) =>
   FORMATS[version](keyed);

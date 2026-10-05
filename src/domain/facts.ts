@@ -1,5 +1,6 @@
 import { budgetForMonth } from './budget';
 import { addDays, weekday } from './date';
+import { type FollowTarget, followed } from './follow';
 import { type PeriodKind, periodEnd, previousStart } from './periods';
 import { type Budget, type Category, type Transaction, isVariableExpense } from './types';
 
@@ -28,6 +29,8 @@ export type FactsInput = {
   budgets: Budget[];
   /** 증감 상위 3개에서 동점을 가르는 카테고리 순서. 숨긴 카테고리도 넣는다 */
   categories: Pick<Category, 'id' | 'sortOrder'>[];
+  /** 지난달 회고의 제안이 가리키는 대상. 지난달 회고가 없거나 제안에 이름 키가 없으면 없다(PRD 4.6) */
+  follow?: FollowTarget;
 };
 
 const sum = (txs: Tx[]) => txs.reduce((total, tx) => total + tx.amount, 0);
@@ -57,6 +60,7 @@ export function computeFacts({
   firstRecordDate,
   budgets,
   categories,
+  follow,
 }: FactsInput) {
   const { kind, start } = period;
   const end = periodEnd(kind, start);
@@ -103,6 +107,8 @@ export function computeFacts({
     (a, b) => b.amount - a.amount || a.date.localeCompare(b.date) || a.id - b.id,
   )[0];
   const income = sum(current.filter(tx => tx.type === 'income'));
+  const followAmount = follow && sum(variable.filter(followed(follow)));
+  const followPrevious = follow && sum(previousVariable.filter(followed(follow)));
 
   return {
     kind,
@@ -165,7 +171,31 @@ export function computeFacts({
       .slice(0, 3),
     /** 수입 기록이 있을 때만. 지출은 고정비를 포함한다 */
     incomeRatio: income > 0 ? { income, expense: sum(expenses) } : undefined,
+    /** 지난달 제안의 대상에 쓴 이번 달과 지난달 변동비. 둘 다 0이면 없다 */
+    follow:
+      follow && (followAmount || followPrevious)
+        ? { target: follow, amount: followAmount ?? 0, previous: followPrevious ?? 0 }
+        : undefined,
   };
 }
 
 export type Facts = ReturnType<typeof computeFacts>;
+
+/**
+ * 변동비 증감의 원인(PRD 4.6). 같은 방향으로 가장 크게 변한 카테고리(증감 상위 3개 중)가 변동비 증감의 절반 이상,
+ * 전부 이하를 차지하면 그 카테고리다. 전부를 넘으면 "늘어난 10,000원 중 29,000원"이 된다. 변동비 증감이 직전 달의
+ * 5%보다 작으면 원인을 따질 만한 증감이 아니다. 회고 상세의 총지출 카드가 코드로 쓴다(LLM에 주면 같은 카테고리의 증감
+ * 문장이 headline이 되어 한 묶음 한 틀 규칙으로 나올 수 없었다)
+ */
+export function changeDriver(facts: Facts) {
+  const total = facts.change?.amount;
+  if (!facts.change || !total) return undefined;
+  if (facts.change.previous > 0 && Math.abs(total) / facts.change.previous < 0.05) return undefined;
+  const top = (facts.topCategoryChanges ?? [])
+    .filter(c => Math.sign(c.change) === Math.sign(total))
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))[0];
+  const ratio = top ? top.change / total : 0;
+  return top && ratio >= 0.5 && ratio <= 1
+    ? { categoryId: top.categoryId, total, part: top.change }
+    : undefined;
+}

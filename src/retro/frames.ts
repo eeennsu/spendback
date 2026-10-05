@@ -174,6 +174,17 @@ export function buildFrames(keyed: KeyedFacts): Frame[] {
 }
 
 /**
+ * 지난달 제안 따라가기의 문장(PRD 4.6). LLM이 고르게 하면 두 모델 모두 한 번도 고르지 않아(2026-10-05 하네스) 화면이
+ * 늘 제안 바로 위에 쓴다. 증감만 말하고 잘했다·못했다를 쓰지 않는다. 지난달 제안이 없으면 없다
+ */
+export function followSentence(keyed: KeyedFacts) {
+  const g = keyed.groups.find(group => groupKind(group.id) === 'follow');
+  if (!g) return undefined;
+  const what = g.id === 'follow.tag' ? '태그가 붙은 지출이' : '지출이';
+  return `지난달 제안 뒤 {${g.id}.name} ${what} {${g.id}.change_phrase}.`;
+}
+
+/**
  * insight로 고를 수 있는 틀(PRD 4.6). 총지출 묶음은 뺀다. 회고 상세의 카드가 총지출·변동비·고정비와 변동비 증감을
  * 늘 보여 줘서 회고 문장이 같은 사실을 두 번 말했다(DESIGN.md 8.4 003). 총지출 묶음은 headline 후보로만 남는다.
  * 총지출을 뺀 묶음이 셋보다 적으면 headline을 고른 뒤 insight 2개를 다른 묶음으로 채울 수 없어 그대로 둔다

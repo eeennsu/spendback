@@ -373,16 +373,19 @@ describe('내역', () => {
     try {
       await addTransaction(db, expense({ memo: '햄버거', categoryId: 2, paymentMethod: 'card' }));
       await addTransaction(db, expense({ memo: '붕어빵', amount: 3000, paymentMethod: 'cash' }));
+      await addTransaction(db, expense({ memo: '개인 용돈', categoryId: 2, amount: 50000 }));
       await mount(<HistoryScreen />);
 
       const burger = await screen.findByRole('button', { name: '햄버거, 개인 용돈, 지출 9,500원' });
       expect(within(burger).getByText('💰')).toBeOnTheScreen();
       expect(within(burger).getByText('개인 용돈')).toBeOnTheScreen();
       expect(within(burger).queryByText(/카드/)).toBeNull();
+      // 메모가 카테고리 이름과 같으면 아랫줄에 되풀이하지 않는다
+      expect(screen.getByRole('button', { name: '개인 용돈, 지출 50,000원' })).toBeOnTheScreen();
       const bread = screen.getByRole('button', { name: '붕어빵, 식비 · 현금, 지출 3,000원' });
       expect(within(bread).getByText('식비 · 현금')).toBeOnTheScreen();
       // 날짜 머리는 날짜와 합계를 양 끝에 두고 한 줄로 읽힌다
-      expect(screen.getByRole('header', { name: '9월 24일 목요일 · 12,500원' })).toBeOnTheScreen();
+      expect(screen.getByRole('header', { name: '9월 24일 목요일 · 62,500원' })).toBeOnTheScreen();
     } finally {
       await renameCategory(db, 2, '카페·간식');
     }
@@ -405,6 +408,13 @@ describe('내역', () => {
     expect(screen.queryByText('편의점 커피')).toBeNull();
     expect(screen.getByLabelText('9월 지출 9,500원')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: '초기화' })).toBeOnTheScreen();
+
+    // 카테고리 보기로 돌아오면 눌러 건 카테고리 조건을 풀고 모든 카테고리의 몫을 보인다
+    await fireEvent.press(screen.getByRole('button', { name: '카테고리' }));
+    expect(
+      await screen.findByRole('button', { name: '카페·간식 32%, 4,500원, 내역 보기' }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: '초기화' })).toBeNull();
   });
 
   test('필터 결과가 비면 필터 초기화를 보인다', async () => {

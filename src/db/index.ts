@@ -1,10 +1,11 @@
 import { type DB, open } from '@op-engineering/op-sqlite';
 import type { OPSQLiteDatabase } from 'drizzle-orm/op-sqlite';
 import { migrate } from 'drizzle-orm/op-sqlite/migrator';
-import { type SqliteRemoteDatabase, drizzle } from 'drizzle-orm/sqlite-proxy';
+import type { SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy';
 
 import migrations from './migrations/migrations';
-import * as schema from './schema';
+import type * as schema from './schema';
+import { serialDb } from './serial';
 
 /** 저장소 함수는 db를 인자로 받는다. 테스트는 같은 드라이버를 node:sqlite로 잇는다(jest/db.ts) */
 export type Db = SqliteRemoteDatabase<typeof schema>;
@@ -24,19 +25,16 @@ function sqlite() {
 /**
  * drizzle-orm의 op-sqlite 드라이버는 op-sqlite 옛 API(executeAsync, rows._array)를 불러 op-sqlite 18에서
  * 동작하지 않는다(drizzle-orm 0.45.3, 1.0.0-rc.4 모두). 범용 드라이버 sqlite-proxy로 잇는다.
- * proxy는 run 말고는 행을 값 배열로 받는다. get은 첫 행 하나다.
+ * proxy는 run 말고는 행을 값 배열로 받는다. get은 첫 행 하나다. 연결이 하나라 쿼리를 한 줄로 세운다(serial.ts).
  */
-export const db: Db = drizzle(
-  async (query, params, method) => {
-    if (method === 'run') {
-      await sqlite().execute(query, params);
-      return { rows: [] };
-    }
-    const { rawRows } = await sqlite().executeRaw(query, params);
-    return { rows: method === 'get' ? rawRows[0] : rawRows };
-  },
-  { schema },
-);
+export const db: Db = serialDb(async (query, params, method) => {
+  if (method === 'run') {
+    await sqlite().execute(query, params);
+    return { rows: [] };
+  }
+  const { rawRows } = await sqlite().executeRaw(query, params);
+  return { rows: method === 'get' ? rawRows[0] : rawRows };
+});
 
 /**
  * 앱을 열 때 한 번 부른다. op-sqlite 마이그레이터는 드라이버와 상관없이 db.dialect.migrate(마이그레이션, db.session)만

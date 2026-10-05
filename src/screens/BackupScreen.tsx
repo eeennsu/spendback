@@ -12,6 +12,7 @@ import {
   parseBackup,
 } from '../db/backup';
 import { Files } from '../native/files';
+import { stopCardSuggestions } from '../state/cards';
 import { mutate, read, useToday } from '../state/data';
 import { ScreenScroll } from '../ui/layout';
 import { Prose } from '../ui/prose';
@@ -52,11 +53,23 @@ export function BackupScreen() {
       return `기록 ${transactions}건을 파일로 만들었어요`;
     });
 
-  /** 지금 데이터를 한 벌 남기고 교체한다 */
+  /**
+   * 지금 데이터를 한 벌 남기고 교체한다. 한 벌은 먼저 옆 파일에 써 두고(쓰지 못하면 가져오지 않는다), 교체에 성공한
+   * 뒤에만 앞서 남긴 한 벌과 바꾼다. 넣다가 실패한 가져오기는 아무것도 바꾸지 않았으므로 앞서 남긴 한 벌을 그대로 둔다.
+   * 홈에서 시작한 카드 추천은 먼저 멈춘다. 돌던 추천이 옛 카테고리 id를 새 기록의 대기열에 적는다
+   */
   const replace = async (backup: Backup) => {
     const current = await read(db => exportBackup(db));
-    await Files.writeTextFile(beforeImportPath(), JSON.stringify(current));
-    await mutate(db => importBackup(db, backup));
+    const next = `${beforeImportPath()}.next`;
+    await Files.writeTextFile(next, JSON.stringify(current));
+    try {
+      await stopCardSuggestions();
+      await mutate(db => importBackup(db, backup));
+    } catch (error) {
+      Files.deleteFile(next);
+      throw error;
+    }
+    if (!Files.moveFile(next, beforeImportPath())) throw new Error('한 벌을 옮기지 못했다');
     setCanUndo(true);
   };
 
@@ -68,7 +81,12 @@ export function BackupScreen() {
 
   const pick = () =>
     run(async () => {
-      const text = await Files.pickTextFile();
+      // 네이티브는 너무 큰 파일을 통째로 읽지 않고 거부한다(메모리 부족으로 앱이 죽는다)
+      const text = await Files.pickTextFile().catch((error: { code?: string }) => {
+        if (error.code === 'too-large')
+          throw new BackupError('백업 파일이 아니에요. 파일이 너무 커요');
+        throw error;
+      });
       if (text === null) return '';
       const backup = parseBackup(text);
       const { transactions, fixedCosts, retrospectives } = backupSummary(backup);
@@ -89,6 +107,7 @@ export function BackupScreen() {
       '지금 기록이 가져오기 직전의 기록으로 바뀌어요.',
       async () => {
         const backup = parseBackup(await Files.readTextFile(beforeImportPath()));
+        await stopCardSuggestions();
         await mutate(db => importBackup(db, backup));
         Files.deleteFile(beforeImportPath());
         setCanUndo(false);

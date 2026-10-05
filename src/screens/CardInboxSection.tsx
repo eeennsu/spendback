@@ -1,7 +1,7 @@
 import { Stack, Text } from '@eeennsu/native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Alert, AppState } from 'react-native';
 import { Text as RNText, View } from 'react-native-css/components';
 
 import { type InboxItem, confirmCancel, dismissInbox, inboxView } from '../cards/inbox';
@@ -36,9 +36,16 @@ export function CardInboxSection({ today }: { today: string }) {
   });
   const waiting = data?.items.some(item => item.needsSuggestion) ?? false;
 
+  // 백그라운드로 가 멈춘 추천은 앞으로 돌아오면 다시 돌린다. 새 알림이 없으면 DB가 바뀌지 않아 effect가 다시 돌지 않는다
   useFocusEffect(
     useCallback(() => {
-      if (waiting && data) void suggestCards(data.categories, modelFor(data.modelId));
+      if (!waiting || !data) return;
+      const suggest = () => void suggestCards(data.categories, modelFor(data.modelId));
+      suggest();
+      const subscription = AppState.addEventListener('change', state => {
+        if (state === 'active') suggest();
+      });
+      return () => subscription.remove();
     }, [waiting, data]),
   );
 

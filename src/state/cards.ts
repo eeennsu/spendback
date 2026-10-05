@@ -6,9 +6,9 @@ import { watchedApps } from '../cards/parse';
 import type { Category } from '../cards/prompt';
 import Cards from '../native/NativeSpendbackCards';
 import { hasModel, modelPath } from '../native/files';
-import { llamaBusy, llamaNarrator } from '../retro/llama';
+import { llamaBusy, llamaNarrator, llamaReleased } from '../retro/llama';
 import type { Model } from '../retro/models';
-import { mutate } from './data';
+import { mutate, mutateIfWritten } from './data';
 
 /**
  * 카드 알림(PRD 4.9). 네이티브 서비스가 적은 대기열을 DB로 옮기고(syncCards), 처음 보는 가맹점의 카테고리를 LLM에
@@ -51,17 +51,27 @@ export function useCardSync(ready: boolean) {
 
 let batch: { abort: AbortController; release: () => Promise<void> } | null = null;
 
+/** 앱이 앞에 있다. 백그라운드에서는 모델을 올리지 않는다(PRD 6장) */
+const foreground = () => AppState.currentState === 'active';
+
 /**
- * 처음 보는 가맹점의 승인에 LLM 추천을 붙인다. 이미 돌고 있거나, 모델이 없거나, 회고가 모델을 쓰고 있으면 하지 않는다.
- * 다 돌면 모델을 내린다
+ * 처음 보는 가맹점의 승인에 LLM 추천을 붙인다. 이미 돌고 있거나, 모델이 없거나, 앱이 백그라운드거나, 회고가 모델을
+ * 쓰고 있으면 하지 않는다. 회고가 모델을 내리는 중이면 다 내린 뒤에 한다. 다 돌면 모델을 내린다. 추천을 적었을 때만
+ * 화면을 다시 그린다. 쓴 것 없이 끝나도(로드 실패, 멈춤) 다시 그리면 홈의 포커스 effect가 곧바로 또 부른다
  */
 export async function suggestCards(categories: Category[], model: Model) {
-  if (batch || llamaBusy() || !hasModel(model)) return;
+  if (batch || !hasModel(model) || !foreground()) return;
+  if (llamaBusy()) {
+    await llamaReleased();
+    if (batch || llamaBusy() || !foreground()) return;
+  }
   const abort = new AbortController();
   const narrator = llamaNarrator(modelPath(model));
   batch = { abort, release: narrator.release };
   try {
-    await mutate(database => suggestPending(database, categories, narrator.generate, abort.signal));
+    await mutateIfWritten(database =>
+      suggestPending(database, categories, narrator.generate, abort.signal),
+    );
   } finally {
     if (batch?.abort === abort) batch = null;
     await narrator.release();

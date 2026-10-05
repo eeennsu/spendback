@@ -23,11 +23,16 @@ export function BudgetScreen() {
   const budgets = useQuery('budgets', allBudgets);
   if (!lists || !budgets) return null;
   const month = today.slice(0, 7);
+  const current = budgetForMonth(budgets, month);
+  // 숨긴 카테고리도 예산이 남아 있으면 칸을 보인다. 칸이 없으면 홈 게이지·합 경고·회고에 계속 쓰이는데 비울 길이 없다
+  const budgeted = new Set(current?.categoryBudgets.map(c => c.categoryId));
   return (
     <BudgetForm
       month={month}
-      current={budgetForMonth(budgets, month)}
-      categories={lists.categories.filter(c => c.type === 'expense' && !c.hidden)}
+      current={current}
+      categories={lists.categories.filter(
+        c => c.type === 'expense' && (!c.hidden || budgeted.has(c.id)),
+      )}
     />
   );
 }
@@ -98,9 +103,14 @@ function BudgetForm({
             const value = perCategory[category.id] ?? '';
             return (
               <Stack key={category.id} direction='row' align='center' className='gap-3'>
-                <Label htmlFor={`category-${category.id}`} className='w-24'>
-                  {category.name}
-                </Label>
+                <Stack className='w-24'>
+                  <Label htmlFor={`category-${category.id}`}>{category.name}</Label>
+                  {category.hidden && (
+                    <Text size='sm' tone='muted'>
+                      숨김
+                    </Text>
+                  )}
+                </Stack>
                 <Input
                   id={`category-${category.id}`}
                   label={`${category.name} 예산`}

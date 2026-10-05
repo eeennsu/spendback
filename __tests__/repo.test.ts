@@ -259,6 +259,13 @@ describe('백업', () => {
     expect(() => parseBackup(JSON.stringify(suggested))).toThrow('백업의 기록이 올바르지 않아요');
   });
 
+  test('앱이 저장할 수 없는 0원 총예산은 받지 않는다', async () => {
+    const backup = await exportBackup(await filled());
+    expect(backup.budgets.length).toBeGreaterThan(0);
+    const zero = { ...backup, budgets: backup.budgets.map(b => ({ ...b, total: 0 })) };
+    expect(() => parseBackup(JSON.stringify(zero))).toThrow(BackupError);
+  });
+
   test('버전 1 파일은 가맹점과 추천값이 없는 것으로 읽는다', async () => {
     const backup = await exportBackup(await filled());
     const v1 = {

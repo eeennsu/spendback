@@ -112,6 +112,35 @@ test('취소하면 생성을 멈추고, release하면 모델을 내린다', asyn
   expect(context.release).toHaveBeenCalled();
 });
 
+test('생성이 시작되기 전(채팅 서식을 만드는 동안) 취소해도 생성이 멈춘다', async () => {
+  // llama.rn 0.12.9: completion은 채팅 서식(getFormattedChat)을 기다린 뒤 생성을 시작하며 중단 표시를 지운다(rewind)
+  const state = { interrupted: false, produced: 0 };
+  const context = {
+    completion: jest.fn(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+      state.interrupted = false;
+      while (!state.interrupted && state.produced < 100) {
+        await new Promise(resolve => setTimeout(resolve, 5));
+        state.produced += 1;
+      }
+      return { text: '' };
+    }),
+    stopCompletion: jest.fn(() => {
+      state.interrupted = true;
+    }),
+    release: jest.fn(async () => {}),
+  };
+  jest.mocked(initLlama).mockResolvedValue(context as never);
+  const { generate } = llamaNarrator('/models/qwen.gguf');
+  const controller = new AbortController();
+  const running = generate(request, () => {}, controller.signal);
+  while (!context.completion.mock.calls.length)
+    await new Promise(resolve => setTimeout(resolve, 0));
+  controller.abort();
+  await running;
+  expect(state.produced).toBeLessThan(20);
+});
+
 test('생성 중에 release하면 생성이 멈춘 뒤에 모델을 내린다', async () => {
   const order: string[] = [];
   let finish = () => {};

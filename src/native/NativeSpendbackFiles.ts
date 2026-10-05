@@ -21,9 +21,11 @@ export interface Spec extends TurboModule {
   /** 파일 크기. 없으면 -1 */
   fileSize(path: string): CodegenTypes.Double;
   deleteFile(path: string): boolean;
+  /** from을 to로 옮긴다. to가 있으면 한 번에 바꾼다(rename). 옮기지 못하면 false */
+  moveFile(from: string, to: string): boolean;
   /**
    * url을 path로 내려받는다. 받는 중에는 `${path}.part`에 쓰고, 그 파일이 있으면 Range로 이어받는다. 받으면서
-   * SHA-256을 계산해 sha256과 같을 때만 path로 옮긴다. 실패하면 code가 no-space · hash-mismatch · network ·
+   * SHA-256을 계산해 sha256과 같을 때만 path로 옮긴다. 실패하면 code가 no-space · hash-mismatch · unavailable(HTTP 오류) · network ·
    * cancelled인 오류로 거부한다(네트워크 오류에는 .part를 남겨 이어받는다)
    */
   download(

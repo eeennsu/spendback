@@ -55,6 +55,13 @@ const PAYMENT_GATEWAYS = [
   '스마일페이',
   'SSG페이',
   '페이레터',
+  // 법인 등기명 한글 표기와 옛 이름. 카드사는 브랜드 대신 법인명으로 보내기도 한다
+  '토스페이먼츠',
+  '케이지이니시스',
+  '케이지모빌리언스',
+  '엔에이치엔케이씨피',
+  'NHN한국사이버결제',
+  '엔에이치엔페이코',
 ];
 
 export function isPaymentGateway(name: string) {

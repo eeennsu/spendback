@@ -30,13 +30,26 @@ export function HistoryFilterSheet() {
   if (!lists) return null;
 
   const set = (patch: Partial<HistoryFilterState>) => setDraft(d => ({ ...d, ...patch }));
-  const categories = lists.categories
-    .filter(c => !c.hidden && (draft.type === undefined || c.type === draft.type))
-    .map(c => ({
-      value: c.id,
-      label: c.type === 'income' && draft.type === undefined ? `${c.name}(수입)` : c.name,
-    }));
-  const tags = lists.reasonTags.filter(t => !t.hidden).map(t => ({ value: t.id, label: t.name }));
+  // 숨김은 지난 기록을 보존하므로(PRD 4.2) 숨긴 것도 고를 수 있게 보이는 것 뒤에 둔다. 걸려 있던 조건도 풀 수 있다
+  const hiddenLast = <T extends { hidden: boolean }>(rows: T[]) => [
+    ...rows.filter(r => !r.hidden),
+    ...rows.filter(r => r.hidden),
+  ];
+  const hiddenMark = (row: { hidden: boolean }, label: string) =>
+    row.hidden ? `${label} · 숨김` : label;
+  const categories = hiddenLast(
+    lists.categories.filter(c => draft.type === undefined || c.type === draft.type),
+  ).map(c => ({
+    value: c.id,
+    label: hiddenMark(
+      c,
+      c.type === 'income' && draft.type === undefined ? `${c.name}(수입)` : c.name,
+    ),
+  }));
+  const tags = hiddenLast(lists.reasonTags).map(t => ({
+    value: t.id,
+    label: hiddenMark(t, t.name),
+  }));
   const from = draft.from ?? today;
   const to = draft.to ?? today;
 

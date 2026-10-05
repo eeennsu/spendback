@@ -1,5 +1,6 @@
 import { sampleFacts, sampleNames } from '../jest/facts';
 import { SNAPSHOTS } from '../scripts/eval/snapshots';
+import type { Facts } from '../src/domain/facts';
 import { checkSentence } from '../src/retro/check';
 import {
   type Frame,
@@ -193,6 +194,69 @@ describe('headline 후보의 초점', () => {
 
   test('무지출일이 많은 주는 무지출일이 headline 후보다', () => {
     expect(candidates('week-no-spend')).toContain('no_spend.days');
+  });
+
+  // 카페·간식 예산 10,000원에 23,600원을 썼다. 예산 틀은 채우면 31자라 headline 한도(30자)를 넘는다
+  const longOver: Facts = {
+    kind: 'weekly',
+    start: '2026-09-21',
+    end: '2026-09-27',
+    variableCount: 10,
+    total: 187300,
+    variable: 187300,
+    fixed: 0,
+    change: { previous: 177300, amount: 10000 },
+    categories: [
+      { categoryId: 1, amount: 60000 },
+      { categoryId: 3, amount: 55000 },
+      { categoryId: 4, amount: 48700 },
+      { categoryId: 2, amount: 23600 },
+    ],
+    topCategoryChanges: [{ categoryId: 2, current: 23600, previous: 13600, change: 10000 }],
+    budget: {
+      budget: 280000,
+      spent: 187300,
+      categories: [{ categoryId: 2, budget: 10000, spent: 23600 }],
+    },
+    reasonTags: [],
+    regret: 0,
+    largest: {
+      ...sampleFacts.largest,
+      amount: 30000,
+      date: '2026-09-26',
+      categoryId: 1,
+      memo: null,
+    },
+    noSpendDays: 0,
+    busiestDay: { date: '2026-09-26', amount: 40000 },
+    busiestWeekday: undefined,
+    repeatedMemos: [],
+    incomeRatio: undefined,
+  };
+  const longNames = {
+    categories: new Map([
+      [1, '식비'],
+      [2, '카페·간식'],
+      [3, '배달'],
+      [4, '교통'],
+    ]),
+    reasonTags: new Map<number, string>(),
+  };
+
+  test('까닭을 말하는 틀이 30자를 넘는 묶음은 다른 틀로 headline을 대신하지 않는다', () => {
+    const keyed = keyFacts(longOver, longNames);
+    const values = factValues(keyed);
+    const ids = headlineFrames(keyed, buildFrames(keyed), t => render(t, values)).map(f => f.id);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids.filter(id => id.startsWith('category.2.'))).toEqual([]);
+  });
+
+  test('그 묶음은 폴백 insight에서 까닭(예산 초과)을 말한다', () => {
+    const picked = pickFrames(keyFacts(longOver, longNames));
+    expect(picked?.insights).toContainEqual({
+      about: 'category.2',
+      text: expect.stringContaining('{category.2.budget_balance_phrase}'),
+    });
   });
 });
 

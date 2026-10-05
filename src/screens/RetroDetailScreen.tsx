@@ -55,6 +55,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   }));
   const generation = useGeneration(period);
   const [skipFixedCheck, setSkipFixedCheck] = useState(false);
+  // 저장본이 있으면 다시 만들기를 눌렀을 때만 미기록 고정비를 확인한다(PRD 4.6)
+  const [regenerateRequested, setRegenerateRequested] = useState(false);
   // 카드의 비교 줄을 뺄지 마지막으로 정한 값. 생성 중 첫 문장이 오기 전에 쓴다
   const [saidChangeBefore, setSaidChangeBefore] = useState(false);
   const autoStarted = useRef(false);
@@ -82,7 +84,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
           addDays(period.end, 1),
         ).overdue
       : [];
-  const needsFixedCheck = unrecorded.length > 0 && !skipFixedCheck;
+  const needsFixedCheck =
+    unrecorded.length > 0 && !skipFixedCheck && (!data?.saved || regenerateRequested);
   const canGenerate = !ongoing && enough && generation.state.status !== 'writing';
 
   const generate = () => {
@@ -90,12 +93,24 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
     void generation.start({ facts, names: lists.names, modelId: data?.modelId });
   };
 
+  /** 저장본을 다시 만든다. 그 달에 기록하지 않은 고정비가 있으면 먼저 알린다 */
+  const regenerate = () => {
+    if (unrecorded.length > 0 && !skipFixedCheck) setRegenerateRequested(true);
+    else generate();
+  };
+
+  /** 미기록 알림의 "그대로 만들기". 저장본이 없으면 자동 시작이 만들고, 있으면 여기서 만든다 */
+  const skipFixed = () => {
+    setSkipFixedCheck(true);
+    if (data?.saved) generate();
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: periodLabel(period, today),
       headerRight:
         data?.saved && canGenerate && !needsFixedCheck
-          ? () => <HeaderAction label='다시 만들기' onPress={generate} />
+          ? () => <HeaderAction label='다시 만들기' onPress={regenerate} />
           : undefined,
     });
   });
@@ -130,10 +145,16 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
     ?.facts.find(f => f.key === 'total.change_phrase')?.value;
   const before = kind === 'weekly' ? '지난주' : '지난달';
   const top = facts.categories.slice(0, 5);
-  const rest = facts.categories.slice(5).reduce((n, c) => n + c.amount, 0);
+  const others = facts.categories.slice(5);
+  const rest = others.reduce((n, c) => n + c.amount, 0);
+  // 나머지 묶음은 기본 카테고리 "기타"와 이름이 겹치지 않게 개수로 부른다
   const slices = [
-    ...top.map(c => ({ label: categoryName(c.categoryId), amount: c.amount })),
-    ...(rest > 0 ? [{ label: '기타', amount: rest }] : []),
+    ...top.map(c => ({
+      key: `category-${c.categoryId}`,
+      label: categoryName(c.categoryId),
+      amount: c.amount,
+    })),
+    ...(rest > 0 ? [{ key: 'rest', label: `그 외 ${others.length}개`, amount: rest }] : []),
   ];
   const percents = slices.map(s =>
     facts.variable > 0 ? formatPercent(s.amount, facts.variable) : '0%',
@@ -207,8 +228,8 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
         }
         kind={kind}
         onGenerate={generate}
-        onSkipFixed={() => setSkipFixedCheck(true)}
-        onRecordFixed={id => navigation.navigate('Entry', { fixedCostId: id })}
+        onSkipFixed={skipFixed}
+        onRecordFixed={id => navigation.navigate('Entry', { fixedCostId: id, month })}
         onCancel={generation.cancel}
         onModels={() => navigation.navigate('Models')}
       />
@@ -219,7 +240,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
           {/* 줄 사이 간격은 줄 자신의 여백만 쓴다(Section gap은 제목과 내용 사이) */}
           <View>
             {slices.map((slice, i) => (
-              <Row key={slice.label}>
+              <Row key={slice.key}>
                 <Swatch index={i} />
                 <Text className='flex-1'>{slice.label}</Text>
                 {/* 금액 자릿수가 달라도 % 열이 곧게 서게 폭을 정한다 */}

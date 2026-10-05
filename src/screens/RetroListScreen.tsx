@@ -1,6 +1,6 @@
 import { Badge, Chip, Stack, Text } from '@eeennsu/native';
-import { useNavigation, useScrollToTop } from '@react-navigation/native';
-import { useRef, useState } from 'react';
+import { useFocusEffect, useNavigation, useScrollToTop } from '@react-navigation/native';
+import { useCallback, useRef, useState } from 'react';
 import { FlatList } from 'react-native';
 import { Text as RNText, View } from 'react-native-css/components';
 
@@ -14,6 +14,7 @@ import {
   periodsSince,
 } from '../domain/periods';
 import { MIN_RECORDS, renderOutput } from '../retro/narrate';
+import { stopCardSuggestions } from '../state/cards';
 import { useQuery, useToday } from '../state/data';
 import { Empty, Row } from '../ui/layout';
 
@@ -22,10 +23,16 @@ type Item = { period: PeriodRef; label: string; ongoing: boolean; saved: boolean
 
 /**
  * 회고 목록(PRD 4.6, docs/DESIGN.md 4.4). 주간/월간 칩, 기간마다 한 줄 상태(저장한 회고의 headline · 아직 만들지
- * 않았어요 · 기록이 부족해요 · 진행 중). 누르면 회고 상세다
+ * 않았어요 · 기록이 부족해요 · 진행 중). 누르면 회고 상세다. 회고 탭으로 오면 홈의 카드 추천을 멈추고 모델을
+ * 내린다(PRD 6장). 탭을 옮겨도 홈은 언마운트되지 않고, 입력 시트를 열 때도 blur되므로 홈 쪽에서는 멈추지 않는다
  */
 export function RetroListScreen() {
   const navigation = useNavigation();
+  useFocusEffect(
+    useCallback(() => {
+      void stopCardSuggestions();
+    }, []),
+  );
   const today = useToday();
   const [kind, setKind] = useState<PeriodKind>('weekly');
   // 고른 탭을 다시 누르면 맨 위로 간다

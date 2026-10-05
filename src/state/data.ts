@@ -23,6 +23,16 @@ export async function mutate<T>(write: (db: Db) => Promise<T>): Promise<T> {
   return result;
 }
 
+/**
+ * 쓴 것이 있을 때만 다시 그린다. 쓰지 않고 끝나는 일(모델 로드 실패, 멈춘 추천)이 구독 화면을 다시 읽게 하면 그 화면의
+ * effect가 같은 일을 또 부른다
+ */
+export async function mutateIfWritten(write: (db: Db) => Promise<boolean>) {
+  const written = await write(db);
+  if (written) useDataStore.getState().bump();
+  return written;
+}
+
 /** 구독하지 않고 한 번 읽는다(눌렀을 때의 조회) */
 export const read = <T>(query: (db: Db) => Promise<T>) => query(db);
 

@@ -9,11 +9,17 @@ import { type Generate, NarratorError } from './narrate';
  */
 let releasing: Promise<void> = Promise.resolve();
 
+/** 취소한 생성이 끝나지 않았으면 이 간격으로 다시 멈춘다 */
+const STOP_RETRY_MS = 50;
+
 /** 올라가 있는 컨텍스트 수. 회고와 카드 알림 추천이 모델 두 벌을 함께 올리지 않게 본다(PRD 6장 실행 정책) */
 let contexts = 0;
 
 /** 어떤 narrator가 모델을 올려 두었는가 */
 export const llamaBusy = () => contexts > 0;
+
+/** 내리는 중인 모델이 다 내려가면 끝난다. 올려 둔 채인 모델은 기다리지 않는다 */
+export const llamaReleased = () => releasing;
 
 /**
  * 실패해도 넘어간다. llama.rn 0.12.9의 stopCompletion은 타입은 Promise지만 JSI 동기 호출이라 undefined를 돌려준다
@@ -67,7 +73,14 @@ export function llamaNarrator(modelPath: string | null) {
     const llama = await load();
     // 로드하는 동안 취소됐으면 시작하지 않는다. release가 곧 이 컨텍스트를 내린다
     if (signal.aborted) return '';
-    const stop = () => void llama.stopCompletion();
+    // llama.rn 0.12.9의 completion은 채팅 서식을 만든 뒤 생성을 시작하며 중단 표시를 지운다(rewind). 그 사이에 온
+    // 취소가 지워지지 않게, 취소하면 생성이 끝날 때까지 되풀이해 멈춘다
+    let finished = false;
+    const stop = () => {
+      if (finished) return;
+      void settle(() => llama.stopCompletion());
+      setTimeout(stop, STOP_RETRY_MS);
+    };
     signal.addEventListener('abort', stop);
     try {
       const completion = llama.completion(
@@ -92,6 +105,7 @@ export function llamaNarrator(modelPath: string | null) {
       const result = await completion;
       return result.text;
     } finally {
+      finished = true;
       signal.removeEventListener('abort', stop);
     }
   };

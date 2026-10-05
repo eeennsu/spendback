@@ -58,13 +58,13 @@ export function weeklyBudget(budgets: Budget[], start: string): PeriodBudget | u
 }
 
 /**
- * 홈의 이번 달 예산과 소비 속도(PRD 4.3 표). 예산이 없는 달이면 없다.
+ * 홈의 이번 달 예산과 소비 속도(PRD 4.3 표). 예산이 없는 달이면 없다. 총예산이 0원이어도 없다(비율을 낼 수 없다).
  * 비율은 화면이 `formatPercent(spent, total)`, `formatPercent(dayOfMonth, monthDays)`로 쓴다.
  */
 export function monthStatus(budgets: Budget[], transactions: Spending[], today: string) {
   const month = today.slice(0, 7);
   const budget = budgetForMonth(budgets, month);
-  if (!budget) return undefined;
+  if (!budget || budget.total <= 0) return undefined;
 
   const spentBy = (categoryId?: number) =>
     transactions

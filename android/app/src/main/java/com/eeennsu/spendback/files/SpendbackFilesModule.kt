@@ -17,6 +17,7 @@ import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import okhttp3.Call
 import okhttp3.Request
 
@@ -55,6 +56,13 @@ class SpendbackFilesModule(reactContext: ReactApplicationContext) :
     return File(path).delete()
   }
 
+  /** 같은 폴더 안의 rename이라 to가 있어도 한 번에 바뀐다(쓰다 잘린 파일이 남지 않는다) */
+  override fun moveFile(from: String, to: String): Boolean {
+    val target = File(to)
+    target.parentFile?.mkdirs()
+    return File(from).renameTo(target)
+  }
+
   override fun download(
       id: String,
       url: String,
@@ -71,15 +79,35 @@ class SpendbackFilesModule(reactContext: ReactApplicationContext) :
       } catch (e: DownloadError) {
         promise.reject(e.code, e.message, e)
       } catch (e: IOException) {
-        if (cancelled.contains(id)) promise.reject("cancelled", "내려받기를 취소했어요", e)
-        else promise.reject("network", e.message ?: "network", e)
+        when {
+          cancelled.contains(id) -> promise.reject("cancelled", "내려받기를 취소했어요", e)
+          // 쓰다가 공간이 바닥나도 IOException이다. 연결 탓으로 알리지 않는다
+          getFreeBytes() < SPACE_MARGIN -> promise.reject("no-space", "저장 공간이 모자라요", e)
+          else -> promise.reject("network", e.message ?: "network", e)
+        }
       } finally {
         calls.remove(id)
+        reserved.remove(id)
       }
     }
   }
 
   private class DownloadError(val code: String, message: String) : Exception(message)
+
+  /** 받는 중인 모델마다 앞으로 쓸 바이트. 함께 받을 때 저장 공간 확인에 쓴다 */
+  private val reserved = ConcurrentHashMap<String, Long>()
+
+  /**
+   * RN 공용 클라이언트는 시간 제한이 없어, 바이트가 더 오지 않는데 연결이 끊기지도 않으면 영원히 기다린다. 연결과
+   * 읽기에만 제한을 둔다. 전체 시간(callTimeout)은 1.5GB 받기를 자르므로 두지 않는다
+   */
+  private val client by lazy {
+    OkHttpClientProvider.getOkHttpClient()
+        .newBuilder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .build()
+  }
 
   /**
    * 받는 중에는 .part에 쓰고, .part가 있으면 Range로 이어받는다. 받으면서 SHA-256을 계산하므로 1GB 넘는 파일을
@@ -93,9 +121,13 @@ class SpendbackFilesModule(reactContext: ReactApplicationContext) :
       part.delete()
       received = 0L
     }
-    // 남은 만큼과 여유 64MB가 없으면 시작하지 않는다
-    if (getFreeBytes() < (size - received) + 64L * 1024 * 1024) {
-      throw DownloadError("no-space", "저장 공간이 모자라요")
+    // 남은 만큼과 여유 64MB가 없으면 시작하지 않는다. 함께 받는 중인 모델이 쓸 만큼도 센다
+    synchronized(reserved) {
+      val others = reserved.filterKeys { it != id }.values.sum()
+      if (getFreeBytes() < (size - received) + others + SPACE_MARGIN) {
+        throw DownloadError("no-space", "저장 공간이 모자라요")
+      }
+      reserved[id] = size - received
     }
 
     val digest = MessageDigest.getInstance("SHA-256")
@@ -106,7 +138,7 @@ class SpendbackFilesModule(reactContext: ReactApplicationContext) :
             .url(url)
             .apply { if (received > 0) header("Range", "bytes=$received-") }
             .build()
-    val call = OkHttpClientProvider.getOkHttpClient().newCall(request)
+    val call = client.newCall(request)
     calls[id] = call
     if (cancelled.contains(id)) call.cancel()
 
@@ -121,7 +153,8 @@ class SpendbackFilesModule(reactContext: ReactApplicationContext) :
               digest.reset()
               false
             }
-            else -> throw IOException("HTTP ${response.code}")
+            // 저장소가 사라졌거나(404) 서버 오류다. 연결 문제가 아니다
+            else -> throw DownloadError("unavailable", "HTTP ${response.code}")
           }
       if (response.code != 416) {
         val body = response.body ?: throw IOException("빈 응답")
@@ -250,16 +283,34 @@ class SpendbackFilesModule(reactContext: ReactApplicationContext) :
     }
     executor.execute {
       try {
-        val text =
-            reactApplicationContext.contentResolver.openInputStream(uri)?.use {
-              it.readBytes().toString(Charsets.UTF_8)
-            }
+        val text = reactApplicationContext.contentResolver.openInputStream(uri)?.use { readLimited(it) }
         promise.resolve(text)
-      } catch (e: Exception) {
+      } catch (e: TooLargeException) {
+        promise.reject("too-large", "파일이 너무 커요", e)
+      } catch (e: Throwable) {
+        // OutOfMemoryError는 Exception이 아니다. 잡지 않으면 실행기 스레드에서 앱이 죽고 promise가 끝나지 않는다
         promise.reject("io", e.message, e)
       }
     }
   }
+
+  /**
+   * 선택기는 아무 파일이나 고를 수 있다(모든 형식). 영상이나 모델 파일을 통째로 읽으면 메모리가 모자라 앱이 죽으므로
+   * MAX_PICK_BYTES까지만 읽고 넘으면 거부한다
+   */
+  private fun readLimited(input: java.io.InputStream): String {
+    val out = java.io.ByteArrayOutputStream()
+    val buffer = ByteArray(64 * 1024)
+    while (true) {
+      val read = input.read(buffer)
+      if (read < 0) break
+      if (out.size() + read > MAX_PICK_BYTES) throw TooLargeException()
+      out.write(buffer, 0, read)
+    }
+    return out.toString(Charsets.UTF_8.name())
+  }
+
+  private class TooLargeException : IOException()
 
   override fun onNewIntent(intent: Intent) = Unit
 
@@ -273,5 +324,9 @@ class SpendbackFilesModule(reactContext: ReactApplicationContext) :
   companion object {
     const val NAME = NativeSpendbackFilesSpec.NAME
     private const val PICK_REQUEST = 4251
+    /** 받은 뒤에도 남겨 둘 여유 공간 */
+    private const val SPACE_MARGIN = 64L * 1024 * 1024
+    /** 백업은 기록 수만 건이어도 몇 MB다 */
+    private const val MAX_PICK_BYTES = 32 * 1024 * 1024
   }
 }

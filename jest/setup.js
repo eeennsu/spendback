@@ -33,6 +33,7 @@ jest.mock('../src/native/NativeSpendbackFiles', () => ({
     getFreeBytes: () => 64 * 1024 ** 3,
     fileSize: jest.fn(() => -1),
     deleteFile: jest.fn(() => true),
+    moveFile: jest.fn(() => true),
     download: jest.fn(async () => {}),
     cancelDownload: jest.fn(),
     writeTextFile: jest.fn(async () => {}),
@@ -66,3 +67,7 @@ jest.mock('@react-native-community/datetimepicker', () => ({
   __esModule: true,
   default: () => null,
 }));
+
+// 프리셋의 AppState 모의는 currentState가 함수다. 앱은 앞에 있는 것으로 둔다(src/state/cards.ts가 백그라운드에서는
+// 모델을 올리지 않는다)
+require('react-native').AppState.currentState = 'active';

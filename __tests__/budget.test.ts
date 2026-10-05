@@ -129,6 +129,10 @@ describe('monthStatus: 홈 예산과 소비 속도(PRD 4.3)', () => {
     expect(status?.dailyAllowance).toBe(58799);
   });
 
+  test('총예산이 0원이면 예산이 없는 달처럼 둔다(비율을 낼 수 없다)', () => {
+    expect(monthStatus([budget('2026-09', 0, [])], [], '2026-09-24')).toBeUndefined();
+  });
+
   test('남은 일수는 오늘을 포함한다', () => {
     expect(monthStatus(budgets, [], '2026-09-30')?.remainingDays).toBe(1);
     expect(monthStatus(budgets, [], '2026-09-01')?.remainingDays).toBe(30);

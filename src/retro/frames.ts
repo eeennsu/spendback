@@ -197,8 +197,9 @@ export const HEADLINE_GROUPS = 3;
 
 /**
  * 앞 묶음부터 headline에 맞는 틀을 모아, 틀이 있는 묶음 HEADLINE_GROUPS개까지 쓴다. 묶음마다 눈에 띄는 까닭의 키
- * (FactGroup.focus)를 쓴 틀만 남기고, 그런 틀이 headline에 맞지 않으면 그 묶음의 다른 틀을 쓴다. insight는
- * headline과 다른 묶음에서 고르므로(grammar.ts) headline이 그 묶음의 까닭을 말하지 않으면 회고가 그 까닭을 놓친다
+ * (FactGroup.focus)를 쓴 틀만 남긴다. 그런 틀이 headline에 맞지 않는 묶음은 headline 후보에서 빼서 insight가 그
+ * 까닭을 말하게 한다. insight는 headline과 다른 묶음에서 고르므로(grammar.ts) 그 묶음의 다른 틀을 headline으로 쓰면
+ * 회고가 그 까닭(카테고리 예산 초과, 몰림)을 놓친다. 어느 묶음도 까닭의 틀이 맞지 않을 때만 다른 틀을 쓴다
  */
 export function headlineFrames(
   keyed: KeyedFacts,
@@ -212,12 +213,10 @@ export function headlineFrames(
   const focusOf = new Map(keyed.groups.map(g => [g.id, g.focus]));
   const usesFocus = (f: Frame) =>
     focusOf.get(f.group)?.some(name => f.text.includes(`{${f.group}.${name}}`)) ?? true;
-  const groups = [...new Set(fit.map(f => f.group))].slice(0, HEADLINE_GROUPS);
-  return groups.flatMap(group => {
-    const mine = fit.filter(f => f.group === group);
-    const focused = mine.filter(usesFocus);
-    return focused.length ? focused : mine;
-  });
+  const focused = fit.filter(usesFocus);
+  const pool = focused.length ? focused : fit;
+  const groups = [...new Set(pool.map(f => f.group))].slice(0, HEADLINE_GROUPS);
+  return groups.flatMap(group => pool.filter(f => f.group === group));
 }
 
 /** 폴백 회고의 insight 수. LLM이 고르는 2~4개의 가운데다 */

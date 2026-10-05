@@ -1,3 +1,4 @@
+import { usePreventRemove } from '@react-navigation/native';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
@@ -19,6 +20,12 @@ import { useHistoryFilter } from '../src/state/ui';
 jest.mock('../src/db', () => {
   const { testDb } = jest.requireActual('../jest/db');
   return { db: testDb(), runMigrations: jest.fn(async () => undefined) };
+});
+
+// 저장 실패를 흉내 낼 수 있게 감싼다. 평소에는 실제 함수를 부른다
+jest.mock('../src/db/transactions', () => {
+  const actual = jest.requireActual('../src/db/transactions');
+  return { ...actual, addTransaction: jest.fn(actual.addTransaction) };
 });
 
 const mockNavigation = {
@@ -156,7 +163,7 @@ describe('홈', () => {
   });
 });
 
-const entry = (params: { transactionId?: number; fixedCostId?: number } = {}) => (
+const entry = (params: { transactionId?: number; fixedCostId?: number; month?: string } = {}) => (
   // StaticScreenProps의 route는 화면 이름과 키를 갖지만 시트는 params만 읽는다
   <EntrySheet route={{ key: 'entry', name: 'Entry', params } as never} />
 );
@@ -193,6 +200,26 @@ describe('입력 시트', () => {
     expect(node?.props.collapsable).toBe(false);
     // placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(docs/DESIGN.md 4.3)
     expect(screen.getByLabelText('금액').props.placeholder).toBeUndefined();
+  });
+
+  test('저장이 실패하면 시트를 닫지 않고 이유를 알리며, 다시 누를 수 있고 닫으면 버릴지 묻는다', async () => {
+    jest.mocked(addTransaction).mockRejectedValueOnce(new Error('SQLITE_FULL'));
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    await mount(entry());
+    await fireEvent.changeText(await screen.findByLabelText('금액'), '9500');
+    await fireEvent.press(chipIn('카테고리', '식비'));
+    await fireEvent.press(save());
+
+    expect(await screen.findByText('저장하지 못했어요. 다시 눌러 주세요')).toBeOnTheScreen();
+    expect(mockNavigation.goBack).not.toHaveBeenCalled();
+    expect(save().props.accessibilityState).toMatchObject({ disabled: false });
+    // 입력이 있는 채로 닫으면 버릴지 묻는다(usePreventRemove가 켜져 있다)
+    expect(jest.mocked(usePreventRemove).mock.calls.at(-1)?.[0]).toBe(true);
+
+    await fireEvent.press(save());
+    expect(await db.select().from(transactions)).toHaveLength(1);
+    expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    jest.mocked(console.error).mockRestore();
   });
 
   test('금액 → 카테고리 → 저장, 세 번에 기록한다', async () => {
@@ -274,6 +301,18 @@ describe('입력 시트', () => {
     await fireEvent.press(save());
     expect(await db.select().from(transactions)).toMatchObject([
       { amount: 55000, categoryId: 7, date: '2026-09-21', isFixed: true, fixedCostId: item.id },
+    ]);
+  });
+
+  test('월간 회고에서 열면 오늘이 아니라 회고 달의 결제일로 채운다(PRD 4.4, 4.6)', async () => {
+    await fixedItem();
+    const [item] = await db.select().from(fixedCosts);
+    await mount(entry({ fixedCostId: item.id, month: '2026-08' }));
+
+    expect(await screen.findByText('휴대폰 요금 기록')).toBeOnTheScreen();
+    await fireEvent.press(save());
+    expect(await db.select().from(transactions)).toMatchObject([
+      { date: '2026-08-21', fixedCostId: item.id },
     ]);
   });
 

@@ -23,11 +23,22 @@ export type Generation =
   | { status: 'fallback'; reason: 'no-model' | 'load-failed' | 'check-failed' }
   | { status: 'cancelled' };
 
-/** 사용할 모델. 설정이 없거나 레지스트리에서 빠진 모델이면 기본 모델이다(PRD 6장) */
-export const modelFor = (id: string | undefined) =>
-  APP_MODELS.find(m => m.id === id) ??
-  APP_MODELS.find(m => m.id === DEFAULT_MODEL_ID) ??
-  APP_MODELS[0];
+/**
+ * 사용할 모델. 설정이 없거나 레지스트리에서 빠진 모델이면 기본 모델이다(PRD 6장). 그 파일이 없으면 받아 둔 다른 모델을
+ * 쓴다(PRD 4.7). 받은 모델이 하나도 없으면 고른 모델이고, 화면은 "모델 없음"으로 본다
+ */
+export const modelFor = (id: string | undefined) => {
+  const chosen =
+    APP_MODELS.find(m => m.id === id) ??
+    APP_MODELS.find(m => m.id === DEFAULT_MODEL_ID) ??
+    APP_MODELS[0];
+  if (hasModel(chosen)) return chosen;
+  // 고른 모델 파일이 없으면(다른 모델만 받았거나 쓰던 모델을 지웠다) 받아 둔 모델을 기본 모델부터 쓴다
+  const byDefault = [...APP_MODELS].sort(
+    (a, b) => Number(b.id === DEFAULT_MODEL_ID) - Number(a.id === DEFAULT_MODEL_ID),
+  );
+  return byDefault.find(hasModel) ?? chosen;
+};
 
 /**
  * 회고 문장 생성(PRD 4.6, 6장 실행 정책). 생성할 때만 모델을 올리고, 화면을 나가거나 앱이 백그라운드로 가면 생성을

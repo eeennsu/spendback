@@ -5,7 +5,7 @@ import { registerGlobalCss } from '../jest/css';
 import { db } from '../src/db';
 import { addFixedCost } from '../src/db/lists';
 import { saveRetrospective } from '../src/db/retrospectives';
-import { fixedCosts, retrospectives, transactions } from '../src/db/schema';
+import { categories, fixedCosts, retrospectives, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
 import Files from '../src/native/NativeSpendbackFiles';
 import { keyFacts } from '../src/retro/keys';
@@ -328,11 +328,75 @@ test('월간은 기록하지 않은 고정비를 먼저 알리고, "그대로 �
   await mount('monthly', '2026-08-01');
 
   expect(await screen.findByText('기록하지 않은 고정비가 있어요')).toBeOnTheScreen();
-  expect(screen.getByRole('button', { name: /^휴대폰 요금 기록/ })).toBeOnTheScreen();
+  // 기록 시트에는 회고 달을 넘겨, 오늘이 든 달(9월)의 결제일로 저장하지 않게 한다
+  await fireEvent.press(screen.getByRole('button', { name: /^휴대폰 요금 기록/ }));
+  expect(mockNavigation.navigate).toHaveBeenCalledWith('Entry', {
+    fixedCostId: expect.any(Number),
+    month: '2026-08',
+  });
   await fireEvent.press(screen.getByRole('button', { name: '그대로 만들기' }));
 
   // 모델이 없어 폴백까지 간다
   expect(await screen.findByText('모델이 없어 앱이 고른 사실만 보여 줘요')).toBeOnTheScreen();
+});
+
+test('월간 저장본은 미기록 고정비가 있어도 그대로 보이고, 다시 만들 때 알린 뒤 "그대로 만들기"로 만든다', async () => {
+  withModel();
+  const { generate } = pendingNarrator();
+  await addFixedCost(db, {
+    name: '휴대폰 요금',
+    amount: 55000,
+    categoryId: 7,
+    dayOfMonth: 21,
+    paymentMethod: 'card',
+  });
+  await db.update(fixedCosts).set({ createdAt: Date.parse('2026-07-01T00:00:00') });
+  for (let i = 0; i < 4; i++) {
+    await addTransaction(db, expense({ date: `2026-08-${10 + i}` }));
+  }
+  // 미기록을 알린 뒤 "그대로 만들기"로 저장한 8월 회고
+  await saveRetrospective(db, {
+    kind: 'monthly',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-31',
+    facts: { kind: 'monthly', period: '8월', groups: [] },
+    output: { headline: '8월은 차분하게 썼어요.', insights: [], suggestion: '' },
+    modelId: QWEN.id,
+    promptVersion: 'v5',
+  });
+  await mount('monthly', '2026-08-01');
+
+  expect(await screen.findByText('8월은 차분하게 썼어요.')).toBeOnTheScreen();
+  expect(screen.queryByText('기록하지 않은 고정비가 있어요')).toBeNull();
+
+  await pressRegenerate();
+  expect(await screen.findByText('기록하지 않은 고정비가 있어요')).toBeOnTheScreen();
+  expect(generate).not.toHaveBeenCalled();
+  await fireEvent.press(screen.getByRole('button', { name: '그대로 만들기' }));
+  await act(async () => {});
+  expect(generate).toHaveBeenCalled();
+});
+
+test('카테고리 표의 나머지 묶음은 기본 카테고리 "기타"와 이름이 겹치지 않는다', async () => {
+  const expenses = (await db.select().from(categories)).filter(c => c.type === 'expense');
+  const other = expenses.find(c => c.name === '기타');
+  const rest = expenses.filter(c => c.name !== '기타').slice(0, 6);
+  expect(other).toBeDefined();
+  // "기타"가 가장 크고, 카테고리가 7개라 상위 5개 밖에 둘이 남는다
+  await addTransaction(db, expense({ categoryId: other!.id, amount: 90000, date: '2026-09-15' }));
+  for (const [i, c] of rest.entries()) {
+    await addTransaction(
+      db,
+      expense({ categoryId: c.id, amount: 20000 - i * 1000, date: '2026-09-16' }),
+    );
+  }
+  const error = jest.spyOn(console, 'error');
+  await mount('weekly', '2026-09-14');
+
+  expect(await screen.findByText('그 외 2개')).toBeOnTheScreen();
+  // 행·조각의 key가 이름이면 같은 key 경고가 난다
+  expect(error.mock.calls.flat().join(' ')).not.toMatch(/same key/);
+  error.mockRestore();
 });
 
 test('다 만들면 저장하고, 늘 있는 상태 줄(live region)이 쓴 모델을 알린다', async () => {

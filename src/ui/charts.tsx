@@ -62,7 +62,8 @@ export function Swatch({ index }: { index: number }) {
   );
 }
 
-export type Slice = { label: string; amount: number };
+/** key는 이름이 아니라 카테고리 id로 만든다. 이름은 겹칠 수 있다 */
+export type Slice = { key: string; label: string; amount: number };
 
 /** 카테고리 도넛. 조각마다 바깥에 %를 적고, 같은 값의 표가 차트의 대체 텍스트다(DESIGN.md 4.4) */
 export function Donut({ slices, percents }: { slices: Slice[]; percents: string[] }) {
@@ -87,7 +88,7 @@ export function Donut({ slices, percents }: { slices: Slice[]; percents: string[
           const angle = -Math.PI / 2 + 2 * Math.PI * (start + fraction / 2);
           return [
             <Ring
-              key={`ring-${slice.label}`}
+              key={`ring-${slice.key}`}
               className={sliceClass(i)}
               strokeOpacity={sliceOpacity(i)}
               cx={size / 2}
@@ -101,7 +102,7 @@ export function Donut({ slices, percents }: { slices: Slice[]; percents: string[
             />,
             fraction >= 0.05 && (
               <Label
-                key={`label-${slice.label}`}
+                key={`label-${slice.key}`}
                 className='fill-fg-muted'
                 x={size / 2 + (r + width / 2 + 14) * Math.cos(angle)}
                 y={size / 2 + (r + width / 2 + 14) * Math.sin(angle) + 4}
@@ -119,7 +120,7 @@ export function Donut({ slices, percents }: { slices: Slice[]; percents: string[
             const a = -Math.PI / 2 + 2 * Math.PI * start;
             return (
               <Divider
-                key={`gap-${slices[i].label}`}
+                key={`gap-${slices[i].key}`}
                 className='stroke-surface'
                 x1={size / 2 + (r - width / 2 - 1) * Math.cos(a)}
                 y1={size / 2 + (r - width / 2 - 1) * Math.sin(a)}

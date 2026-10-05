@@ -88,6 +88,11 @@ describe('신한카드', () => {
     });
   });
 
+  test('가맹점명이 비어 있으면 다음 줄(누적금액)을 가맹점으로 읽지 않고 읽지 못한 알림으로 둔다', () => {
+    const empty = SHINHAN_APPROVAL.replace('- 가맹점명: 비바리퍼블리카', '- 가맹점명: ');
+    expect(parseCardNotification(shinhan(empty))).toEqual({ kind: 'unreadable' });
+  });
+
   test('지켜보는 앱이다', () => {
     expect(watchedApps(false)).toContain(SHINHAN);
   });

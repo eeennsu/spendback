@@ -167,7 +167,8 @@ export async function inboxView(db: Db, categories: Category[]): Promise<InboxIt
 
 /**
  * 처음 보는 가맹점의 승인에 LLM 추천을 붙인다. 한 번 물은 항목은 다시 묻지 않는다. 모델이 없거나 올리지 못하면
- * 멈추고 시도 시각을 남기지 않아, 모델을 받은 뒤 다시 묻는다. 취소되면 그 항목은 다음에 다시 묻는다
+ * 멈추고 시도 시각을 남기지 않아, 모델을 받은 뒤 다시 묻는다. 취소되면 그 항목은 다음에 다시 묻는다.
+ * 추천을 하나라도 적었는지 돌려준다
  */
 export async function suggestPending(
   db: Db,
@@ -184,24 +185,27 @@ export async function suggestPending(
       !isPaymentGateway(row.merchant) &&
       row.suggestedAt === null,
   );
+  let written = false;
   for (const row of todo) {
-    if (signal.aborted) return;
+    if (signal.aborted) return written;
     const merchant = row.merchant as string;
     if (exactMatch(merchant, known, categories) !== undefined) continue;
     let suggestion: Suggestion | undefined;
     try {
       suggestion = await suggestCategory({ merchant, known, categories, generate, signal });
     } catch (error) {
-      if (error instanceof NarratorError) return;
+      if (error instanceof NarratorError) return written;
       throw error;
     }
-    if (signal.aborted) return;
+    if (signal.aborted) return written;
     await updateInbox(db, row.id, {
       suggestedCategoryId: suggestion?.categoryId ?? null,
       suggestionSource: suggestion ? 'llm' : null,
       suggestedAt: now,
     });
+    written = true;
   }
+  return written;
 }
 
 /** 폼에서 확인한 승인을 거래로 저장한다. 가맹점 원문과 폼이 보인 추천을 함께 남긴다(정확도) */

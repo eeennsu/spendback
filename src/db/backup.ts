@@ -78,7 +78,8 @@ const TransactionSchema = z.object({
 
 const BudgetSchema = z.object({
   effectiveFrom: z.string().regex(/^\d{4}-\d{2}$/),
-  total: z.number().int().nonnegative(),
+  // 예산 화면처럼 0원은 받지 않는다. 홈은 0원으로 비율을 낼 수 없다
+  total: z.number().int().positive(),
   categoryBudgets: z.array(z.object({ categoryId: id, amount: z.number().int().positive() })),
 });
 

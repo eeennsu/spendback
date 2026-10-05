@@ -22,6 +22,7 @@ const FAILURES = {
   'hash-mismatch': '받은 파일이 손상됐어요. 처음부터 다시 받아요',
   'network': '연결이 끊겼어요. 다시 받으면 받은 곳부터 이어받아요',
   'cancelled': '받기를 멈췄어요. 다시 받으면 받은 곳부터 이어받아요',
+  'unavailable': '지금은 모델 파일을 받을 수 없어요. 잠시 뒤 다시 받아 주세요',
 } as const;
 
 /**
@@ -29,6 +30,9 @@ const FAILURES = {
  * Hugging Face에서 커밋을 고정한 주소로 받아 SHA-256으로 확인한다. 받는 중에는 진행률과 Wi-Fi 권장 문구를 보인다
  */
 export function ModelsScreen() {
+  // 파일 상태(받음·받다 만 크기)를 렌더할 때마다 네이티브에서 읽는다. React Compiler가 이 읽기를 기억해 두면 지운 뒤
+  // 다시 그려도 옛 상태가 보인다
+  'use no memo';
   const selected = useQuery('model-setting', db => getSetting(db, 'model'));
   const downloads = useDownloads(state => state.downloads);
   const { start, cancel } = useDownloads();
@@ -41,6 +45,24 @@ export function ModelsScreen() {
     Alert.alert(
       '모델 파일을 지울까요?',
       `${model.name} 파일 ${gigabytes(model.sizeBytes)}를 비워요. 다시 쓰려면 다시 받아야 해요.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '지우기',
+          style: 'destructive',
+          onPress: () => {
+            Files.deleteFile(modelPath(model));
+            refresh();
+          },
+        },
+      ],
+    );
+
+  /** 받다 만 파일(.part)을 지운다. deleteFile이 .part도 지운다 */
+  const removePartial = (model: Model, bytes: number) =>
+    Alert.alert(
+      '받다 만 파일을 지울까요?',
+      `받다 만 ${gigabytes(bytes)}를 비워요. 다시 받으면 처음부터 받아요.`,
       [
         { text: '취소', style: 'cancel' },
         {
@@ -123,12 +145,20 @@ export function ModelsScreen() {
                     {`${formatPercent(partial, model.sizeBytes)} 받았어요. 이어받을 수 있어요`}
                   </Prose>
                 )}
-                <Button
-                  label={partial > 0 || download?.status === 'failed' ? '다시 받기' : '받기'}
-                  variant='secondary'
-                  className='self-start'
-                  onPress={() => void start(model).then(refresh)}
-                />
+                <Stack direction='row' wrap className='gap-3'>
+                  <Button
+                    label={partial > 0 || download?.status === 'failed' ? '다시 받기' : '받기'}
+                    variant='secondary'
+                    onPress={() => void start(model).then(refresh)}
+                  />
+                  {partial > 0 && (
+                    <Button
+                      label='지우기'
+                      variant='secondary'
+                      onPress={() => removePartial(model, partial)}
+                    />
+                  )}
+                </Stack>
               </>
             )}
           </Card>

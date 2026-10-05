@@ -6,6 +6,7 @@ import { Alert, Keyboard } from 'react-native';
 import { Pressable, ScrollView, Switch, View } from 'react-native-css/components';
 
 import { type InboxItem, dismissInbox, inboxView, saveFromInbox } from '../cards/inbox';
+import type { Db } from '../db';
 import { type CategoryRow, type FixedCostRow, type ReasonTagRow, allCategories } from '../db/lists';
 import {
   type TransactionInput,
@@ -28,15 +29,17 @@ import { Prose } from '../ui/prose';
 import { Sheet } from '../ui/sheet';
 import { visibleExpenseCategories } from './CardInboxSection';
 
-type Params = { transactionId?: number; fixedCostId?: number; inboxId?: number } | undefined;
+/** month: 고정비를 채울 달(YYYY-MM). 월간 회고에서 열 때 넘기고, 없으면 오늘이 든 달이다 */
+type Params =
+  { transactionId?: number; fixedCostId?: number; month?: string; inboxId?: number } | undefined;
 
 /**
  * 입력 시트(PRD 4.1, docs/DESIGN.md 4.3). 금액 → 카테고리 → 저장, 3번에 끝나도록 필수 항목만 먼저 보이고 나머지는
- * "선택 항목"으로 접는다. 거래 줄에서 열면 수정, 홈 고정비 줄에서 열면 그 항목으로 채운 채로 연다(PRD 4.4).
- * 홈 카드 알림 줄에서 열면 알림 값과 추천 카테고리로 채운다(PRD 4.9)
+ * "선택 항목"으로 접는다. 거래 줄에서 열면 수정, 홈 고정비 줄이나 월간 회고의 미기록 알림에서 열면 그 항목과 그 달의
+ * 결제일로 채운 채로 연다(PRD 4.4). 홈 카드 알림 줄에서 열면 알림 값과 추천 카테고리로 채운다(PRD 4.9)
  */
 export function EntrySheet({ route }: StaticScreenProps<Params>) {
-  const { transactionId, fixedCostId, inboxId } = route.params ?? {};
+  const { transactionId, fixedCostId, month, inboxId } = route.params ?? {};
   const today = useToday();
   const lists = useLists();
   const editing = useQuery(`entry:${transactionId}`, db =>
@@ -55,7 +58,7 @@ export function EntrySheet({ route }: StaticScreenProps<Params>) {
   const fixedItem = lists.fixedCosts.find(item => item.id === fixedCostId);
   return (
     <EntryForm
-      initial={initialValues(editing, fixedItem, inbox, today)}
+      initial={initialValues(editing, fixedItem, inbox, today, month ?? today.slice(0, 7))}
       editingId={editing?.id}
       fixedItem={fixedItem}
       inbox={inbox ?? undefined}
@@ -79,6 +82,7 @@ function initialValues(
   item: FixedCostRow | undefined,
   inbox: InboxItem | null,
   today: string,
+  fixedMonth: string,
 ): Values {
   if (tx) return { ...tx, amount: String(tx.amount) };
   // 금액·날짜·가맹점은 알림의 사실이고 결제수단은 카드다. 이유와 만족도는 회고의 재료라 비운다(PRD 4.9)
@@ -100,7 +104,7 @@ function initialValues(
     return {
       type: 'expense',
       amount: String(item.amount),
-      date: paymentDate(item.dayOfMonth, today.slice(0, 7)),
+      date: paymentDate(item.dayOfMonth, fixedMonth),
       categoryId: item.categoryId,
       reasonTagId: null,
       satisfaction: null,
@@ -156,6 +160,7 @@ function EntryForm({
   const measure = () => setOverflow(contentHeight.current > scrollHeight.current + 1);
   const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState('');
   const amountRef = useRef<{ focus(): void; blur(): void }>(null);
   const set = (patch: Partial<Values>) => setValues(v => ({ ...v, ...patch }));
 
@@ -222,29 +227,43 @@ function EntryForm({
       set({ categoryId });
   };
 
+  /**
+   * 쓰고 닫는다. 쓰기가 실패하면(저장 공간 부족 등) 시트를 멈추지 않고 이유를 상태 줄에 쓴다. 다시 누를 수 있고,
+   * 닫으면 입력을 버릴지 묻는다(DESIGN.md 3.7, 4.3)
+   */
+  const write = async (task: (db: Db) => Promise<unknown>, failure: string) => {
+    setSaving(true);
+    setFailed('');
+    try {
+      await mutate(task);
+    } catch (error) {
+      console.error(error);
+      setSaving(false);
+      setFailed(failure);
+      return;
+    }
+    navigation.goBack();
+  };
+
   const save = async () => {
     if (missing !== '' || categoryId === undefined) return;
-    setSaving(true);
     const input: TransactionInput = {
       ...values,
       amount: Number(values.amount),
       categoryId,
       memo: values.memo?.trim() ? values.memo.trim() : null,
     };
-    await mutate(async db => {
+    await write(async db => {
       // 폼이 보인 추천을 함께 남긴다. 추천을 고치지 않고 저장한 비율이 정확도다(PRD 4.9)
       if (inbox) await saveFromInbox(db, inbox.id, input, inbox.suggestion);
       else if (editingId === undefined) await addTransaction(db, input);
       else await updateTransaction(db, editingId, input);
-    });
-    navigation.goBack();
+    }, '저장하지 못했어요. 다시 눌러 주세요');
   };
 
   const skip = async () => {
     if (!inbox) return;
-    setSaving(true);
-    await mutate(db => dismissInbox(db, inbox.id));
-    navigation.goBack();
+    await write(db => dismissInbox(db, inbox.id), '넘기지 못했어요. 다시 눌러 주세요');
   };
 
   const remove = () => {
@@ -254,11 +273,8 @@ function EntryForm({
       {
         text: '삭제',
         style: 'destructive',
-        onPress: async () => {
-          setSaving(true);
-          await mutate(db => deleteTransaction(db, editingId));
-          navigation.goBack();
-        },
+        onPress: () =>
+          write(db => deleteTransaction(db, editingId), '지우지 못했어요. 다시 눌러 주세요'),
       },
     ]);
   };
@@ -288,7 +304,7 @@ function EntryForm({
   // 저장할 수 있으면 어느 날짜로 저장하는지 쓴다. 키보드가 뜨면 날짜 칩이 가려져도 기본값(오늘)이 보인다
   const dateText =
     dateChoice === 'today' ? '오늘' : dateChoice === 'yesterday' ? '어제' : otherLabel;
-  const status = missing !== '' ? missing : `${dateText} 날짜로 저장해요`;
+  const status = failed || (missing !== '' ? missing : `${dateText} 날짜로 저장해요`);
 
   const footer = (
     // 가운데가 넘쳐 스크롤되면 아래 버튼 영역과의 경계를 긋는다. 잘린 칸이 없는 칸처럼 보이지 않게 한다
@@ -298,7 +314,7 @@ function EntryForm({
         평탄화해 live region이 사라지므로 collapsable={false}로 네이티브 뷰를 남긴다(DESIGN.md 3.7)
       */}
       <View accessibilityLiveRegion='polite' collapsable={false}>
-        <Text size='sm' tone='muted'>
+        <Text size='sm' tone={failed ? 'danger' : 'muted'}>
           {status}
         </Text>
       </View>

@@ -25,6 +25,7 @@ import { type KeyedFacts, factValues, keyFacts } from '../retro/keys';
 import { MODELS } from '../retro/models';
 import { MIN_RECORDS } from '../retro/narrate';
 import { render, renderParts } from '../retro/render';
+import { isStale } from '../retro/stale';
 import { useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { type Generation, modelFor, useGeneration } from '../state/retro';
@@ -170,6 +171,9 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   const busiest = days.reduce((best, d) => (d.amount > best.amount ? d : best), days[0]);
   // 보일 회고. 방금 만든 회고가 DB 저장본보다 새롭다
   const shown = generation.state.status === 'saved' ? generation.state : (data.saved ?? undefined);
+  // 저장본이 지금 기록과 다르면 알린다. 방금 만든 회고는 지금 기록으로 만들었다(PRD 4.6 생성 조건)
+  const stale =
+    generation.state.status !== 'saved' && !!data.saved && isStale(data.saved.facts, keyed);
   // 폴백이면 코드가 고른 틀 문장을 보인다. 저장본이 있으면 다시 만들기가 실패해도 저장본을 보인다(PRD 4.6)
   const state = generation.state;
   const picked = state.status === 'fallback' && !shown ? pickFrames(keyed) : undefined;
@@ -219,6 +223,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
         ongoing={ongoing}
         enough={enough}
         saved={shown}
+        stale={stale}
         picked={picked && { facts: keyed, output: picked }}
         generation={generation.state}
         unrecorded={
@@ -299,6 +304,7 @@ function Narrative({
   ongoing,
   enough,
   saved,
+  stale,
   picked,
   generation,
   unrecorded,
@@ -311,6 +317,8 @@ function Narrative({
   ongoing: boolean;
   enough: boolean;
   saved: { facts: KeyedFacts; output: Output; modelId: string } | undefined;
+  /** 저장본을 만든 뒤 그 달 기록이 바뀌었다. 다시 만들기는 헤더에 있다 */
+  stale: boolean;
   /** 폴백에서 코드가 고른 틀 문장 */
   picked: { facts: KeyedFacts; output: Told } | undefined;
   generation: Generation;
@@ -421,7 +429,9 @@ function Narrative({
       </>
     );
   } else if (saved) {
-    status = { text: author(saved.modelId), lead: false };
+    status = stale
+      ? { text: '회고를 만든 뒤 기록이 바뀌었어요', lead: true }
+      : { text: author(saved.modelId), lead: false };
     body = <Sentences facts={saved.facts} output={saved.output} />;
   } else {
     status = {

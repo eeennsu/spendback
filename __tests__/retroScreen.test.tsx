@@ -399,6 +399,48 @@ test('카테고리 표의 나머지 묶음은 기본 카테고리 "기타"와 �
   error.mockRestore();
 });
 
+describe('저장한 뒤 그 달 기록이 바뀌면 낡은 회고라고 알린다(PRD 4.6 생성 조건)', () => {
+  /** 실제 facts 스냅샷으로 8월 회고를 만들어 저장하고 화면을 내린다 */
+  async function saveAugust() {
+    withModel();
+    pendingNarrator();
+    jest.mocked(narrate).mockImplementationOnce(async ({ facts, names }) => ({
+      status: 'done',
+      keyed: keyFacts(facts, names),
+      output: {
+        headline: '변동비는 {total.variable}였어요.',
+        insights: [],
+        suggestion: '다음 달에는 지출 전에 꼭 필요한지 생각해 보세요.',
+      },
+      attempts: 1,
+    }));
+    await august(4);
+    await mount('2026-08-01');
+    expect(await screen.findByText('Qwen3.5-2B가 기기 안에서 엮은 회고예요')).toBeOnTheScreen();
+    await screen.unmount();
+  }
+
+  test('기록이 그대로면 쓴 모델을 알린다', async () => {
+    await saveAugust();
+    await mount('2026-08-01');
+    expect(await screen.findByText('Qwen3.5-2B가 기기 안에서 엮은 회고예요')).toBeOnTheScreen();
+    expect(screen.queryByText('회고를 만든 뒤 기록이 바뀌었어요')).toBeNull();
+  });
+
+  test('늦게 저장한 결제가 있으면 알리고, 저장본 문장은 그대로 보이며 다시 만들지 않는다', async () => {
+    await saveAugust();
+    await addTransaction(db, expense({ amount: 5000, date: '2026-08-31' }));
+    await mount('2026-08-01');
+
+    expect(await screen.findByText('회고를 만든 뒤 기록이 바뀌었어요')).toBeOnTheScreen();
+    expect(screen.getByText('변동비는 46,000원였어요.')).toBeOnTheScreen();
+    expect(narrate).toHaveBeenCalledTimes(1);
+    // 다시 만들기는 헤더에 있다
+    const options = mockNavigation.setOptions.mock.calls.at(-1)?.[0];
+    expect(options?.headerRight?.().props.label).toBe('다시 만들기');
+  });
+});
+
 test('다 만들면 저장하고, 늘 있는 상태 줄(live region)이 쓴 모델을 알린다', async () => {
   withModel();
   pendingNarrator();

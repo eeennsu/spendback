@@ -28,3 +28,7 @@ npm-debug.log
 
 # llama.rn의 Gradle이 빌드할 때마다 복사한다(Qualcomm Hexagon 백엔드)
 android/app/src/main/assets/ggml-hexagon/
+
+# 편한가계부 이관(scripts/import-pyunhan.mts)의 엑셀, 규칙, 결과. 개인 기록이라 올리지 않는다
+*.xlsx
+/.local/

@@ -21,7 +21,8 @@
     "prepare": "husky",
     "eval:models": "tsx scripts/eval/download.mts",
     "eval": "tsx scripts/eval/run.mts",
-    "eval:cards": "tsx scripts/eval/categorize.mts"
+    "eval:cards": "tsx scripts/eval/categorize.mts",
+    "import:pyunhan": "tsx scripts/import-pyunhan.mts"
   },
   "dependencies": {
     "@eeennsu/native": "0.4.0",

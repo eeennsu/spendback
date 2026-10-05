@@ -177,7 +177,9 @@ test('끝난 달을 처음 열면 만들기 시작하고, 취소하면 모델을
   await mount('2026-08-01');
 
   expect(await screen.findByText('쓰는 중')).toBeOnTheScreen();
-  expect(llamaNarrator).toHaveBeenCalledWith(expect.stringContaining(QWEN.fileName));
+  expect(llamaNarrator).toHaveBeenCalledWith(expect.stringContaining(QWEN.fileName), {
+    reuseSystem: true,
+  });
   await fireEvent.press(screen.getByRole('button', { name: '취소' }));
 
   expect(await screen.findByText('만들기를 취소했어요')).toBeOnTheScreen();

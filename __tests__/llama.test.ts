@@ -1,5 +1,6 @@
 import { initLlama } from 'llama.rn';
 
+import Files from '../src/native/NativeSpendbackFiles';
 import { llamaNarrator } from '../src/retro/llama';
 import { INFERENCE } from '../src/retro/models';
 import { NarratorError } from '../src/retro/narrate';
@@ -228,4 +229,108 @@ test('stopCompletion이 Promise를 돌려주지 않아도(llama.rn JSI) 모델�
   await release();
   expect(context.stopCompletion).toHaveBeenCalled();
   expect(context.release).toHaveBeenCalled();
+});
+
+describe('지시문 세션 캐시(PRD 6장 실행 정책)', () => {
+  const SYSTEM = '너는 담백한 분석가다.';
+  const chat = {
+    ...request,
+    messages: [
+      { role: 'system' as const, content: SYSTEM },
+      { role: 'user' as const, content: 'facts' },
+    ],
+  };
+  const FORMATTED = `<|im_start|>system\n${SYSTEM}<|im_end|>\n<|im_start|>user\nfacts<|im_end|>\n`;
+
+  function sessionContext() {
+    const context = {
+      ...fakeContext(['{}']),
+      // 지시문만 처리할 때는 prompt를, 생성할 때는 messages를 준다
+      completion: jest.fn(
+        async (params: { prompt?: string }, callback?: (data: { token: string }) => void) => {
+          if (params.prompt) return { text: '', tokens_evaluated: 120 };
+          callback?.({ token: '{}' });
+          return { text: '{}', tokens_evaluated: 300 };
+        },
+      ),
+      getFormattedChat: jest.fn(async () => ({ type: 'jinja', prompt: FORMATTED })),
+      loadSession: jest.fn(async () => ({ tokens_loaded: 120, prompt: '' })),
+      saveSession: jest.fn(async () => 120),
+    };
+    jest.mocked(initLlama).mockResolvedValue(context as never);
+    return context;
+  }
+
+  const signal = () => new AbortController().signal;
+
+  beforeEach(() => {
+    jest.mocked(Files.fileSize).mockReturnValue(-1);
+    jest.mocked(Files.moveFile).mockReturnValue(true);
+  });
+
+  test('세션 파일이 없으면 지시문까지만 처리해 저장하고, 저장한 상태로 되돌린 뒤 생성한다', async () => {
+    const context = sessionContext();
+    const { generate } = llamaNarrator('/models/qwen.gguf', { reuseSystem: true });
+    expect(await generate(chat, () => {}, signal())).toBe('{}');
+
+    const prefix = context.completion.mock.calls[0][0] as { prompt: string; n_predict: number };
+    expect(prefix.prompt).toBe(`<|im_start|>system\n${SYSTEM}`);
+    expect(prefix.n_predict).toBe(1);
+    const [part, options] = context.saveSession.mock.calls[0] as unknown as [string, object];
+    expect(part).toMatch(/^\/cache\/llama-qwen\.gguf-[0-9a-f]{8}\.session\.part$/);
+    expect(options).toEqual({ tokenSize: 120 });
+    const file = part.replace(/\.part$/, '');
+    expect(Files.moveFile).toHaveBeenCalledWith(part, file);
+    expect(context.loadSession).toHaveBeenCalledWith(file);
+    expect(context.completion.mock.calls[1][0]).toMatchObject({ messages: chat.messages });
+  });
+
+  test('세션 파일이 있으면 불러오기만 하고, 같은 컨텍스트의 다음 생성은 다시 불러오지 않는다', async () => {
+    const context = sessionContext();
+    jest.mocked(Files.fileSize).mockReturnValue(4096);
+    const { generate } = llamaNarrator('/models/qwen.gguf', { reuseSystem: true });
+    await generate(chat, () => {}, signal());
+    await generate(chat, () => {}, signal());
+
+    expect(context.loadSession).toHaveBeenCalledTimes(1);
+    expect(context.getFormattedChat).not.toHaveBeenCalled();
+    expect(context.completion).toHaveBeenCalledTimes(2);
+  });
+
+  test('지시문이 바뀌면 다른 세션 파일이다', async () => {
+    const context = sessionContext();
+    jest.mocked(Files.fileSize).mockReturnValue(4096);
+    await llamaNarrator('/models/qwen.gguf', { reuseSystem: true }).generate(
+      chat,
+      () => {},
+      signal(),
+    );
+    const changed = {
+      ...chat,
+      messages: [{ role: 'system' as const, content: 'v7' }, chat.messages[1]],
+    };
+    await llamaNarrator('/models/qwen.gguf', { reuseSystem: true }).generate(
+      changed,
+      () => {},
+      signal(),
+    );
+    const [first, second] = context.loadSession.mock.calls.map(c => (c as unknown as [string])[0]);
+    expect(first).not.toBe(second);
+  });
+
+  test('세션을 불러오지 못하면 파일을 지우고 캐시 없이 생성한다', async () => {
+    const context = sessionContext();
+    jest.mocked(Files.fileSize).mockReturnValue(4096);
+    context.loadSession.mockRejectedValueOnce(new Error('Failed to load session'));
+    const { generate } = llamaNarrator('/models/qwen.gguf', { reuseSystem: true });
+    expect(await generate(chat, () => {}, signal())).toBe('{}');
+    expect(Files.deleteFile).toHaveBeenCalledWith(expect.stringMatching(/\.session$/));
+  });
+
+  test('카드 알림 추천처럼 옵션이 없으면 세션을 쓰지 않는다', async () => {
+    const context = sessionContext();
+    await llamaNarrator('/models/qwen.gguf').generate(chat, () => {}, signal());
+    expect(context.loadSession).not.toHaveBeenCalled();
+    expect(context.getFormattedChat).not.toHaveBeenCalled();
+  });
 });

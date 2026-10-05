@@ -91,7 +91,8 @@ export function useGeneration(period: PeriodRef) {
     controller.current = abort;
     // 카드 알림 추천이 모델을 쓰고 있으면 멈추고 내린다. 다음 로드는 내린 뒤에 한다(llama.ts releasing)
     void stopCardSuggestions();
-    narrator.current = llamaNarrator(modelPath(model));
+    // 회고의 지시문은 늘 같아 처리 결과를 세션 파일로 다시 쓴다(PRD 6장)
+    narrator.current = llamaNarrator(modelPath(model), { reuseSystem: true });
     setState({ status: 'writing', sentences: [], templates: [], retrying: false });
 
     let result: NarrateResult;

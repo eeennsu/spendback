@@ -292,7 +292,7 @@ function MonthNav({
 }
 
 /**
- * 기간 합계. 홈의 남은 예산과 같은 모양(작은 이름 + 2xl 금액)이라 아래 목록의 줄과 섞이지 않는다.
+ * 기간 합계. 홈의 남은 예산과 같은 모양(작은 이름 + 큰 금액, 여기는 xl)이라 아래 목록의 줄과 섞이지 않는다.
  * 수입만 걸러 보면 수입이 큰 금액이다. 스크린 리더는 한 덩어리("10월 지출 288,100원, 수입 …")로 읽는다
  */
 function Total({
@@ -318,7 +318,8 @@ function Total({
       <Text size='sm' tone='muted'>
         {kind}
       </Text>
-      <Text size='2xl' className='tabular-nums'>
+      {/* 홈의 남은 예산(2xl)보다 한 단 작다. 내역의 주인공은 아래 목록이다 */}
+      <Text size='xl' className='tabular-nums'>
         {amount}
       </Text>
       {extra !== undefined && (
@@ -385,6 +386,7 @@ function CategoryShare({
           {slices.map((slice, i) => (
             <Row
               key={slice.key}
+              dense
               // 스크린 리더는 이모지 이름을 읽지 않게 이름만 읽는다(목록 줄과 같다)
               label={`${leadingEmoji(slice.label).rest} ${percents[i]}, ${formatWon(slice.amount)}, 내역 보기`}
               onPress={() => onPick(slice.ids)}
@@ -421,16 +423,16 @@ function HistoryItem({
 }) {
   const item = entry.tx;
   if (!item) {
-    // 하루마다 위에 구분선을 긋는다. 선 위 24(앞 줄 여백 12 + 12), 선 아래 16이라 선이 아래 날짜에 붙는다.
+    // 하루마다 위에 구분선을 긋는다. 선 위 16(앞 줄 여백 8 + 8), 선 아래 12라 선이 아래 날짜에 붙는다.
     // 줄 사이에는 긋지 않는다. 합계는 줄 금액과 같은 오른쪽 열이다. 끈적하게 붙으면 선이 헤더 아래 경계가 된다
     return (
       <View
         accessible
         accessibilityRole='header'
         accessibilityLabel={sectionTitle(entry.section)}
-        className='bg-canvas pt-3'
+        className='bg-canvas pt-2'
       >
-        <View className='flex-row justify-between gap-3 border-t border-border pb-1 pt-4'>
+        <View className='flex-row justify-between gap-3 border-t border-border pb-1 pt-3'>
           <Text size='sm' tone='muted'>
             {formatDate(entry.section.date)}
           </Text>
@@ -455,6 +457,7 @@ function HistoryItem({
   return (
     <MoneyRow
       inset='screen'
+      dense
       // 아랫줄이 비면 빈 칸을 읽지 않는다("식비, , 지출")
       label={[
         title,

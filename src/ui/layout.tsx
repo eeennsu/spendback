@@ -60,11 +60,13 @@ export function Section({
  * 목록 한 줄. label을 주면 줄 전체가 버튼이 되고 스크린 리더는 label을 읽는다.
  * inset은 카드 안(좌우 24) 또는 화면 바로 위(좌우 16)의 눌림 배경 폭이다.
  * compact는 안쪽에 이미 48 높이의 누름 영역(이름 버튼, 스위치)이 있는 줄이라 위아래 여백을 4로 줄인다.
+ * dense는 줄이 많은 목록(내역)이라 위아래 여백을 8로 줄인다. 두 줄이면 64로 누름 영역 48을 넘는다.
  * chevron은 다른 화면으로 가는 줄이다(설정, 회고 목록, 고정비). 시트를 여는 줄(내역, 최근 지출)에는 달지 않는다
  */
 export function Row({
   column = false,
   compact = false,
+  dense = false,
   chevron = false,
   label,
   onPress,
@@ -73,6 +75,7 @@ export function Row({
 }: {
   column?: boolean;
   compact?: boolean;
+  dense?: boolean;
   chevron?: boolean;
   label?: string;
   onPress?: () => void;
@@ -82,7 +85,7 @@ export function Row({
   // 눌림 배경을 카드 끝까지 늘려 글자가 눌림 사각형 가장자리에 붙지 않게 한다
   const className = cn(
     inset === 'card' ? '-mx-6 px-6' : '-mx-4 px-4',
-    compact ? 'py-1' : 'py-3',
+    compact ? 'py-1' : dense ? 'py-2' : 'py-3',
     column ? 'gap-2' : 'flex-row items-center gap-3',
   );
   if (label === undefined) return <View className={className}>{children as ReactNode}</View>;
@@ -102,7 +105,8 @@ export function Row({
 /**
  * 돈 한 줄(내역, 홈 최근 지출, DESIGN.md 4.4). 윗줄은 제목과 금액이 같은 줄이고 아랫줄은 보조 정보(sm muted)와 배지 하나다.
  * 금액을 두 줄의 세로 가운데에 두면 제목과 다른 높이라 눈이 지그재그로 움직였다. 카테고리 이모지는 왼쪽 32 칸에 따로
- * 세운다. glyphs면 이모지가 없는 줄도 칸을 비워 글자 왼쪽 끝을 맞춘다. 수입은 brand 글자다
+ * 세운다. glyphs면 이모지가 없는 줄도 칸을 비워 글자 왼쪽 끝을 맞춘다. 수입은 brand 글자다.
+ * dense(내역)는 위아래 여백 8, 이모지 lg(18)에 24 칸이다. 홈 카드 안은 기본(여백 12, 이모지 xl에 32 칸)이다
  */
 export function MoneyRow({
   label,
@@ -115,6 +119,7 @@ export function MoneyRow({
   income = false,
   meta,
   badge,
+  dense = false,
 }: {
   label: string;
   onPress: () => void;
@@ -126,12 +131,13 @@ export function MoneyRow({
   income?: boolean;
   meta: string;
   badge?: string;
+  dense?: boolean;
 }) {
   return (
-    <Row inset={inset} label={label} onPress={onPress}>
+    <Row inset={inset} dense={dense} label={label} onPress={onPress}>
       {glyphs && (
-        <View className='w-8 items-center'>
-          {emoji !== undefined && <Text size='xl'>{emoji}</Text>}
+        <View className={dense ? 'w-6 items-center' : 'w-8 items-center'}>
+          {emoji !== undefined && <Text size={dense ? 'lg' : 'xl'}>{emoji}</Text>}
         </View>
       )}
       <Stack className='flex-1 gap-1'>

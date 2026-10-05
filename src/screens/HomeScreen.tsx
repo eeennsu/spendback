@@ -1,20 +1,20 @@
 import { Button, Card, Stack, Text } from '@eeennsu/native';
 import { useNavigation, useScrollToTop } from '@react-navigation/native';
 import { type ComponentRef, useLayoutEffect, useRef } from 'react';
-import { Pressable, ScrollView, Text as RNText, View } from 'react-native-css/components';
+import { Pressable, ScrollView, View } from 'react-native-css/components';
 
 import { allBudgets } from '../db/budgets';
 import { recentExpenses, transactionsBetween } from '../db/transactions';
 import { monthStatus } from '../domain/budget';
 import { daysInMonth } from '../domain/date';
-import { relativeDate } from '../domain/entry';
+import { leadingEmoji, relativeDate } from '../domain/entry';
 import { fixedCostChecklist, paymentDate } from '../domain/fixedCost';
 import { formatPercent, formatWon, formatWonFraction } from '../domain/format';
 import { useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
 import { Meter } from '../ui/Meter';
 import { IconButton } from '../ui/chrome';
-import { Row, Section } from '../ui/layout';
+import { MoneyRow, Row, Section } from '../ui/layout';
 import { Prose } from '../ui/prose';
 import { CardInboxSection } from './CardInboxSection';
 
@@ -54,6 +54,10 @@ export function HomeScreen() {
   const status = monthStatus(data.budgets, data.monthTransactions, today);
   const checklist = fixedCostChecklist(lists.fixedCosts, data.monthTransactions, month, today);
   const categoryName = (id: number) => lists.names.categories.get(id) ?? '카테고리';
+  // 최근 지출의 이모지 칸. 내역과 같이 하나라도 이모지 카테고리면 모든 줄에 둔다
+  const glyphs = data.recent.some(
+    tx => leadingEmoji(categoryName(tx.categoryId)).emoji !== undefined,
+  );
 
   return (
     <View className='flex-1 bg-canvas'>
@@ -162,27 +166,24 @@ export function HomeScreen() {
             <>
               <View>
                 {data.recent.map(tx => {
-                  const title = tx.memo || categoryName(tx.categoryId);
-                  // 메모가 없으면 제목이 카테고리라 아랫줄에 다시 쓰지 않는다
-                  const meta = tx.memo
-                    ? `${categoryName(tx.categoryId)} · ${relativeDate(tx.date, today)}`
-                    : relativeDate(tx.date, today);
+                  const name = leadingEmoji(categoryName(tx.categoryId));
+                  const title = tx.memo || name.rest;
+                  // 메모가 없거나 카테고리 이름과 같으면 아랫줄에 카테고리를 다시 쓰지 않는다
+                  const meta =
+                    title === name.rest
+                      ? relativeDate(tx.date, today)
+                      : `${name.rest} · ${relativeDate(tx.date, today)}`;
                   return (
-                    <Row
+                    <MoneyRow
                       key={tx.id}
                       label={`${title}, ${meta}, ${formatWon(tx.amount)}`}
                       onPress={() => navigation.navigate('Entry', { transactionId: tx.id })}
-                    >
-                      <Stack className='flex-1 gap-1'>
-                        <RNText numberOfLines={1} className='font-sans text-md text-fg'>
-                          {title}
-                        </RNText>
-                        <Text size='sm' tone='muted'>
-                          {meta}
-                        </Text>
-                      </Stack>
-                      <Text className='tabular-nums'>{formatWon(tx.amount)}</Text>
-                    </Row>
+                      glyphs={glyphs}
+                      emoji={name.emoji}
+                      title={title}
+                      amount={formatWon(tx.amount)}
+                      meta={meta}
+                    />
                   );
                 })}
               </View>

@@ -1,7 +1,7 @@
-import { Card, Chip, Icon, Label, Stack, Text, cn } from '@eeennsu/native';
+import { Badge, Card, Chip, Icon, Label, Stack, Text, cn } from '@eeennsu/native';
 import type { ElementChildren } from '@eeennsu/tokens';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, ScrollView, View } from 'react-native-css/components';
+import { Pressable, Text as RNText, ScrollView, View } from 'react-native-css/components';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Prose } from './prose';
@@ -96,6 +96,67 @@ export function Row({
       {children as ReactNode}
       {chevron && <Icon name='chevron-right' tone='muted' />}
     </Pressable>
+  );
+}
+
+/**
+ * 돈 한 줄(내역, 홈 최근 지출, DESIGN.md 4.4). 윗줄은 제목과 금액이 같은 줄이고 아랫줄은 보조 정보(sm muted)와 배지 하나다.
+ * 금액을 두 줄의 세로 가운데에 두면 제목과 다른 높이라 눈이 지그재그로 움직였다. 카테고리 이모지는 왼쪽 32 칸에 따로
+ * 세운다. glyphs면 이모지가 없는 줄도 칸을 비워 글자 왼쪽 끝을 맞춘다. 수입은 brand 글자다
+ */
+export function MoneyRow({
+  label,
+  onPress,
+  inset,
+  glyphs,
+  emoji,
+  title,
+  amount,
+  income = false,
+  meta,
+  badge,
+}: {
+  label: string;
+  onPress: () => void;
+  inset?: 'card' | 'screen';
+  glyphs: boolean;
+  emoji: string | undefined;
+  title: string;
+  amount: string;
+  income?: boolean;
+  meta: string;
+  badge?: string;
+}) {
+  return (
+    <Row inset={inset} label={label} onPress={onPress}>
+      {glyphs && (
+        <View className='w-8 items-center'>
+          {emoji !== undefined && <Text size='xl'>{emoji}</Text>}
+        </View>
+      )}
+      <Stack className='flex-1 gap-1'>
+        <Stack direction='row' className='gap-3'>
+          <RNText numberOfLines={1} className='flex-1 font-sans text-md text-fg'>
+            {title}
+          </RNText>
+          <Text className={income ? 'text-fg-brand tabular-nums' : 'tabular-nums'}>{amount}</Text>
+        </Stack>
+        {(meta !== '' || badge !== undefined) && (
+          <Stack direction='row' align='center' className='gap-2'>
+            {meta !== '' && (
+              <Text size='sm' tone='muted'>
+                {meta}
+              </Text>
+            )}
+            {badge !== undefined && (
+              <Badge variant='secondary' size='sm'>
+                {badge}
+              </Badge>
+            )}
+          </Stack>
+        )}
+      </Stack>
+    </Row>
   );
 }
 

@@ -1,8 +1,8 @@
-import { Badge, Button, Chip, Stack, Text } from '@eeennsu/native';
+import { Button, Chip, Stack, Text } from '@eeennsu/native';
 import { useNavigation, useScrollToTop } from '@react-navigation/native';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { FlatList } from 'react-native';
-import { Text as RNText, View } from 'react-native-css/components';
+import { View } from 'react-native-css/components';
 
 import { type TransactionRow, filterTransactions, firstRecordDate } from '../db/transactions';
 import { addMonths } from '../domain/date';
@@ -27,7 +27,7 @@ import {
 } from '../state/ui';
 import { Donut, Swatch } from '../ui/charts';
 import { HeaderAction, IconButton } from '../ui/chrome';
-import { Empty, Row, Section } from '../ui/layout';
+import { Empty, MoneyRow, Row, Section } from '../ui/layout';
 import { Prose } from '../ui/prose';
 
 type Entry = {
@@ -405,8 +405,8 @@ function CategoryShare({
 }
 
 /**
- * 날짜 머리 또는 거래 한 줄(DESIGN.md 4.4). 줄은 두 칸이다: 윗줄은 제목과 금액이 같은 줄에, 아랫줄은 카테고리.
- * 카테고리 이모지는 왼쪽 칸에 따로 세운다. 수입은 +와 brand 글자, 고정비는 배지 하나
+ * 날짜 머리 또는 거래 한 줄(DESIGN.md 4.4, 줄 모양은 MoneyRow). 아랫줄은 카테고리와 카드가 아닌 결제수단, 수입은 +와 brand
+ * 글자, 고정비는 배지 하나
  */
 function HistoryItem({
   entry,
@@ -452,9 +452,8 @@ function HistoryItem({
     .filter(Boolean)
     .join(' · ');
   const income = item.type === 'income';
-  const amount = income ? `+${formatWon(item.amount)}` : formatWon(item.amount);
   return (
-    <Row
+    <MoneyRow
       inset='screen'
       // 아랫줄이 비면 빈 칸을 읽지 않는다("식비, , 지출")
       label={[
@@ -466,34 +465,13 @@ function HistoryItem({
         .filter(Boolean)
         .join(', ')}
       onPress={() => onPress(item.id)}
-    >
-      {glyphs && (
-        <View className='w-8 items-center'>
-          {name.emoji !== undefined && <Text size='xl'>{name.emoji}</Text>}
-        </View>
-      )}
-      <Stack className='flex-1 gap-1'>
-        <Stack direction='row' className='gap-3'>
-          <RNText numberOfLines={1} className='flex-1 font-sans text-md text-fg'>
-            {title}
-          </RNText>
-          <Text className={income ? 'text-fg-brand tabular-nums' : 'tabular-nums'}>{amount}</Text>
-        </Stack>
-        {(meta !== '' || item.isFixed) && (
-          <Stack direction='row' align='center' className='gap-2'>
-            {meta !== '' && (
-              <Text size='sm' tone='muted'>
-                {meta}
-              </Text>
-            )}
-            {item.isFixed && (
-              <Badge variant='secondary' size='sm'>
-                고정비
-              </Badge>
-            )}
-          </Stack>
-        )}
-      </Stack>
-    </Row>
+      glyphs={glyphs}
+      emoji={name.emoji}
+      title={title}
+      amount={income ? `+${formatWon(item.amount)}` : formatWon(item.amount)}
+      income={income}
+      meta={meta}
+      badge={item.isFixed ? '고정비' : undefined}
+    />
   );
 }

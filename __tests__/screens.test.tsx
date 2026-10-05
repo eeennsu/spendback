@@ -101,6 +101,20 @@ async function fixedItem() {
 }
 
 describe('홈', () => {
+  test('최근 지출 줄은 내역과 같이 이모지를 왼쪽 칸에 떼고 제목과 금액을 한 줄에 둔다', async () => {
+    await renameCategory(db, 2, '💰 개인 용돈');
+    try {
+      await addTransaction(db, expense({ memo: '햄버거', categoryId: 2 }));
+      await mount(<HomeScreen />);
+
+      const row = await screen.findByRole('button', { name: '햄버거, 개인 용돈 · 오늘, 9,500원' });
+      expect(within(row).getByText('💰')).toBeOnTheScreen();
+      expect(within(row).getByText('개인 용돈 · 오늘')).toBeOnTheScreen();
+    } finally {
+      await renameCategory(db, 2, '카페·간식');
+    }
+  });
+
   test('남은 예산, 미기록 고정비, 초과한 카테고리, 최근 지출, 기록 버튼을 보여 준다', async () => {
     await setBudget(db, '2026-09', 1200000, [{ categoryId: 3, amount: 100000 }]);
     await fixedItem();

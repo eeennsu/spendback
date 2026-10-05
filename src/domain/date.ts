@@ -37,8 +37,3 @@ export function daysInMonth(month: string) {
 export function weekday(date: string) {
   return (new Date(toUtc(date)).getUTCDay() + 6) % 7;
 }
-
-/** 그 날이 속한 주의 월요일 */
-export function weekStart(date: string) {
-  return addDays(date, -weekday(date));
-}

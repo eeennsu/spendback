@@ -15,7 +15,7 @@ export const PROMPT_VERSION: PromptVersion = 'v5';
 
 export type Message = { role: 'system' | 'user'; content: string };
 
-const unit = (kind: KeyedFacts['kind']) => (kind === 'weekly' ? '주' : '달');
+const unit = (_kind: KeyedFacts['kind']) => '달';
 /** 제안의 첫머리. 문법이 강제한다(grammar.ts) */
 const next = (kind: KeyedFacts['kind']) => `다음 ${unit(kind)}에는`;
 
@@ -64,7 +64,7 @@ function user(
     })
     .filter(Boolean);
   const nameLine = names.map(key => `{${key}} = ${values[key]}`).join(', ');
-  const period = keyed.kind === 'weekly' ? '이번 주' : '이번 달';
+  const period = '이번 달';
   return `문장(id: 문장)\n\n${groups.join('\n\n')}\n\nheadline 후보: ${headlines.map(f => f.id).join(', ')}\n\n이름 키: ${nameLine}\n\n${period} 회고를 JSON으로 써 줘.`;
 }
 

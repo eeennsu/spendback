@@ -115,6 +115,14 @@ const RetrospectiveSchema = z.object({
   createdAt: time,
 });
 
+/** 주간 회고는 2026-10-05에 뺐다(PRD 13장). 그 전 백업에 든 주간 회고는 읽고 버린다 */
+const monthlyOnly = (list: z.infer<typeof RetrospectiveSchema>[]) =>
+  list.flatMap(r =>
+    r.kind === 'monthly' && r.facts.kind === 'monthly'
+      ? [{ ...r, kind: r.kind, facts: { ...r.facts, kind: r.facts.kind } }]
+      : [],
+  );
+
 export const BackupSchema = z
   .object({
     app: z.literal('spendback'),
@@ -125,7 +133,7 @@ export const BackupSchema = z
     fixedCosts: z.array(FixedCostSchema),
     transactions: z.array(TransactionSchema),
     budgets: z.array(BudgetSchema),
-    retrospectives: z.array(RetrospectiveSchema),
+    retrospectives: z.array(RetrospectiveSchema).transform(monthlyOnly),
   })
   .superRefine((backup, ctx) => {
     // 외래 키는 DB도 막지만, 어느 기록이 틀렸는지 알 수 있게 먼저 본다

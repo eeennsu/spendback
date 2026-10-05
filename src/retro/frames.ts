@@ -15,10 +15,10 @@ export type Frame = { id: string; group: string; text: string };
 /** 같은 종류의 묶음(category.3, category.1 …)을 한 종류로 본다 */
 const groupKind = (id: string) => id.split('.')[0];
 
-function framesOf(g: FactGroup, kind: KeyedFacts['kind']): Frame[] {
-  const before = kind === 'weekly' ? '지난주보다' : '지난달보다';
-  const same = kind === 'weekly' ? '지난주와' : '지난달과';
-  const period = kind === 'weekly' ? '이번 주' : '이번 달';
+function framesOf(g: FactGroup, _kind: KeyedFacts['kind']): Frame[] {
+  const before = '지난달보다';
+  const same = '지난달과';
+  const period = '이번 달';
   const value = (name: string) => g.facts.find(f => f.key === `${g.id}.${name}`)?.value;
   const k = (name: string) => `{${g.id}.${name}}`;
   const frames: Frame[] = [];
@@ -131,11 +131,6 @@ function framesOf(g: FactGroup, kind: KeyedFacts['kind']): Frame[] {
       add('days', `지출이 없는 날이 ${k('days')} 있었어요.`, ['days']);
       break;
     case 'busiest':
-      add('day', `가장 많이 쓴 날은 ${k('day')}{이었어요/였어요}.`, ['day']);
-      add('day_amount', `${k('day')}에 ${k('amount')}{으로/로} 가장 많이 썼어요.`, [
-        'day',
-        'amount',
-      ]);
       add('weekday', `가장 많이 쓴 요일은 ${k('weekday')}{이었어요/였어요}.`, ['weekday']);
       add(
         'weekday_amount',

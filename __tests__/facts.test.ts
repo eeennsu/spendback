@@ -38,14 +38,14 @@ const categories = [
   { id: TRANSPORT, sortOrder: 3 },
 ];
 
-/** 2026-09-21(월) ~ 27(일). 직전 주는 14 ~ 20일 */
-const WEEK = { kind: 'weekly', start: '2026-09-21' } as const;
+/** 2026년 9월. 직전 달은 8월 */
+const SEPTEMBER = { kind: 'monthly', start: '2026-09-01' } as const;
 /** 2026년 8월. 직전 달은 7월 */
 const AUGUST = { kind: 'monthly', start: '2026-08-01' } as const;
 
 function facts(input: Partial<FactsInput> & Pick<FactsInput, 'transactions'>) {
   return computeFacts({
-    period: WEEK,
+    period: SEPTEMBER,
     firstRecordDate: '2026-01-01',
     budgets: [],
     categories,
@@ -54,8 +54,8 @@ function facts(input: Partial<FactsInput> & Pick<FactsInput, 'transactions'>) {
 }
 
 describe('기간', () => {
-  test('주간은 월요일부터 일요일까지다', () => {
-    expect(facts({ transactions: [] })).toMatchObject({ start: '2026-09-21', end: '2026-09-27' });
+  test('1일부터 말일까지다', () => {
+    expect(facts({ transactions: [] })).toMatchObject({ start: '2026-09-01', end: '2026-09-30' });
   });
 
   test('월간은 달력 월이다', () => {
@@ -79,7 +79,7 @@ describe('총지출', () => {
     tx('2026-09-22', 20000, { categoryId: CAFE }),
     tx('2026-09-25', 500000, { isFixed: true, categoryId: RENT }),
     tx('2026-09-23', 3000000, { type: 'income', categoryId: SALARY }),
-    tx('2026-09-28', 99999), // 다음 주
+    tx('2026-10-01', 99999), // 다음 달
   ];
 
   test('전체·변동비·고정비를 따로 낸다. 수입과 기간 밖은 뺀다', () => {
@@ -97,8 +97,8 @@ describe('총지출', () => {
 
 describe('직전 기간 대비 증감(변동비)', () => {
   const transactions = [
-    tx('2026-09-15', 40000),
-    tx('2026-09-16', 100000, { isFixed: true }),
+    tx('2026-08-15', 40000),
+    tx('2026-08-16', 100000, { isFixed: true }),
     tx('2026-09-22', 72000),
   ];
 
@@ -107,10 +107,10 @@ describe('직전 기간 대비 증감(변동비)', () => {
   });
 
   test('직전 기간이 첫 기록일과 겹치면 비교하지 않는다', () => {
-    expect(facts({ transactions, firstRecordDate: '2026-09-16' }).change).toBeUndefined();
+    expect(facts({ transactions, firstRecordDate: '2026-08-16' }).change).toBeUndefined();
     // 첫 기록일이 직전 기간의 첫날이어도 겹친다
-    expect(facts({ transactions, firstRecordDate: '2026-09-14' }).change).toBeUndefined();
-    expect(facts({ transactions, firstRecordDate: '2026-09-13' }).change).toBeDefined();
+    expect(facts({ transactions, firstRecordDate: '2026-08-01' }).change).toBeUndefined();
+    expect(facts({ transactions, firstRecordDate: '2026-07-31' }).change).toBeDefined();
   });
 
   test('기록이 없으면 비교하지 않는다', () => {
@@ -144,15 +144,15 @@ describe('카테고리', () => {
 
   describe('증감 상위 3개', () => {
     const transactions = [
-      // 직전 주
-      tx('2026-09-14', 10000),
-      tx('2026-09-14', 30000, { categoryId: CAFE }),
-      tx('2026-09-15', 8000, { categoryId: TRANSPORT }),
-      // 이번 주
+      // 직전 달
+      tx('2026-08-14', 10000),
+      tx('2026-08-14', 30000, { categoryId: CAFE }),
+      tx('2026-08-15', 8000, { categoryId: TRANSPORT }),
+      // 이번 달
       tx('2026-09-21', 30000), // food +20,000
       tx('2026-09-22', 20000, { categoryId: DELIVERY }), // delivery +20,000(이번 금액이 작다)
       tx('2026-09-23', 8000, { categoryId: TRANSPORT }), // transport 0
-      // cafe -30,000(이번 주에 없다)
+      // cafe -30,000(이번 달에 없다)
     ];
 
     test('증감액 절댓값 순, 같으면 이번 금액 큰 순. 증감 0은 넣지 않는다', () => {
@@ -184,7 +184,7 @@ describe('카테고리', () => {
 
     test('비교할 수 없으면 없다', () => {
       expect(
-        facts({ transactions, firstRecordDate: '2026-09-14' }).topCategoryChanges,
+        facts({ transactions, firstRecordDate: '2026-08-01' }).topCategoryChanges,
       ).toBeUndefined();
     });
   });
@@ -204,19 +204,12 @@ describe('예산 대비(변동비)', () => {
     tx('2026-08-05', 600000, { isFixed: true }),
   ];
 
-  test('월간은 그 달의 예산이다', () => {
+  test('그 달의 예산이다', () => {
     expect(facts({ period: AUGUST, budgets, transactions }).budget).toEqual({
       budget: 1240000,
       spent: 250000,
       categories: [{ categoryId: FOOD, budget: 310000, spent: 200000 }],
     });
-  });
-
-  test('주간은 일할한 예산이다', () => {
-    // 2026-08-03(월) 주: 1,240,000 ÷ 31 × 7
-    const f = facts({ period: { kind: 'weekly', start: '2026-08-03' }, budgets, transactions });
-    expect(f.budget).toMatchObject({ budget: 280000, spent: 250000 });
-    expect(f.budget?.categories).toEqual([{ categoryId: FOOD, budget: 70000, spent: 200000 }]);
   });
 
   test('예산이 없으면 없다', () => {
@@ -272,31 +265,19 @@ describe('무지출일(변동비 지출이 없는 날)', () => {
   ];
 
   test('고정비와 수입만 있는 날도 무지출일이다', () => {
-    expect(facts({ transactions }).noSpendDays).toBe(5);
+    // 9월 30일 중 21일과 23일에만 썼다
+    expect(facts({ transactions }).noSpendDays).toBe(28);
   });
 
   test('첫 기록일 전의 날은 세지 않는다', () => {
-    // 23 ~ 27일 중 23일에만 썼다
+    // 23 ~ 30일 중 23일에만 썼다
     const f = facts({ transactions: transactions.slice(2), firstRecordDate: '2026-09-23' });
-    expect(f.noSpendDays).toBe(4);
+    expect(f.noSpendDays).toBe(7);
   });
 });
 
-describe('지출이 가장 많은 날·요일(변동비)', () => {
-  test('주간은 가장 많이 쓴 날이고, 같으면 이른 날이다', () => {
-    const f = facts({
-      transactions: [
-        tx('2026-09-22', 10000),
-        tx('2026-09-22', 5000),
-        tx('2026-09-21', 15000),
-        tx('2026-09-23', 90000, { isFixed: true }),
-      ],
-    });
-    expect(f.busiestDay).toEqual({ date: '2026-09-21', amount: 15000 });
-    expect(f.busiestWeekday).toBeUndefined();
-  });
-
-  test('월간은 요일별 합계가 가장 큰 요일이다(월요일 0)', () => {
+describe('지출이 가장 많은 요일(변동비)', () => {
+  test('요일별 합계가 가장 큰 요일이다(월요일 0)', () => {
     const f = facts({
       period: AUGUST,
       transactions: [
@@ -306,7 +287,6 @@ describe('지출이 가장 많은 날·요일(변동비)', () => {
       ],
     });
     expect(f.busiestWeekday).toEqual({ weekday: 4, amount: 60000 });
-    expect(f.busiestDay).toBeUndefined();
   });
 });
 
@@ -342,7 +322,7 @@ describe('같은 메모가 반복된 지출(변동비, 메모 완전 일치)', (
   });
 });
 
-describe('수입 대비 지출률(월간, 수입 기록이 있을 때만)', () => {
+describe('수입 대비 지출률(수입 기록이 있을 때만)', () => {
   const transactions = [
     tx('2026-08-10', 2000000, { type: 'income', categoryId: SALARY }),
     tx('2026-08-20', 500000, { type: 'income', categoryId: SIDE }),
@@ -361,10 +341,5 @@ describe('수입 대비 지출률(월간, 수입 기록이 있을 때만)', () =
     expect(
       facts({ period: AUGUST, transactions: transactions.slice(2) }).incomeRatio,
     ).toBeUndefined();
-  });
-
-  test('주간에는 없다', () => {
-    const f = facts({ period: { kind: 'weekly', start: '2026-08-03' }, transactions });
-    expect(f.incomeRatio).toBeUndefined();
   });
 });

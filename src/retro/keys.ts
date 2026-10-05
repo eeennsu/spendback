@@ -27,7 +27,7 @@ import {
  * | regret | amount, share | 47,000원, 25% |
  * | largest | amount, category, memo, date | 32,000원, 배달, 야식 치킨, 9월 24일 목요일 |
  * | no_spend | days | 하루, 5일 |
- * | busiest | day 또는 weekday, amount | 9월 26일 토요일, 71,500원 |
+ * | busiest | weekday, amount | 토요일, 71,500원 |
  * | memo.<n> | text, count, amount | 편의점 커피, 5번, 12,500원 |
  * | income | amount, expense_rate | 3,200,000원, 85% |
  * | income | balance_phrase(서술어) | 480,000원 남았어요, 214,000원 더 썼어요 |
@@ -87,7 +87,7 @@ function incomePhrase(income: number, expense: number) {
  * 묶음이 눈에 띄는 정도(0~100)와 그 까닭이 된 키(focus). 묶음을 이 순서로 프롬프트에 쓰고, headline 후보는 앞
  * 묶음에서, 그 묶음의 focus 키를 쓴 틀로 고른다(frames.ts). 2026-10-02 하네스에서 두 모델 모두 적자와 예산
  * 초과를 headline으로 거의 고르지 않았고, 배달 예산을 넘은 주에 "배달 지출이 늘었어요"를 headline으로 골라 같은
- * 묶음의 예산 초과를 말하지 못했다(PRD 11장). 값은 같은 기간의 변동비에 대한 비율로 정해 주간·월간에 같이 쓴다
+ * 묶음의 예산 초과를 말하지 못했다(PRD 11장). 값은 같은 달의 변동비에 대한 비율로 정한다
  */
 function salience(facts: Facts, id: string): { weight: number; focus?: string[] } {
   const variable = facts.variable;
@@ -165,14 +165,14 @@ function salience(facts: Facts, id: string): { weight: number; focus?: string[] 
     case 'largest':
       return { weight: part(facts.largest?.amount ?? 0) >= 0.25 ? 45 : 20 };
     case 'no_spend': {
-      // 한 주 7일 중 5일, 한 달 중 12일 넘게 쓰지 않았으면 그 기간의 이야기다
-      const [many, some] = facts.kind === 'weekly' ? [5, 3] : [12, 8];
+      // 한 달 중 12일 넘게 쓰지 않았으면 그 달의 이야기다
+      const [many, some] = [12, 8];
       return {
         weight: facts.noSpendDays >= many ? 75 : facts.noSpendDays >= some ? 50 : 15,
       };
     }
     case 'busiest':
-      return { weight: facts.busiestDay && part(facts.busiestDay.amount) >= 0.4 ? 35 : 15 };
+      return { weight: 15 };
     case 'memo':
       return { weight: (facts.repeatedMemos[key - 1]?.count ?? 0) >= 5 ? 30 : 18 };
     default:
@@ -181,7 +181,7 @@ function salience(facts: Facts, id: string): { weight: number; focus?: string[] 
 }
 
 export function keyFacts(facts: Facts, names: Names): KeyedFacts {
-  const before = facts.kind === 'weekly' ? '지난주보다' : '지난달보다';
+  const before = '지난달보다';
   const whole = facts.variable;
   const share = (amount: number) =>
     amount > 0 && whole > 0 ? formatPercent(amount, whole) : undefined;
@@ -218,11 +218,7 @@ export function keyFacts(facts: Facts, names: Names): KeyedFacts {
     ]),
     ...(budget
       ? group('budget', '예산', [
-          [
-            'amount',
-            formatWon(budget.budget),
-            facts.kind === 'weekly' ? '이번 주 예산(월 예산을 날수로 나눈 몫)' : '이번 달 예산',
-          ],
+          ['amount', formatWon(budget.budget), '이번 달 예산'],
           ['usage', formatPercent(budget.spent, budget.budget), '예산 사용률(변동비)'],
           ['balance_phrase', balancePhrase(budget.budget, budget.spent), '예산에서', 'predicate'],
         ])
@@ -282,12 +278,6 @@ export function keyFacts(facts: Facts, names: Names): KeyedFacts {
         '변동비를 쓰지 않은 날 수',
       ],
     ]),
-    ...(facts.busiestDay
-      ? group('busiest', '가장 많이 쓴 날', [
-          ['day', formatDate(facts.busiestDay.date), '날짜'],
-          ['amount', formatWon(facts.busiestDay.amount), '그날 변동비 지출'],
-        ])
-      : []),
     ...(facts.busiestWeekday
       ? group('busiest', '가장 많이 쓴 요일', [
           ['weekday', formatWeekday(facts.busiestWeekday.weekday), '요일'],

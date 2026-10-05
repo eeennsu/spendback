@@ -71,3 +71,17 @@ test('카드 알림: 거래에 가맹점과 추천값을 남기고, 대기열은
   expect(db.prepare('SELECT status FROM card_inbox').get()).toEqual({ status: 'pending' });
   expect(insert).toThrow(/UNIQUE constraint failed/);
 });
+
+test('0005는 주간 회고만 지운다(PRD 13장 2026-10-05)', () => {
+  const db = new DatabaseSync(':memory:');
+  const all = Object.values(migrations.migrations);
+  const at = all.findIndex(sql => sql.includes("WHERE `kind` = 'weekly'"));
+  for (const sql of all.slice(0, at)) db.exec(sql);
+  const insert = db.prepare(
+    "INSERT INTO retrospectives (kind, period_start, period_end, facts, output, model_id, prompt_version, created_at) VALUES (?, '2026-09-01', '2026-09-30', '{}', '{}', 'qwen3.5-2b', 'v5', 0)",
+  );
+  insert.run('weekly');
+  insert.run('monthly');
+  db.exec(all[at]);
+  expect(names(db, 'SELECT kind AS name FROM retrospectives')).toEqual(['monthly']);
+});

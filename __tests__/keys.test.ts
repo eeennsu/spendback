@@ -14,7 +14,7 @@ test('키는 묶음 id로 시작하고 겹치지 않는다', () => {
 });
 
 test('기간 이름', () => {
-  expect(keyFacts(base, names).period).toBe('9월 21일~27일');
+  expect(keyFacts(base, names).period).toBe('9월');
 });
 
 describe('총지출과 증감', () => {
@@ -114,7 +114,7 @@ describe('카테고리', () => {
 });
 
 describe('나머지 묶음', () => {
-  test('태그·후회·최대 지출·무지출일·가장 많이 쓴 날·반복 메모', () => {
+  test('태그·후회·최대 지출·무지출일·가장 많이 쓴 요일·반복 메모', () => {
     expect(values(base)).toMatchObject({
       'tag.2.name': '충동',
       'tag.2.share': '29%',
@@ -124,7 +124,7 @@ describe('나머지 묶음', () => {
       'largest.memo': '야식 치킨',
       'largest.date': '9월 24일 목요일',
       'no_spend.days': '하루',
-      'busiest.day': '9월 26일 토요일',
+      'busiest.weekday': '토요일',
       'memo.1.text': '편의점 커피',
       'memo.1.count': '5번',
     });
@@ -142,13 +142,9 @@ describe('나머지 묶음', () => {
     expect(v['largest.memo']).toBeUndefined();
   });
 
-  test('월간은 가장 많이 쓴 요일과 수입 대비 지출률이 있다', () => {
+  test('수입 기록이 있으면 수입 대비 지출률이 있다', () => {
     const v = values({
       ...base,
-      kind: 'monthly',
-      start: '2026-09-01',
-      end: '2026-09-30',
-      busiestDay: undefined,
       busiestWeekday: { weekday: 5, amount: 310000 },
       incomeRatio: { income: 3200000, expense: 2720000 },
     });
@@ -163,7 +159,6 @@ describe('나머지 묶음', () => {
   test('수입보다 많이 쓰면 더 쓴 금액을 쓴다', () => {
     const v = values({
       ...base,
-      kind: 'monthly',
       incomeRatio: { income: 1750000, expense: 1964000 },
     });
     expect(v['income.balance_phrase']).toBe('214,000원 더 썼어요');

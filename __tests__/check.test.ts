@@ -113,8 +113,8 @@ describe('checkSentence', () => {
 });
 
 const keyed: KeyedFacts = {
-  kind: 'weekly',
-  period: '9월 21일~27일',
+  kind: 'monthly',
+  period: '9월',
   groups: [
     {
       id: 'total',

@@ -87,7 +87,7 @@ export function buildGrammar(
   headlines: Choice[],
   frames: Choice[],
   names: string[],
-  kind: KeyedFacts['kind'],
+  _kind: KeyedFacts['kind'],
 ) {
   const ids = (list: Choice[]) => list.map(c => literal(`"${c.id}"`)).join(' | ');
   const groups = [...new Set(headlines.map(h => h.group))];
@@ -98,7 +98,7 @@ export function buildGrammar(
   };
   const headRule = (group: string, i: number) =>
     `head-${i} ::= (${ids(headlines.filter(h => h.group === group))}) ws "," ws "\\"insights\\":" ws "[" ws ins-${i} (ws "," ws ins-${i}){1,3} ws "]"`;
-  const lead = kind === 'weekly' ? '다음 주에는 ' : '다음 달에는 ';
+  const lead = '다음 달에는 ';
   // 낱말 수 상한은 넉넉히 둔다. 상한에 닿으면 모델이 쓰던 문장을 "필요한지세요.", "생각해세요."처럼 끊었다
   // (하네스 v4, "{이름} 지출 전에 꼭 필요한지 다시 한 번 생각해 보세요"는 열 낱말이다). 길이는 하네스가 잰다
   const body = names.length

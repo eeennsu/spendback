@@ -76,7 +76,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   // 월간은 만들기 전에 그 달에 기록하지 않은 고정비를 알린다(PRD 4.4, 4.6)
   const month = start.slice(0, 7);
   const unrecorded =
-    kind === 'monthly' && data && lists
+    data && lists
       ? fixedCostChecklist(
           lists.fixedCosts,
           data.transactions.filter(tx => tx.date.startsWith(month)),
@@ -143,7 +143,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   const change = keyed.groups
     .find(g => g.id === 'total')
     ?.facts.find(f => f.key === 'total.change_phrase')?.value;
-  const before = kind === 'weekly' ? '지난주' : '지난달';
+  const before = '지난달';
   const top = facts.categories.slice(0, 5);
   const others = facts.categories.slice(5);
   const rest = others.reduce((n, c) => n + c.amount, 0);
@@ -159,7 +159,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
   const percents = slices.map(s =>
     facts.variable > 0 ? formatPercent(s.amount, facts.variable) : '0%',
   );
-  const length = kind === 'weekly' ? 7 : Number(period.end.slice(8));
+  const length = Number(period.end.slice(8));
   const days = Array.from({ length }, (_, i) => {
     const date = addDays(start, i);
     const amount = data.transactions
@@ -226,7 +226,6 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
             ? unrecorded.map(item => ({ ...item, date: paymentDate(item.dayOfMonth, month) }))
             : []
         }
-        kind={kind}
         onGenerate={generate}
         onSkipFixed={skipFixed}
         onRecordFixed={id => navigation.navigate('Entry', { fixedCostId: id, month })}
@@ -303,7 +302,6 @@ function Narrative({
   picked,
   generation,
   unrecorded,
-  kind,
   onGenerate,
   onSkipFixed,
   onRecordFixed,
@@ -317,7 +315,6 @@ function Narrative({
   picked: { facts: KeyedFacts; output: Told } | undefined;
   generation: Generation;
   unrecorded: Array<{ id: number; name: string; amount: number; date: string }>;
-  kind: PeriodKind;
   onGenerate: () => void;
   onSkipFixed: () => void;
   onRecordFixed: (id: number) => void;
@@ -327,11 +324,7 @@ function Narrative({
   if (ongoing) {
     return (
       <Notice
-        title={
-          kind === 'weekly'
-            ? '이번 주가 끝나면 회고를 만들어요'
-            : '이번 달이 끝나면 회고를 만들어요'
-        }
+        title='이번 달이 끝나면 회고를 만들어요'
         body='진행 중인 기간은 지표와 차트만 보여 줘요'
       />
     );

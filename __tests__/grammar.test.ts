@@ -13,7 +13,7 @@ const grammar = buildGrammar(
   [choice('total.change'), choice('category.3.change')],
   FRAMES,
   ['category.3.name', 'tag.2.name'],
-  'weekly',
+  'monthly',
 );
 const rule = (name: string, text = grammar) =>
   text
@@ -44,22 +44,20 @@ describe('buildGrammar', () => {
   });
 
   test('다른 묶음이 없으면 insight는 모든 틀에서 고른다', () => {
-    const one = buildGrammar([choice('total.change')], [choice('total.change')], [], 'weekly');
+    const one = buildGrammar([choice('total.change')], [choice('total.change')], [], 'monthly');
     expect(rule('ins-0', one)).toBe('"\\"total.change\\""');
   });
 
-  test('제안은 "다음 주에는"으로 시작해 "세요."로 끝나고 이름 키만 2개까지 쓴다', () => {
-    expect(rule('suggestion')).toBe('"다음 주에는 " sbody "세요."');
+  test('제안은 "다음 달에는"으로 시작해 "세요."로 끝나고 이름 키만 2개까지 쓴다', () => {
+    expect(rule('suggestion')).toBe('"다음 달에는 " sbody "세요."');
     expect(rule('sbody').split(' | ')).toHaveLength(3);
     expect(rule('sbody')).toContain('nph gap (wa gap');
     expect((rule('sbody').match(/nph/g) ?? []).length).toBe(3);
     expect(rule('nph')).toBe('"{" ("category.3.name" | "tag.2.name") "}" (josa | particle)?');
-    const monthly = buildGrammar([choice('total.change')], FRAMES, [], 'monthly');
-    expect(rule('suggestion', monthly)).toBe('"다음 달에는 " sbody "세요."');
   });
 
   test('이름 키가 없으면 제안은 낱말로만 쓴다', () => {
-    const plain = buildGrammar([choice('total.change')], FRAMES, [], 'weekly');
+    const plain = buildGrammar([choice('total.change')], FRAMES, [], 'monthly');
     expect(rule('sbody', plain)).toBe('(w gap){0,11} stem');
     expect(plain).not.toContain('nph');
   });
@@ -102,7 +100,7 @@ describe('buildMessages', () => {
 
   test('채운 문장을 묶음별로 id와 함께 쓰고, headline 후보와 이름 키를 적는다', () => {
     const [, user] = buildMessages(keyed, frames, headlines, nameKeys(keyed));
-    expect(user.content).toContain('category.3.change: 배달 지출이 지난주보다 29,000원 늘었어요.');
+    expect(user.content).toContain('category.3.change: 배달 지출이 지난달보다 29,000원 늘었어요.');
     expect(user.content).toMatch(/headline 후보: [^\n]*total\.change/);
     expect(user.content).toContain('{category.3.name} = 배달');
     // 문장은 값을 채워 보여 준다. 플레이스홀더는 이름 키 줄에만 있다

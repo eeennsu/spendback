@@ -1,4 +1,4 @@
-import { budgetForMonth, weeklyBudget } from './budget';
+import { budgetForMonth } from './budget';
 import { addDays, weekday } from './date';
 import { type PeriodKind, periodEnd, previousStart } from './periods';
 import { type Budget, type Category, type Transaction, isVariableExpense } from './types';
@@ -16,7 +16,7 @@ type Tx = Pick<
   | 'isFixed'
 >;
 
-/** 주간은 월요일 start부터 일요일까지, 월간은 start(`YYYY-MM-01`)가 있는 달력 월이다 */
+/** start(`YYYY-MM-01`)가 있는 달력 월이다 */
 export type Period = { kind: PeriodKind; start: string };
 
 export type FactsInput = {
@@ -79,8 +79,7 @@ export function computeFacts({
   const categoryTotals = totalsBy(variable, tx => tx.categoryId);
   const previousCategoryTotals = totalsBy(previousVariable, tx => tx.categoryId);
 
-  const periodBudget =
-    kind === 'weekly' ? weeklyBudget(budgets, start) : budgetForMonth(budgets, start.slice(0, 7));
+  const periodBudget = budgetForMonth(budgets, start.slice(0, 7));
 
   const memos = new Map<string, { memo: string; count: number; amount: number }>();
   for (const tx of variable) {
@@ -99,10 +98,7 @@ export function computeFacts({
     if (!spendDays.has(date)) noSpendDays += 1;
   }
 
-  const busiestDay =
-    kind === 'weekly' ? largestEntry(totalsBy(variable, tx => tx.date)) : undefined;
-  const busiestWeekday =
-    kind === 'monthly' ? largestEntry(totalsBy(variable, tx => weekday(tx.date))) : undefined;
+  const busiestWeekday = largestEntry(totalsBy(variable, tx => weekday(tx.date)));
   const largest: Tx | undefined = [...variable].sort(
     (a, b) => b.amount - a.amount || a.date.localeCompare(b.date) || a.id - b.id,
   )[0];
@@ -142,7 +138,7 @@ export function computeFacts({
           )
           .slice(0, 3)
       : undefined,
-    /** 주간은 일할한 예산이다. 예산이 없는 날이 끼면 없다 */
+    /** 그 달의 예산. 없으면 없다 */
     budget: periodBudget && {
       budget: periodBudget.total,
       spent: variableTotal,
@@ -160,7 +156,6 @@ export function computeFacts({
     /** 같은 금액이면 이른 날 */
     largest,
     noSpendDays,
-    busiestDay: busiestDay && { date: busiestDay[0], amount: busiestDay[1] },
     /** 월요일 0 … 일요일 6 */
     busiestWeekday: busiestWeekday && { weekday: busiestWeekday[0], amount: busiestWeekday[1] },
     /** 메모 완전 일치로 2번 이상. 횟수 순, 같으면 금액 순, 3개까지 */
@@ -168,8 +163,8 @@ export function computeFacts({
       .filter(m => m.count >= 2)
       .sort((a, b) => b.count - a.count || b.amount - a.amount || (a.memo < b.memo ? -1 : 1))
       .slice(0, 3),
-    /** 월간만, 수입 기록이 있을 때만. 지출은 고정비를 포함한다 */
-    incomeRatio: kind === 'monthly' && income > 0 ? { income, expense: sum(expenses) } : undefined,
+    /** 수입 기록이 있을 때만. 지출은 고정비를 포함한다 */
+    incomeRatio: income > 0 ? { income, expense: sum(expenses) } : undefined,
   };
 }
 

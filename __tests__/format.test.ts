@@ -53,11 +53,6 @@ describe('formatDate', () => {
 });
 
 describe('formatPeriod', () => {
-  test('주간은 첫날과 끝날, 끝날이 같은 달이면 달을 한 번만 쓴다', () => {
-    expect(formatPeriod('weekly', '2026-09-21')).toBe('9월 21일~27일');
-    expect(formatPeriod('weekly', '2026-09-28')).toBe('9월 28일~10월 4일');
-  });
-
   test('월간은 달이다', () => {
     expect(formatPeriod('monthly', '2026-09-01')).toBe('9월');
   });

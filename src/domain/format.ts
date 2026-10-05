@@ -1,4 +1,4 @@
-import { addDays, weekday } from './date';
+import { weekday } from './date';
 
 /**
  * 금액은 어디서나 `32,000원`, 비율은 정수 %다(PRD 4.6). 금액은 원 단위 정수로 받는다.
@@ -42,9 +42,7 @@ export function formatDate(date: string) {
   return `${monthDay(date)} ${formatWeekday(weekday(date))}`;
 }
 
-/** 주간은 9월 21일~27일(달을 넘으면 9월 28일~10월 4일), 월간은 9월 */
-export function formatPeriod(kind: 'weekly' | 'monthly', start: string) {
-  if (kind === 'monthly') return `${Number(start.slice(5, 7))}월`;
-  const end = addDays(start, 6);
-  return `${monthDay(start)}~${end.slice(5, 7) === start.slice(5, 7) ? `${Number(end.slice(8))}일` : monthDay(end)}`;
+/** 회고 기간 이름. 9월 */
+export function formatPeriod(_kind: 'monthly', start: string) {
+  return `${Number(start.slice(5, 7))}월`;
 }

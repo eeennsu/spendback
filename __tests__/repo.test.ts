@@ -205,17 +205,17 @@ describe('백업', () => {
     );
     await setBudget(db, '2026-09', 1200000, [{ categoryId: 1, amount: 300000 }]);
     await saveRetrospective(db, {
-      kind: 'weekly',
-      periodStart: '2026-09-21',
-      periodEnd: '2026-09-27',
-      facts: { kind: 'weekly', period: '9월 21일~27일', groups: [] },
+      kind: 'monthly',
+      periodStart: '2026-09-01',
+      periodEnd: '2026-09-30',
+      facts: { kind: 'monthly', period: '9월', groups: [] },
       output: {
         headline: '{total.variable}',
         insights: [
           { about: 'total', text: 'a' },
           { about: 'total', text: 'b' },
         ],
-        suggestion: '다음 주에는 확인해 보세요.',
+        suggestion: '다음 달에는 확인해 보세요.',
       },
       modelId: 'qwen3.5-2b',
       promptVersion: 'v4',
@@ -257,6 +257,23 @@ describe('백업', () => {
       transactions: backup.transactions.map(tx => ({ ...tx, suggestedCategoryId: 99 })),
     };
     expect(() => parseBackup(JSON.stringify(suggested))).toThrow('백업의 기록이 올바르지 않아요');
+  });
+
+  test('주간 회고를 뺀 2026-10-05 전 백업의 주간 회고는 읽고 버린다', async () => {
+    const backup = await exportBackup(await filled());
+    const monthly = backup.retrospectives[0];
+    const weekly = {
+      ...monthly,
+      id: monthly.id + 1,
+      kind: 'weekly',
+      periodStart: '2026-09-21',
+      periodEnd: '2026-09-27',
+      facts: { ...monthly.facts, kind: 'weekly' },
+    };
+    const read = parseBackup(
+      JSON.stringify({ ...backup, retrospectives: [...backup.retrospectives, weekly] }),
+    );
+    expect(read.retrospectives).toEqual(backup.retrospectives);
   });
 
   test('앱이 저장할 수 없는 0원 총예산은 받지 않는다', async () => {

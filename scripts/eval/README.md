@@ -10,7 +10,7 @@ Node 22.13 이상. Windows와 macOS 모두 돈다.
 pnpm eval:models                       # GGUF 세 개(약 3.6GB)를 받아 SHA-256을 확인한다
 pnpm eval                              # 스냅샷 20개 × 모델 3개 × 1회
 pnpm eval qwen3.5-2b --runs 3          # 모델 하나, 스냅샷마다 3회
-pnpm eval --only week-base,month-base  # 스냅샷 일부
+pnpm eval --only month-spike,month-base  # 스냅샷 일부
 pnpm eval --temp 0.3 --repeat 1        # 샘플링 비교(기본값은 src/retro/models.ts의 INFERENCE)
 pnpm eval qwen3.5-2b --temp 1 --top-p 1 --repeat 1 --presence 2  # 모델 카드 비추론 권장값
 pnpm eval --prompt v5                  # 프롬프트 버전(src/retro/prompt.ts PROMPT_VERSIONS). 비교할 때 버전을 더한다
@@ -26,7 +26,7 @@ PowerShell은 `--only a,b`의 쉼표를 배열로 읽어 "a b"로 넘긴다. Pow
 
 ## 입력
 
-`snapshots.ts`의 facts 스냅샷 20개. 스파이크와 같은 한 주(`week-base`)를 기준으로 직전 기간 없음, 변동비 3건, 예산 초과·없음, 고정비가 큼, 감소, 직전 0원, 한 카테고리 몰림, 고르게 씀, 태그·후회 없음, 이름에 숫자·영문, 무지출일 많음, 카테고리 예산 초과, 증감 0, 월간(수입 있음·적자·수입 없음·첫 달)을 담는다.
+`snapshots.ts`의 facts 스냅샷 20개. 스파이크의 한 주를 한 달로 늘린 9월(`month-spike`)을 기준으로 직전 기간 없음, 변동비 3건, 예산 초과·없음, 고정비가 큼, 감소, 직전 0원, 한 카테고리 몰림, 고르게 씀, 태그·후회 없음, 이름에 숫자·영문, 무지출일 많음, 카테고리 예산 초과, 증감 0을 담고, 8월(`month-base`)을 기준으로 수입 있음·적자·수입 없음·첫 달을 담는다.
 
 ## 자동 점검
 
@@ -46,7 +46,7 @@ PowerShell은 `--only a,b`의 쉼표를 배열로 읽어 "a b"로 넘긴다. Pow
 | 금지어 | 하네스 | 느낌표, 인사·호칭, 단정·과장, 비난·훈계("~야 해요"), 사실 밖 추측(`checks.ts`) |
 | 같은 묶음 | 하네스 | insight끼리 같은 묶음을 고름. 문장 틀은 코드가 걸러 늘 0이고, v1 결과와 비교할 때 본다 |
 | 다른 사실에 이름 | 하네스 | headline·insight에 다른 묶음의 카테고리·태그 이름을 글자로 씀. 문장 틀에서는 생기지 않는다 |
-| 놓친 사실 | 하네스 | 꼭 말해야 할 사실이 정해진 스냅샷(`snapshots.ts` salient: 예산 초과, 적자, 카테고리 예산 초과, 무지출일이 많은 주 등 11개)에서 그 사실을 headline·insight에 쓰지 않음. "headline 적중"은 첫 사실을 headline으로 고른 회고다 |
+| 놓친 사실 | 하네스 | 꼭 말해야 할 사실이 정해진 스냅샷(`snapshots.ts` salient: 예산 초과, 적자, 카테고리 예산 초과, 무지출일이 많은 달 등 11개)에서 그 사실을 headline·insight에 쓰지 않음. "headline 적중"은 첫 사실을 headline으로 고른 회고다 |
 | 문장 품질 휴리스틱 | 하네스 | 증감 낱말 깨뜨리기("늘 때")·동의어, 수사 누출("삼분의 일"), 프롬프트 옮겨 쓰기, 해요체 아님, 다짐·질문, 낱말 되풀이, 뭉친 낱말(`checks.ts` QUALITY) |
 
 "걸린 데 없는 회고"는 길이·문장 수·금지어·같은 묶음·다른 사실에 이름과 문장 품질 휴리스틱에 하나도 걸리지 않은 회고다. 휴리스틱이라 넘치거나 모자랄 수 있다. 결과의 "폰 시간 추정"은 프롬프트·생성 토큰 수를 LLM 스파이크의 S24+ 속도(`report.ts` PHONE)로 나눈 값이다.

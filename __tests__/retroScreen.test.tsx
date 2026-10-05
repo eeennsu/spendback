@@ -64,7 +64,7 @@ const FG_BRAND = '#1b64da';
 const expense = (overrides: Partial<TransactionInput>): TransactionInput => ({
   type: 'expense',
   amount: 9500,
-  date: '2026-09-15',
+  date: '2026-08-15',
   categoryId: 1,
   reasonTagId: null,
   satisfaction: null,
@@ -75,27 +75,27 @@ const expense = (overrides: Partial<TransactionInput>): TransactionInput => ({
   ...overrides,
 });
 
-/** 9월 3주(9.14~9.20)에 변동비 기록을 count건 넣는다 */
-async function week(count: number) {
+/** 8월에 변동비 기록을 count건 넣는다 */
+async function august(count: number) {
   for (let i = 0; i < count; i++) {
-    await addTransaction(db, expense({ amount: 10000 + i * 1000, date: `2026-09-${15 + i}` }));
+    await addTransaction(db, expense({ amount: 10000 + i * 1000, date: `2026-08-${15 + i}` }));
   }
 }
 
-async function mount(kind: 'weekly' | 'monthly', start: string) {
+async function mount(start: string) {
   await registerGlobalCss();
-  await render(<RetroDetailScreen route={{ params: { kind, start } }} />);
+  await render(<RetroDetailScreen route={{ params: { kind: 'monthly', start } }} />);
 }
 
-/** 9월 3주 저장본. 값은 facts 스냅샷 하나로 채운다 */
-const saveWeek = (key: string, value: string, headline: string) =>
+/** 8월 저장본. 값은 facts 스냅샷 하나로 채운다 */
+const saveAugust = (key: string, value: string, headline: string) =>
   saveRetrospective(db, {
-    kind: 'weekly',
-    periodStart: '2026-09-14',
-    periodEnd: '2026-09-20',
+    kind: 'monthly',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-31',
     facts: {
-      kind: 'weekly',
-      period: '9월 3주',
+      kind: 'monthly',
+      period: '8월',
       groups: [
         {
           id: key.split('.').slice(0, -1).join('.'),
@@ -107,7 +107,7 @@ const saveWeek = (key: string, value: string, headline: string) =>
     output: {
       headline,
       insights: [],
-      suggestion: '다음 주에는 지출 전에 꼭 필요한지 생각해 보세요.',
+      suggestion: '다음 달에는 지출 전에 꼭 필요한지 생각해 보세요.',
     },
     modelId: QWEN.id,
     promptVersion: 'v5',
@@ -138,43 +138,43 @@ beforeEach(async () => {
   await db.delete(retrospectives);
 });
 
-test('진행 중인 주는 지표만 보이고 회고를 만들지 않는다', async () => {
+test('진행 중인 달은 지표만 보이고 회고를 만들지 않는다', async () => {
   await addTransaction(db, expense({ date: '2026-09-22' }));
-  await mount('weekly', '2026-09-21');
+  await mount('2026-09-01');
 
-  expect(await screen.findByText('이번 주가 끝나면 회고를 만들어요')).toBeOnTheScreen();
+  expect(await screen.findByText('이번 달이 끝나면 회고를 만들어요')).toBeOnTheScreen();
   expect(screen.getByText('총지출')).toBeOnTheScreen();
   expect(llamaNarrator).not.toHaveBeenCalled();
 });
 
 test('변동비 기록이 모자라면 회고를 만들지 않는다', async () => {
-  await week(2);
-  await mount('weekly', '2026-09-14');
+  await august(2);
+  await mount('2026-08-01');
 
   expect(await screen.findByText('기록이 부족해요')).toBeOnTheScreen();
   expect(llamaNarrator).not.toHaveBeenCalled();
 });
 
 test('모델이 없으면 코드가 고른 틀 문장과 폴백 안내, 모델 관리로 가는 버튼을 보인다', async () => {
-  await week(4);
-  await mount('weekly', '2026-09-14');
+  await august(4);
+  await mount('2026-08-01');
 
   expect(await screen.findByText('모델이 없어 앱이 고른 사실만 보여 줘요')).toBeOnTheScreen();
   // headline은 가장 눈에 띄는 묶음의 틀, insight는 다른 묶음의 틀이다. 제안은 없다(PRD 4.6 폴백)
   expect(screen.getByText('가장 큰 지출은 식비에 쓴 13,000원이었어요.')).toBeOnTheScreen();
   expect(screen.getByText('식비에 쓴 46,000원이 변동비의 100%를 차지했어요.')).toBeOnTheScreen();
-  expect(screen.getByText('지출이 없는 날이 2일 있었어요.')).toBeOnTheScreen();
-  expect(screen.queryByText(/^다음 주에는/)).toBeNull();
+  expect(screen.getByText('지출이 없는 날이 13일 있었어요.')).toBeOnTheScreen();
+  expect(screen.queryByText(/^다음 달에는/)).toBeNull();
   await fireEvent.press(screen.getByRole('button', { name: '모델 관리로 이동' }));
   expect(mockNavigation.navigate).toHaveBeenCalledWith('Models');
   expect(llamaNarrator).not.toHaveBeenCalled();
 });
 
-test('끝난 주를 처음 열면 만들기 시작하고, 취소하면 모델을 내린다', async () => {
+test('끝난 달을 처음 열면 만들기 시작하고, 취소하면 모델을 내린다', async () => {
   withModel();
   const narrator = pendingNarrator();
-  await week(4);
-  await mount('weekly', '2026-09-14');
+  await august(4);
+  await mount('2026-08-01');
 
   expect(await screen.findByText('쓰는 중')).toBeOnTheScreen();
   expect(llamaNarrator).toHaveBeenCalledWith(expect.stringContaining(QWEN.fileName));
@@ -187,14 +187,14 @@ test('끝난 주를 처음 열면 만들기 시작하고, 취소하면 모델을
 
 test('저장본이 있으면 다시 만들지 않고, 코드가 채운 이름과 숫자만 강조한다', async () => {
   withModel();
-  await week(4);
+  await august(4);
   await saveRetrospective(db, {
-    kind: 'weekly',
-    periodStart: '2026-09-14',
-    periodEnd: '2026-09-20',
+    kind: 'monthly',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-31',
     facts: {
-      kind: 'weekly',
-      period: '9월 3주',
+      kind: 'monthly',
+      period: '8월',
       groups: [
         {
           id: 'category.3',
@@ -212,38 +212,38 @@ test('저장본이 있으면 다시 만들지 않고, 코드가 채운 이름과
       ],
     },
     output: {
-      headline: '{category.3.name} 지출이 지난주보다 {category.3.change_phrase}.',
+      headline: '{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.',
       insights: [],
-      suggestion: '다음 주에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.',
+      suggestion: '다음 달에는 {category.3.name} 지출 전에 꼭 필요한지 생각해 보세요.',
     },
     modelId: QWEN.id,
     promptVersion: 'v5',
   });
-  await mount('weekly', '2026-09-14');
+  await mount('2026-08-01');
 
-  expect(await screen.findByText('배달 지출이 지난주보다 29,000원 늘었어요.')).toBeOnTheScreen();
+  expect(await screen.findByText('배달 지출이 지난달보다 29,000원 늘었어요.')).toBeOnTheScreen();
   expect(screen.getAllByText('배달')[0]).toHaveStyle({ color: FG_BRAND });
   expect(screen.getByText('29,000원')).toHaveStyle({ color: FG_BRAND });
   // 서술어("늘었어요")는 강조하지 않는다
   expect(screen.queryByText('29,000원 늘었어요')).toBeNull();
   // 회고 문장이 변동비 증감을 말하지 않으면 카드의 비교 줄이 있다
-  expect(screen.getByText('지난주와 비교할 기록이 없어요')).toBeOnTheScreen();
+  expect(screen.getByText('지난달와 비교할 기록이 없어요')).toBeOnTheScreen();
   expect(llamaNarrator).not.toHaveBeenCalled();
 });
 
 test('회고 문장이 변동비 증감을 말하면 카드의 비교 줄을 뺀다', async () => {
   withModel();
-  // 직전 주(9.7~9.13)가 첫 기록일 뒤라 증감을 비교한다
-  await addTransaction(db, expense({ date: '2026-09-01' }));
-  await addTransaction(db, expense({ amount: 20000, date: '2026-09-08' }));
-  await week(4);
+  // 직전 달(7월)이 첫 기록일 뒤라 증감을 비교한다
+  await addTransaction(db, expense({ date: '2026-06-20' }));
+  await addTransaction(db, expense({ amount: 20000, date: '2026-07-08' }));
+  await august(4);
   await saveRetrospective(db, {
-    kind: 'weekly',
-    periodStart: '2026-09-14',
-    periodEnd: '2026-09-20',
+    kind: 'monthly',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-31',
     facts: {
-      kind: 'weekly',
-      period: '9월 3주',
+      kind: 'monthly',
+      period: '8월',
       groups: [
         {
           id: 'total',
@@ -260,53 +260,53 @@ test('회고 문장이 변동비 증감을 말하면 카드의 비교 줄을 뺀
       ],
     },
     output: {
-      headline: '변동비가 지난주보다 {total.change_phrase}.',
+      headline: '변동비가 지난달보다 {total.change_phrase}.',
       insights: [],
-      suggestion: '다음 주에는 지출 전에 꼭 필요한지 생각해 보세요.',
+      suggestion: '다음 달에는 지출 전에 꼭 필요한지 생각해 보세요.',
     },
     modelId: QWEN.id,
     promptVersion: 'v5',
   });
-  await mount('weekly', '2026-09-14');
+  await mount('2026-08-01');
 
-  expect(await screen.findByText('변동비가 지난주보다 26,000원 늘었어요.')).toBeOnTheScreen();
-  expect(screen.queryByText('변동비가 지난주보다 26,000원 늘었어요')).toBeNull();
+  expect(await screen.findByText('변동비가 지난달보다 26,000원 늘었어요.')).toBeOnTheScreen();
+  expect(screen.queryByText('변동비가 지난달보다 26,000원 늘었어요')).toBeNull();
 });
 
 test('다시 만드는 동안 첫 문장이 오기 전에는 카드의 비교 줄을 직전 판단대로 둔다', async () => {
   withModel();
   pendingNarrator();
-  await addTransaction(db, expense({ date: '2026-09-01' }));
-  await addTransaction(db, expense({ amount: 20000, date: '2026-09-08' }));
-  await week(4);
-  await saveWeek(
+  await addTransaction(db, expense({ date: '2026-06-20' }));
+  await addTransaction(db, expense({ amount: 20000, date: '2026-07-08' }));
+  await august(4);
+  await saveAugust(
     'total.change_phrase',
     '26,000원 늘었어요',
-    '변동비가 지난주보다 {total.change_phrase}.',
+    '변동비가 지난달보다 {total.change_phrase}.',
   );
-  await mount('weekly', '2026-09-14');
-  expect(await screen.findByText('변동비가 지난주보다 26,000원 늘었어요.')).toBeOnTheScreen();
+  await mount('2026-08-01');
+  expect(await screen.findByText('변동비가 지난달보다 26,000원 늘었어요.')).toBeOnTheScreen();
 
   await pressRegenerate();
   expect(await screen.findByText('쓰는 중')).toBeOnTheScreen();
   // 문장이 아직 없어도 줄이 다시 나오지 않아 카드가 튀지 않는다(6차 031)
-  expect(screen.queryByText('변동비가 지난주보다 26,000원 늘었어요')).toBeNull();
+  expect(screen.queryByText('변동비가 지난달보다 26,000원 늘었어요')).toBeNull();
 });
 
 test('저장본이 있는 기간에서 다시 만들기가 실패하면 저장본을 그대로 보인다', async () => {
-  await week(4);
-  await saveWeek(
+  await august(4);
+  await saveAugust(
     'category.3.change_phrase',
     '29,000원 늘었어요',
-    '배달 지출이 지난주보다 {category.3.change_phrase}.',
+    '배달 지출이 지난달보다 {category.3.change_phrase}.',
   );
-  await mount('weekly', '2026-09-14');
-  expect(await screen.findByText('배달 지출이 지난주보다 29,000원 늘었어요.')).toBeOnTheScreen();
+  await mount('2026-08-01');
+  expect(await screen.findByText('배달 지출이 지난달보다 29,000원 늘었어요.')).toBeOnTheScreen();
 
   // 모델이 없어 폴백으로 끝난다. 덮어쓰기는 성공했을 때만이다(PRD 4.6)
   await pressRegenerate();
   expect(await screen.findByText('다시 만들지 못해 저장한 회고를 보여 줘요')).toBeOnTheScreen();
-  expect(screen.getByText('배달 지출이 지난주보다 29,000원 늘었어요.')).toBeOnTheScreen();
+  expect(screen.getByText('배달 지출이 지난달보다 29,000원 늘었어요.')).toBeOnTheScreen();
   expect(screen.queryByText('모델이 없어 앱이 고른 사실만 보여 줘요')).toBeNull();
   // 다시 만들기는 헤더에만 있고, 카드에는 모델 관리만 둔다(6차 032)
   expect(screen.getByRole('button', { name: '모델 관리로 이동' })).toBeOnTheScreen();
@@ -325,7 +325,7 @@ test('월간은 기록하지 않은 고정비를 먼저 알리고, "그대로 �
   for (let i = 0; i < 4; i++) {
     await addTransaction(db, expense({ date: `2026-08-${10 + i}` }));
   }
-  await mount('monthly', '2026-08-01');
+  await mount('2026-08-01');
 
   expect(await screen.findByText('기록하지 않은 고정비가 있어요')).toBeOnTheScreen();
   // 기록 시트에는 회고 달을 넘겨, 오늘이 든 달(9월)의 결제일로 저장하지 않게 한다
@@ -364,7 +364,7 @@ test('월간 저장본은 미기록 고정비가 있어도 그대로 보이고, 
     modelId: QWEN.id,
     promptVersion: 'v5',
   });
-  await mount('monthly', '2026-08-01');
+  await mount('2026-08-01');
 
   expect(await screen.findByText('8월은 차분하게 썼어요.')).toBeOnTheScreen();
   expect(screen.queryByText('기록하지 않은 고정비가 있어요')).toBeNull();
@@ -383,15 +383,15 @@ test('카테고리 표의 나머지 묶음은 기본 카테고리 "기타"와 �
   const rest = expenses.filter(c => c.name !== '기타').slice(0, 6);
   expect(other).toBeDefined();
   // "기타"가 가장 크고, 카테고리가 7개라 상위 5개 밖에 둘이 남는다
-  await addTransaction(db, expense({ categoryId: other!.id, amount: 90000, date: '2026-09-15' }));
+  await addTransaction(db, expense({ categoryId: other!.id, amount: 90000, date: '2026-08-15' }));
   for (const [i, c] of rest.entries()) {
     await addTransaction(
       db,
-      expense({ categoryId: c.id, amount: 20000 - i * 1000, date: '2026-09-16' }),
+      expense({ categoryId: c.id, amount: 20000 - i * 1000, date: '2026-08-16' }),
     );
   }
   const error = jest.spyOn(console, 'error');
-  await mount('weekly', '2026-09-14');
+  await mount('2026-08-01');
 
   expect(await screen.findByText('그 외 2개')).toBeOnTheScreen();
   // 행·조각의 key가 이름이면 같은 key 경고가 난다
@@ -408,12 +408,12 @@ test('다 만들면 저장하고, 늘 있는 상태 줄(live region)이 쓴 모�
     output: {
       headline: '변동비는 {total.variable}였어요.',
       insights: [],
-      suggestion: '다음 주에는 지출 전에 꼭 필요한지 생각해 보세요.',
+      suggestion: '다음 달에는 지출 전에 꼭 필요한지 생각해 보세요.',
     },
     attempts: 1,
   }));
-  await week(4);
-  await mount('weekly', '2026-09-14');
+  await august(4);
+  await mount('2026-08-01');
 
   const status = await screen.findByText('Qwen3.5-2B가 기기 안에서 엮은 회고예요');
   // 상태가 바뀌어도 같은 live region 안에서 글자만 바뀌어야 스크린 리더가 읽는다(DESIGN.md 3.7)

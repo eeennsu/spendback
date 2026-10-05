@@ -1,10 +1,10 @@
 import type { Facts } from '../src/domain/facts';
 
-/** 스파이크의 facts(9월 셋째 주)와 같은 숫자 */
+/** 스파이크의 facts(9월 셋째 주)와 같은 숫자를 9월 한 달로 둔다. 주간 회고는 2026-10-05에 뺐다 */
 export const sampleFacts: Facts = {
-  kind: 'weekly',
-  start: '2026-09-21',
-  end: '2026-09-27',
+  kind: 'monthly',
+  start: '2026-09-01',
+  end: '2026-09-30',
   variableCount: 14,
   total: 412300,
   variable: 187300,
@@ -41,8 +41,7 @@ export const sampleFacts: Facts = {
     isFixed: false,
   },
   noSpendDays: 1,
-  busiestDay: { date: '2026-09-26', amount: 71500 },
-  busiestWeekday: undefined,
+  busiestWeekday: { weekday: 5, amount: 71500 },
   repeatedMemos: [{ memo: '편의점 커피', count: 5, amount: 12500 }],
   incomeRatio: undefined,
 };

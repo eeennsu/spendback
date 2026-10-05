@@ -32,25 +32,25 @@ describe('buildFrames', () => {
     },
   );
 
-  test('증감이 0이면 "지난주와 같았어요"로 쓴다', () => {
-    const same = SNAPSHOTS.find(s => s.id === 'week-same');
-    if (!same) throw new Error('week-same');
+  test('증감이 0이면 "지난달과 같았어요"로 쓴다', () => {
+    const same = SNAPSHOTS.find(s => s.id === 'month-same');
+    if (!same) throw new Error('month-same');
     const keyed = keyedOf(same);
     const frame = buildFrames(keyed).find(f => f.id === 'total.change');
-    expect(render(frame?.text ?? '', factValues(keyed))).toBe('변동비가 지난주와 같았어요.');
+    expect(render(frame?.text ?? '', factValues(keyed))).toBe('변동비가 지난달과 같았어요.');
   });
 
   test('총예산을 넘으면 "전체 예산을 …넘었어요"로 쓴다', () => {
-    const over = SNAPSHOTS.find(s => s.id === 'week-over');
-    if (!over) throw new Error('week-over');
+    const over = SNAPSHOTS.find(s => s.id === 'month-over');
+    if (!over) throw new Error('month-over');
     const keyed = keyedOf(over);
     const values = factValues(keyed);
     const texts = buildFrames(keyed)
       .filter(f => f.group === 'budget')
       .map(f => render(f.text, values));
     expect(texts).toEqual([
-      '전체 예산을 33,600원 넘었어요.',
-      '전체 예산의 112%를 써서 33,600원 넘었어요.',
+      '전체 예산을 134,400원 넘었어요.',
+      '전체 예산의 112%를 써서 134,400원 넘었어요.',
     ]);
   });
 
@@ -68,10 +68,14 @@ describe('buildFrames', () => {
   });
 
   test.each([
-    ['week-base', 'budget.balance', '전체 예산이 92,700원 남았어요.'],
-    ['week-base', 'no_spend.days', '지출이 없는 날이 하루 있었어요.'],
-    ['week-no-spend', 'no_spend.days', '지출이 없는 날이 5일 있었어요.'],
-    ['week-base', 'busiest.day_amount', '9월 26일 토요일에 71,500원으로 가장 많이 썼어요.'],
+    ['month-spike', 'budget.balance', '전체 예산이 370,800원 남았어요.'],
+    ['month-spike', 'no_spend.days', '지출이 없는 날이 4일 있었어요.'],
+    ['month-no-spend', 'no_spend.days', '지출이 없는 날이 15일 있었어요.'],
+    [
+      'month-spike',
+      'busiest.weekday_amount',
+      '요일별로는 토요일에 196,000원으로 가장 많이 썼어요.',
+    ],
     ['month-base', 'income.balance', '수입에서 1,236,000원 남았어요.'],
     ['month-base', 'income.rate', '수입 3,200,000원 중 61%를 썼어요.'],
     ['month-deficit', 'income.balance', '수입보다 214,000원 더 썼어요.'],
@@ -85,8 +89,8 @@ describe('buildFrames', () => {
   });
 
   test.each([
-    ['week-over', 'budget'],
-    ['week-category-over', 'category.3'],
+    ['month-over', 'budget'],
+    ['month-category-over', 'category.3'],
     ['month-deficit', 'income'],
     ['month-no-income', 'budget'],
   ])('%s: 눈에 띄는 사실(%s)이 headline 후보의 맨 앞이다', (id, group) => {
@@ -103,7 +107,7 @@ describe('frameFormat', () => {
   const keyed = keyFacts(sampleFacts, sampleNames);
   const format = frameFormat(keyed, buildFrames(keyed));
   const json = (headline: string, insights: string[]) =>
-    JSON.stringify({ headline, insights, suggestion: '다음 주에는 꼭 확인해 보세요.' });
+    JSON.stringify({ headline, insights, suggestion: '다음 달에는 꼭 확인해 보세요.' });
 
   test('headline이나 앞 insight와 같은 묶음의 틀은 버린다', () => {
     const abouts = (headline: string, insights: string[]) =>
@@ -126,25 +130,25 @@ describe('frameFormat', () => {
   test('id를 플레이스홀더 문장으로 펼친다', () => {
     expect(format.parse(json('total.change', ['category.3.change', 'tag.2.amount_share']))).toEqual(
       {
-        headline: '변동비가 지난주보다 {total.change_phrase}.',
+        headline: '변동비가 지난달보다 {total.change_phrase}.',
         insights: [
           {
             about: 'category.3',
-            text: '{category.3.name} 지출이 지난주보다 {category.3.change_phrase}.',
+            text: '{category.3.name} 지출이 지난달보다 {category.3.change_phrase}.',
           },
           {
             about: 'tag.2',
             text: '{tag.2.name} 태그가 붙은 지출은 {tag.2.amount}{으로/로} 변동비의 {tag.2.share}{이었어요/였어요}.',
           },
         ],
-        suggestion: '다음 주에는 꼭 확인해 보세요.',
+        suggestion: '다음 달에는 꼭 확인해 보세요.',
       },
     );
   });
 
   test('Qwen의 빈 think 블록을 떼고 읽는다', () => {
     const raw = `<think>\n\n</think>\n\n${json('total.change', ['category.3.change', 'tag.2.amount_share'])}`;
-    expect(format.parse(raw)?.headline).toBe('변동비가 지난주보다 {total.change_phrase}.');
+    expect(format.parse(raw)?.headline).toBe('변동비가 지난달보다 {total.change_phrase}.');
   });
 
   test('모양이 틀리거나 끊긴 출력은 읽지 않는다', () => {
@@ -168,7 +172,7 @@ describe('frameFormat', () => {
 
   test('제안에 값 키를 쓰면 걸린다', () => {
     expect(
-      format.check({ field: 'suggestion', text: '다음 주에는 {category.3.amount}만 써 보세요.' }),
+      format.check({ field: 'suggestion', text: '다음 달에는 {category.3.amount}만 써 보세요.' }),
     ).toEqual(['unknown-key']);
   });
 });
@@ -183,24 +187,24 @@ describe('headline 후보의 초점', () => {
   };
 
   test('카테고리 예산을 넘으면 그 카테고리는 예산 틀만 headline 후보다', () => {
-    const ids = candidates('week-category-over');
+    const ids = candidates('month-category-over');
     expect(ids).toContain('category.3.budget');
     expect(ids).not.toContain('category.3.change');
   });
 
   test('고정비가 큰 주는 고정비 틀이 headline 후보다', () => {
-    expect(candidates('week-fixed-heavy')).toContain('total.fixed');
+    expect(candidates('month-fixed-heavy')).toContain('total.fixed');
   });
 
-  test('무지출일이 많은 주는 무지출일이 headline 후보다', () => {
-    expect(candidates('week-no-spend')).toContain('no_spend.days');
+  test('무지출일이 많은 달은 무지출일이 headline 후보다', () => {
+    expect(candidates('month-no-spend')).toContain('no_spend.days');
   });
 
   // 카페·간식 예산 10,000원에 23,600원을 썼다. 예산 틀은 채우면 31자라 headline 한도(30자)를 넘는다
   const longOver: Facts = {
-    kind: 'weekly',
-    start: '2026-09-21',
-    end: '2026-09-27',
+    kind: 'monthly',
+    start: '2026-09-01',
+    end: '2026-09-30',
     variableCount: 10,
     total: 187300,
     variable: 187300,
@@ -228,8 +232,7 @@ describe('headline 후보의 초점', () => {
       memo: null,
     },
     noSpendDays: 0,
-    busiestDay: { date: '2026-09-26', amount: 40000 },
-    busiestWeekday: undefined,
+    busiestWeekday: { weekday: 5, amount: 40000 },
     repeatedMemos: [],
     incomeRatio: undefined,
   };
@@ -334,8 +337,8 @@ describe('pickFrames(폴백)', () => {
       facts: [{ key: 'no_spend.days', value: '하루', kind: 'noun', note: '' }],
     };
     const keyed = (groups: FactGroup[]): KeyedFacts => ({
-      kind: 'weekly',
-      period: '9월 3주',
+      kind: 'monthly',
+      period: '9월',
       groups,
     });
     const categories = [
@@ -383,8 +386,8 @@ describe('pickFrames(폴백)', () => {
   });
 
   test('insight는 눈에 띄는 순서이고, 묶음의 까닭을 쓴 틀을 고른다', () => {
-    const snapshot = SNAPSHOTS.find(s => s.id === 'week-category-over');
-    if (!snapshot) throw new Error('week-category-over');
+    const snapshot = SNAPSHOTS.find(s => s.id === 'month-category-over');
+    if (!snapshot) throw new Error('month-category-over');
     const keyed = keyedOf(snapshot);
     const picked = pickFrames(keyed);
     const order = keyed.groups.map(g => g.id);
@@ -405,13 +408,13 @@ test('제안이 채운 뒤 45자를 넘으면 걸린다', () => {
   expect(
     format.check({
       field: 'suggestion',
-      text: '다음 주에는 {category.3.name} 지출을 줄이면서 편의점 커피도 줄이고 다른 습관을 만들어 꾸준히 이어 가 보세요.',
+      text: '다음 달에는 {category.3.name} 지출을 줄이면서 편의점 커피도 줄이고 다른 습관을 만들어 꾸준히 이어 가 보세요.',
     }),
   ).toEqual(['too-long']);
   expect(
     format.check({
       field: 'suggestion',
-      text: '다음 주에는 {category.3.name} 지출을 줄여 보세요.',
+      text: '다음 달에는 {category.3.name} 지출을 줄여 보세요.',
     }),
   ).toEqual([]);
 });

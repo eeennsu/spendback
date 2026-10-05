@@ -1,11 +1,4 @@
-import {
-  addDays,
-  addMonths,
-  daysInMonth,
-  toLocalDate,
-  weekStart,
-  weekday,
-} from '../src/domain/date';
+import { addDays, addMonths, daysInMonth, toLocalDate, weekday } from '../src/domain/date';
 
 describe('toLocalDate', () => {
   test('UTC가 아니라 기기 로컬 시간의 날짜다', () => {
@@ -55,17 +48,5 @@ describe('주는 월요일에 시작한다', () => {
     expect(weekday('2026-09-28')).toBe(0);
     expect(weekday('2026-09-24')).toBe(3);
     expect(weekday('2026-09-27')).toBe(6);
-  });
-
-  test('일요일은 앞 월요일의 주다', () => {
-    expect(weekStart('2026-09-27')).toBe('2026-09-21');
-  });
-
-  test('월요일은 그 날이 주의 시작이다', () => {
-    expect(weekStart('2026-09-28')).toBe('2026-09-28');
-  });
-
-  test('두 달에 걸친 주는 앞 달의 월요일에서 시작한다', () => {
-    expect(weekStart('2026-10-01')).toBe('2026-09-28');
   });
 });

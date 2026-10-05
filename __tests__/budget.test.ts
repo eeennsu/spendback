@@ -1,11 +1,10 @@
-import { budgetForMonth, monthStatus, weeklyBudget } from '../src/domain/budget';
+import { budgetForMonth, monthStatus } from '../src/domain/budget';
 import type { Budget, Transaction } from '../src/domain/types';
 
 type Tx = Pick<Transaction, 'type' | 'isFixed' | 'amount' | 'date' | 'categoryId'>;
 
 /** 카테고리 id */
 const FOOD = 1;
-const CAFE = 2;
 const DELIVERY = 3;
 const RENT = 5;
 const SALARY = 6;
@@ -40,43 +39,6 @@ describe('budgetForMonth: 예산은 이어 쓴다', () => {
 
   test('저장 순서와 상관없이 가장 늦은 것을 고른다', () => {
     expect(budgetForMonth([...budgets].reverse(), '2026-10')?.total).toBe(1200000);
-  });
-});
-
-describe('weeklyBudget: 날마다 그 달 예산 ÷ 그 달 일수를 더한다', () => {
-  test('한 달 안의 주', () => {
-    // 9월 30일 × 7일
-    expect(weeklyBudget([budget('2026-09', 1200000)], '2026-09-14')?.total).toBe(280000);
-  });
-
-  test('두 달에 걸친 주는 달마다 일할하고 원 단위로 내린다', () => {
-    // 9월 3일(1,200,000 ÷ 30) + 10월 4일(1,200,000 ÷ 31) = 274,838.7…
-    expect(weeklyBudget([budget('2026-09', 1200000)], '2026-09-28')?.total).toBe(274838);
-  });
-
-  test('정확히 떨어지는 합이 부동소수 오차로 1원 모자라지 않는다', () => {
-    // 7월 5일 × 1,800,000 ÷ 31 + 8월 2일 × 1,700,000 ÷ 31 = 400,000. 날마다 더하면 399,999.99…
-    const budgets = [budget('2026-07', 1800000), budget('2026-08', 1700000)];
-    expect(weeklyBudget(budgets, '2026-07-27')?.total).toBe(400000);
-  });
-
-  test('하루라도 예산이 없으면 주간 예산이 없다', () => {
-    // 첫 예산을 10월에 정했다. 9월 28~30일에는 예산이 없다
-    expect(weeklyBudget([budget('2026-10', 1200000)], '2026-09-28')).toBeUndefined();
-  });
-
-  test('카테고리 예산은 그 주의 모든 날에 있을 때만 넣는다', () => {
-    const budgets = [
-      budget('2026-09', 1200000, [
-        { categoryId: FOOD, amount: 300000 },
-        { categoryId: CAFE, amount: 60000 },
-      ]),
-      budget('2026-10', 1200000, [{ categoryId: FOOD, amount: 310000 }]),
-    ];
-    // food: 9월 3일 × 10,000 + 10월 4일 × 10,000. cafe는 10월에 없다
-    expect(weeklyBudget(budgets, '2026-09-28')?.categoryBudgets).toEqual([
-      { categoryId: FOOD, amount: 70000 },
-    ]);
   });
 });
 

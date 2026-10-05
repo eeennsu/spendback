@@ -121,7 +121,7 @@ export const retrospectives = sqliteTable(
   'retrospectives',
   {
     id: id(),
-    kind: text('kind', { enum: ['weekly', 'monthly'] }).notNull(),
+    kind: text('kind', { enum: ['monthly'] }).notNull(),
     periodStart: text('period_start').notNull(),
     periodEnd: text('period_end').notNull(),
     facts: text('facts', { mode: 'json' }).$type<KeyedFacts>().notNull(),

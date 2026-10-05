@@ -97,12 +97,7 @@ describe('leadingEmoji', () => {
 });
 
 describe('periods', () => {
-  test('그 날이 든 주(월~일)와 달', () => {
-    expect(periodOf('weekly', '2026-09-24')).toEqual({
-      kind: 'weekly',
-      start: '2026-09-21',
-      end: '2026-09-27',
-    });
+  test('그 날이 든 달', () => {
     expect(periodOf('monthly', '2026-02-14')).toEqual({
       kind: 'monthly',
       start: '2026-02-01',
@@ -111,28 +106,20 @@ describe('periods', () => {
   });
 
   test('첫 기록일부터 오늘까지 최근 먼저', () => {
-    expect(periodsSince('weekly', '2026-09-10', '2026-09-24').map(p => p.start)).toEqual([
-      '2026-09-21',
-      '2026-09-14',
-      '2026-09-07',
-    ]);
     expect(periodsSince('monthly', '2026-08-31', '2026-10-02').map(p => p.start)).toEqual([
       '2026-10-01',
       '2026-09-01',
       '2026-08-01',
     ]);
-    expect(periodsSince('weekly', undefined, '2026-09-24')).toEqual([]);
+    expect(periodsSince('monthly', undefined, '2026-09-24')).toEqual([]);
   });
 
   test('진행 중인 기간', () => {
-    expect(isOngoing(periodOf('weekly', '2026-09-24'), '2026-09-27')).toBe(true);
-    expect(isOngoing(periodOf('weekly', '2026-09-24'), '2026-09-28')).toBe(false);
+    expect(isOngoing(periodOf('monthly', '2026-09-24'), '2026-09-30')).toBe(true);
+    expect(isOngoing(periodOf('monthly', '2026-09-24'), '2026-10-01')).toBe(false);
   });
 
-  test('기간 이름. 주는 목요일이 든 달의 몇째 주다', () => {
-    expect(periodLabel(periodOf('weekly', '2026-09-24'), '2026-10-02')).toBe('9월 4주 · 9.21~9.27');
-    // 8월 31일(월)~9월 6일(일)은 목요일이 9월 3일이라 9월 1주다
-    expect(periodLabel(periodOf('weekly', '2026-09-01'), '2026-10-02')).toBe('9월 1주 · 8.31~9.6');
+  test('기간 이름. 올해가 아니면 연도를 붙인다', () => {
     expect(periodLabel(periodOf('monthly', '2026-09-24'), '2026-10-02')).toBe('9월');
     expect(periodLabel(periodOf('monthly', '2025-12-24'), '2026-01-02')).toBe('2025년 12월');
   });

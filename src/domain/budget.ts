@@ -1,10 +1,8 @@
-import { addDays, daysInMonth } from './date';
+import { daysInMonth } from './date';
 import { type Budget, type Transaction, isVariableExpense } from './types';
 
 /** 예산은 변동비에만 적용한다. 수입은 예산을 늘리지 않는다(PRD 4.3) */
 type Spending = Pick<Transaction, 'type' | 'isFixed' | 'amount' | 'date' | 'categoryId'>;
-
-type PeriodBudget = Pick<Budget, 'total' | 'categoryBudgets'>;
 
 /** 그 달(`YYYY-MM`)의 예산. effectiveFrom이 그 달 이하인 것 중 가장 늦은 것이다 */
 export function budgetForMonth(budgets: Budget[], month: string) {
@@ -15,46 +13,6 @@ export function budgetForMonth(budgets: Budget[], month: string) {
     }
   }
   return found;
-}
-
-/**
- * 월요일 start부터 7일의 예산. 날마다 "그 달 예산 ÷ 그 달 일수"를 더하고 원 단위로 내린다.
- * 하루라도 예산이 없으면 없고, 카테고리 예산은 모든 날에 있는 카테고리만 넣는다(PRD 4.3).
- */
-export function weeklyBudget(budgets: Budget[], start: string): PeriodBudget | undefined {
-  const daysByMonth = new Map<string, number>();
-  for (let i = 0; i < 7; i++) {
-    const month = addDays(start, i).slice(0, 7);
-    daysByMonth.set(month, (daysByMonth.get(month) ?? 0) + 1);
-  }
-
-  const slices: Array<{ budget: Budget; days: number; monthDays: number }> = [];
-  for (const [month, days] of daysByMonth) {
-    const budget = budgetForMonth(budgets, month);
-    if (!budget) return undefined;
-    slices.push({ budget, days, monthDays: daysInMonth(month) });
-  }
-
-  const prorate = (amountOf: (budget: Budget) => number) => {
-    // 날마다 부동소수로 더하면 정확히 떨어지는 합이 1원 모자랄 수 있다(31일 달 둘에 걸친 주).
-    // 분모를 통분해 한 번에 나눈다
-    const denominator = slices.reduce((d, s) => d * s.monthDays, 1);
-    const numerator = slices.reduce(
-      (n, s) => n + amountOf(s.budget) * s.days * (denominator / s.monthDays),
-      0,
-    );
-    return Math.floor(numerator / denominator);
-  };
-
-  const amountFor = (budget: Budget, categoryId: number) =>
-    budget.categoryBudgets.find(c => c.categoryId === categoryId)?.amount;
-  const categoryBudgets = slices[0].budget.categoryBudgets
-    .filter(({ categoryId }) => slices.every(s => amountFor(s.budget, categoryId) !== undefined))
-    .map(({ categoryId }) => ({
-      categoryId,
-      amount: prorate(b => amountFor(b, categoryId) ?? 0),
-    }));
-  return { total: prorate(b => b.total), categoryBudgets };
 }
 
 /**

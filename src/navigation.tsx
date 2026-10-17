@@ -16,6 +16,7 @@ import { ModelsScreen } from './screens/ModelsScreen';
 import { RetroDetailScreen } from './screens/RetroDetailScreen';
 import { RetroListScreen } from './screens/RetroListScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { TaggingScreen } from './screens/TaggingScreen';
 import { StackHeader, TabBar, TabHeader } from './ui/chrome';
 
 /**
@@ -50,6 +51,7 @@ const RootStack = createNativeStackNavigator({
     Models: { screen: ModelsScreen, options: { title: '모델 관리' } },
     Backup: { screen: BackupScreen, options: { title: '백업' } },
     Cards: { screen: CardsScreen, options: { title: '카드 알림' } },
+    Tagging: { screen: TaggingScreen, options: { title: '이유·만족도' } },
   },
   groups: {
     Sheets: {

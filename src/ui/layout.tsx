@@ -61,13 +61,15 @@ export function Section({
  * inset은 카드 안(좌우 24) 또는 화면 바로 위(좌우 16)의 눌림 배경 폭이다.
  * compact는 안쪽에 이미 48 높이의 누름 영역(이름 버튼, 스위치)이 있는 줄이라 위아래 여백을 4로 줄인다.
  * dense는 줄이 많은 목록(내역)이라 위아래 여백을 8로 줄인다. 두 줄이면 64로 누름 영역 48을 넘는다.
- * chevron은 다른 화면으로 가는 줄이다(설정, 회고 목록, 고정비). 시트를 여는 줄(내역, 최근 지출)에는 달지 않는다
+ * chevron은 다른 화면으로 가는 줄이다(설정, 회고 목록, 고정비). 시트를 여는 줄(내역, 최근 지출)에는 달지 않는다.
+ * checked를 주면 줄 전체가 체크박스다(이유·만족도 고르기)
  */
 export function Row({
   column = false,
   compact = false,
   dense = false,
   chevron = false,
+  checked,
   label,
   onPress,
   inset = 'card',
@@ -77,6 +79,7 @@ export function Row({
   compact?: boolean;
   dense?: boolean;
   chevron?: boolean;
+  checked?: boolean;
   label?: string;
   onPress?: () => void;
   inset?: 'card' | 'screen';
@@ -91,11 +94,23 @@ export function Row({
   if (label === undefined) return <View className={className}>{children as ReactNode}</View>;
   return (
     <Pressable
-      accessibilityRole='button'
+      accessibilityRole={checked === undefined ? 'button' : 'checkbox'}
+      accessibilityState={checked === undefined ? undefined : { checked }}
       accessibilityLabel={label}
       onPress={onPress}
       className={cn(className, 'active:bg-surface-hover')}
     >
+      {checked !== undefined && (
+        <View
+          className={cn(
+            // md(12)는 24 칸에서 원이 되어 하나만 고르는 라디오처럼 보인다
+            'size-6 items-center justify-center rounded-sm border-2',
+            checked ? 'border-transparent bg-brand' : 'border-fg-muted',
+          )}
+        >
+          {checked && <Icon name='check' size='sm' className='text-fg-on-brand' />}
+        </View>
+      )}
       {children as ReactNode}
       {chevron && <Icon name='chevron-right' tone='muted' />}
     </Pressable>
@@ -120,9 +135,11 @@ export function MoneyRow({
   meta,
   badge,
   dense = false,
+  checked,
 }: {
   label: string;
   onPress: () => void;
+  checked?: boolean;
   inset?: 'card' | 'screen';
   glyphs: boolean;
   emoji: string | undefined;
@@ -134,7 +151,7 @@ export function MoneyRow({
   dense?: boolean;
 }) {
   return (
-    <Row inset={inset} dense={dense} label={label} onPress={onPress}>
+    <Row inset={inset} dense={dense} checked={checked} label={label} onPress={onPress}>
       {glyphs && (
         <View className={dense ? 'w-6 items-center' : 'w-8 items-center'}>
           {emoji !== undefined && <Text size={dense ? 'lg' : 'xl'}>{emoji}</Text>}

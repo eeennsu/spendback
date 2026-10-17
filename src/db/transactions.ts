@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, isNotNull, lte, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, ne, or, sql } from 'drizzle-orm';
 
 import type { Db } from '.';
 import { transactions } from './schema';
@@ -99,6 +99,33 @@ export function recentExpenses(db: Db, limit = 5) {
     .where(eq(transactions.type, 'expense'))
     .orderBy(desc(transactions.date), desc(transactions.createdAt), desc(transactions.id))
     .limit(limit);
+}
+
+/**
+ * 이유나 만족도가 빈 변동비 지출(PRD 4.5 몰아 고르기). 회고가 둘을 변동비에서만 쓰므로 고정비는 뺀다. 최근 날짜 먼저
+ */
+export function untaggedExpenses(db: Db, from: string) {
+  return db
+    .select()
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.type, 'expense'),
+        eq(transactions.isFixed, false),
+        gte(transactions.date, from),
+        or(isNull(transactions.reasonTagId), isNull(transactions.satisfaction)),
+      ),
+    )
+    .orderBy(desc(transactions.date), desc(transactions.createdAt), desc(transactions.id));
+}
+
+/** 여러 지출에 이유·만족도를 한 번에 붙인다. 주지 않은 값은 그대로 둔다 */
+export function tagExpenses(
+  db: Db,
+  ids: number[],
+  tags: Partial<Pick<TransactionRow, 'reasonTagId' | 'satisfaction'>>,
+) {
+  return db.update(transactions).set(tags).where(inArray(transactions.id, ids));
 }
 
 /** 가장 이른 거래의 날짜. 회고의 비교 기준과 무지출일 계산에 쓴다(PRD 4.6). 기록이 없으면 undefined */

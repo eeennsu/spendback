@@ -5,6 +5,12 @@ import { formatDate } from './format';
  * 입력 폼과 목록이 쓰는 표시 규칙(docs/DESIGN.md 3.8, 4.3).
  */
 
+/**
+ * 이유·만족도를 몰아 고르는 첫 날(PRD 4.5). 편한가계부에서 옮긴 기록(2026-10-05까지)은 둘이 비어 있어, 사용자가 10월부터만
+ * 고르기로 했다(2026-10-17)
+ */
+export const TAGGING_FROM = '2026-10-01';
+
 /** 원 단위 금액 칸의 자릿수 상한. 999,999,999원 */
 export const AMOUNT_DIGITS = 9;
 

@@ -31,6 +31,8 @@ import {
   lastCategoryForMemo,
   memoSuggestions,
   recentExpenses,
+  tagExpenses,
+  untaggedExpenses,
   updateTransaction,
 } from '../src/db/transactions';
 
@@ -133,6 +135,31 @@ describe('거래', () => {
     // 입력한 그대로인 메모는 다시 제안하지 않는다
     expect(await memoSuggestions(db, '택시', 'expense')).toEqual([]);
     expect(await memoSuggestions(db, '', 'income')).toEqual([]);
+  });
+
+  test('이유·만족도가 빈 변동비 지출을 from부터 모으고, 몰아 붙이면 준 값만 채운다', async () => {
+    const db = testDb();
+    const coffee = await addTransaction(db, expense({ date: '2026-10-02' }));
+    const lunch = await addTransaction(db, expense({ date: '2026-10-03', reasonTagId: 1 }));
+    await addTransaction(
+      db,
+      expense({ date: '2026-10-03', reasonTagId: 1, satisfaction: 'neutral' }),
+    );
+    await addTransaction(db, expense({ date: '2026-09-30' }));
+    await addTransaction(db, expense({ date: '2026-10-04', isFixed: true }));
+    await addTransaction(db, expense({ type: 'income', categoryId: 12, date: '2026-10-04' }));
+    expect((await untaggedExpenses(db, '2026-10-01')).map(t => t.id)).toEqual([lunch, coffee]);
+
+    await tagExpenses(db, [coffee, lunch], { satisfaction: 'regret' });
+    expect(await getTransaction(db, coffee)).toMatchObject({
+      reasonTagId: null,
+      satisfaction: 'regret',
+    });
+    expect(await getTransaction(db, lunch)).toMatchObject({
+      reasonTagId: 1,
+      satisfaction: 'regret',
+    });
+    expect((await untaggedExpenses(db, '2026-10-01')).map(t => t.id)).toEqual([coffee]);
   });
 
   test('같은 메모에 마지막으로 고른 카테고리', async () => {

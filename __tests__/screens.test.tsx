@@ -13,6 +13,8 @@ import { EntrySheet } from '../src/screens/EntrySheet';
 import { FixedCostsScreen } from '../src/screens/FixedCostsScreen';
 import { HistoryScreen } from '../src/screens/HistoryScreen';
 import { HomeScreen } from '../src/screens/HomeScreen';
+import { TaggingScreen } from '../src/screens/TaggingScreen';
+import { mutate } from '../src/state/data';
 import { useHistoryFilter } from '../src/state/ui';
 
 /**
@@ -192,6 +194,36 @@ describe('홈', () => {
     expect(screen.queryByText(/하루 .*원까지/)).toBeNull();
   });
 
+  test('이번 달 지출은 내역의 합계와 같이 고정비를 넣고, 누르면 조건 없는 이번 달 내역을 연다', async () => {
+    await addTransaction(db, expense({ amount: 9500 }));
+    await addTransaction(db, expense({ amount: 55000, isFixed: true, date: '2026-09-21' }));
+    await addTransaction(db, expense({ type: 'income', categoryId: 12, amount: 3000000 }));
+    await addTransaction(db, expense({ date: '2026-08-31' }));
+    useHistoryFilter.getState().showMonth('2026-08', '2026-09-24');
+    await mount(<HomeScreen />);
+
+    await fireEvent.press(
+      await screen.findByRole('button', {
+        name: '이번 달 지출 64,500원, 고정비 55,000원 포함, 수입 3,000,000원. 내역 보기',
+      }),
+    );
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Tabs', { screen: 'History' });
+    expect(useHistoryFilter.getState().filter.month).toBeUndefined();
+  });
+
+  test('10월부터 이유·만족도가 빈 지출이 있으면 몰아 고르는 화면으로 가는 줄이 있다', async () => {
+    await addTransaction(db, expense({ date: '2026-09-30' }));
+    await mount(<HomeScreen />);
+    expect(await screen.findByText('최근 지출')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /^이유·만족도 고르기/ })).toBeNull();
+
+    await act(() => mutate(d => addTransaction(d, expense({ date: '2026-10-02' }))));
+    await fireEvent.press(
+      await screen.findByRole('button', { name: '이유·만족도 고르기, 비어 있는 지출 1건' }),
+    );
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Tagging');
+  });
+
   test('첫 실행에는 예산을 정하라는 안내와 동작이 있다', async () => {
     await mount(<HomeScreen />);
 
@@ -199,6 +231,63 @@ describe('홈', () => {
     await fireEvent.press(screen.getByRole('button', { name: '예산 정하기' }));
     expect(mockNavigation.navigate).toHaveBeenCalledWith('Budget');
     expect(screen.getByText(/아직 기록이 없어요/)).toBeOnTheScreen();
+  });
+});
+
+describe('이유·만족도 고르기', () => {
+  const apply = () => screen.getByRole('button', { name: /에 적용$|^지출을 고르세요$/ });
+
+  test('여러 지출을 골라 고른 값만 한 번에 붙이고, 둘 다 채운 지출은 목록에서 빠진다', async () => {
+    const coffee = await addTransaction(db, expense({ date: '2026-10-02', memo: '커피' }));
+    const lunch = await addTransaction(
+      db,
+      expense({ date: '2026-10-03', memo: '점심', reasonTagId: 1 }),
+    );
+    await addTransaction(db, expense({ date: '2026-10-04', memo: '택시' }));
+    await mount(<TaggingScreen />);
+
+    expect(
+      await screen.findByText('비어 있는 지출 3건이에요. 골라서 이유와 만족도를 한 번에 정해요'),
+    ).toBeOnTheScreen();
+    // 이미 고른 값은 아랫줄에 보인다
+    expect(
+      screen.getByRole('checkbox', { name: '점심, 식비 · 10월 3일 · 필요, 9,500원' }),
+    ).toBeOnTheScreen();
+    expect(apply()).toBeDisabled();
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: /^커피/ }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: /^점심/ }));
+    expect(screen.getByRole('checkbox', { name: /^커피/ })).toBeChecked();
+    // 지출만 고르고 값을 고르지 않으면 적용할 것이 없다
+    expect(apply()).toBeDisabled();
+    await fireEvent.press(screen.getByRole('button', { name: '후회' }));
+    await fireEvent.press(apply());
+
+    expect(
+      await screen.findByText('비어 있는 지출 2건이에요. 골라서 이유와 만족도를 한 번에 정해요'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole('checkbox', { name: /^점심/ })).toBeNull();
+    expect(screen.getByRole('checkbox', { name: /^커피/ })).not.toBeChecked();
+    expect(screen.getByRole('button', { name: '후회' })).not.toBeSelected();
+    const rows = await db.select().from(transactions);
+    expect(rows.find(r => r.id === coffee)).toMatchObject({
+      reasonTagId: null,
+      satisfaction: 'regret',
+    });
+    expect(rows.find(r => r.id === lunch)).toMatchObject({
+      reasonTagId: 1,
+      satisfaction: 'regret',
+    });
+  });
+
+  test('고를 지출이 없으면 빈 상태다', async () => {
+    await addTransaction(
+      db,
+      expense({ date: '2026-10-02', reasonTagId: 1, satisfaction: 'neutral' }),
+    );
+    await mount(<TaggingScreen />);
+
+    expect(await screen.findByText('고를 지출이 없어요')).toBeOnTheScreen();
   });
 });
 

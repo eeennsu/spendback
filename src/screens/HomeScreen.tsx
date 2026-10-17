@@ -4,14 +4,15 @@ import { type ComponentRef, useLayoutEffect, useRef } from 'react';
 import { Pressable, ScrollView, View } from 'react-native-css/components';
 
 import { allBudgets } from '../db/budgets';
-import { recentExpenses, transactionsBetween } from '../db/transactions';
+import { recentExpenses, transactionsBetween, untaggedExpenses } from '../db/transactions';
 import { monthStatus } from '../domain/budget';
 import { daysInMonth } from '../domain/date';
-import { leadingEmoji, relativeDate } from '../domain/entry';
+import { TAGGING_FROM, leadingEmoji, relativeDate } from '../domain/entry';
 import { fixedCostChecklist, installmentRound, paymentDate } from '../domain/fixedCost';
 import { formatPercent, formatWon, formatWonFraction } from '../domain/format';
 import { useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
+import { useHistoryFilter } from '../state/ui';
 import { Meter } from '../ui/Meter';
 import { IconButton } from '../ui/chrome';
 import { MoneyRow, Row, Section } from '../ui/layout';
@@ -19,8 +20,8 @@ import { Prose } from '../ui/prose';
 import { CardInboxSection } from './CardInboxSection';
 
 /**
- * 홈(docs/DESIGN.md 4.2). 위에서부터 행동이 필요한 것 → 참고할 것 순서다: 남은 예산과 소비 속도, 기록하지 않은 고정비,
- * 카드 알림, 카테고리 예산, 최근 지출. 오른쪽 아래 "기록"이 입력 시트를 연다
+ * 홈(docs/DESIGN.md 4.2). 위에서부터 행동이 필요한 것 → 참고할 것 순서다: 남은 예산과 소비 속도, 이번 달 지출 합계,
+ * 기록하지 않은 고정비, 카드 알림, 이유·만족도 고르기, 카테고리 예산, 최근 지출. 오른쪽 아래 "기록"이 입력 시트를 연다
  */
 export function HomeScreen() {
   const navigation = useNavigation();
@@ -38,6 +39,7 @@ export function HomeScreen() {
       `${month}-${daysInMonth(month)}`,
     ),
     recent: await recentExpenses(db),
+    untagged: (await untaggedExpenses(db, TAGGING_FROM)).length,
   }));
 
   useLayoutEffect(() => {
@@ -80,6 +82,17 @@ export function HomeScreen() {
               onPress={() => navigation.navigate('Budget')}
             />
           </Card>
+        )}
+
+        {data.monthTransactions.length > 0 && (
+          <MonthTotal
+            rows={data.monthTransactions}
+            onPress={() => {
+              // 내역이 다른 달이나 조건을 보고 있으면 이 카드의 합계와 다르다
+              useHistoryFilter.getState().reset();
+              navigation.navigate('Tabs', { screen: 'History' });
+            }}
+          />
         )}
 
         {checklist.total > 0 && (
@@ -129,6 +142,23 @@ export function HomeScreen() {
         )}
 
         <CardInboxSection today={today} />
+
+        {data.untagged > 0 && (
+          <Card>
+            <Row
+              chevron
+              label={`이유·만족도 고르기, 비어 있는 지출 ${data.untagged}건`}
+              onPress={() => navigation.navigate('Tagging')}
+            >
+              <Stack className='flex-1 gap-1'>
+                <Text>이유·만족도 고르기</Text>
+                <Text size='sm' tone='muted' className='tabular-nums'>
+                  {`비어 있는 지출 ${data.untagged}건 · 회고에 쓰여요`}
+                </Text>
+              </Stack>
+            </Row>
+          </Card>
+        )}
 
         {status && status.categories.length > 0 && (
           <Section title='카테고리 예산'>
@@ -215,6 +245,46 @@ export function HomeScreen() {
         className='absolute bottom-4 right-4 rounded-full shadow-md active:bg-brand-hover active:opacity-100'
       />
     </View>
+  );
+}
+
+type MonthRow = { type: 'expense' | 'income'; amount: number; isFixed: boolean };
+
+/**
+ * 이번 달 지출 합계(DESIGN.md 4.2). 내역 위의 합계와 같은 값이라 고정비를 넣는다. 위 예산의 사용액은 변동비만이라 고정비
+ * 몫을 적어 두 숫자가 다른 까닭을 보인다. 카드 전체가 이번 달 내역을 여는 버튼이다
+ */
+function MonthTotal({ rows, onPress }: { rows: MonthRow[]; onPress: () => void }) {
+  const sum = (pick: (row: MonthRow) => boolean) =>
+    rows.filter(pick).reduce((n, row) => n + row.amount, 0);
+  const expense = sum(r => r.type === 'expense');
+  const fixed = sum(r => r.type === 'expense' && r.isFixed);
+  const income = sum(r => r.type === 'income');
+  const detail = [
+    fixed > 0 ? `고정비 ${formatWon(fixed)} 포함` : undefined,
+    income > 0 ? `수입 ${formatWon(income)}` : undefined,
+  ].filter((s): s is string => s !== undefined);
+  return (
+    <Pressable
+      accessibilityRole='button'
+      accessibilityLabel={`${[`이번 달 지출 ${formatWon(expense)}`, ...detail].join(', ')}. 내역 보기`}
+      onPress={onPress}
+      className='rounded-xl active:opacity-80'
+    >
+      <Card className='gap-1'>
+        <Text size='sm' tone='muted'>
+          이번 달 지출
+        </Text>
+        <Text size='xl' className='tabular-nums'>
+          {formatWon(expense)}
+        </Text>
+        {detail.length > 0 && (
+          <Text size='sm' tone='muted' className='tabular-nums'>
+            {detail.join(' · ')}
+          </Text>
+        )}
+      </Card>
+    </Pressable>
   );
 }
 

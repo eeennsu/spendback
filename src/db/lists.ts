@@ -1,4 +1,4 @@
-import { and, asc, eq, max } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, max } from 'drizzle-orm';
 
 import type { Db } from '.';
 import { splitInstallment } from '../domain/fixedCost';
@@ -118,6 +118,14 @@ export function updateFixedCost(db: Db, id: number, input: FixedCostInput) {
 /** 해지는 숨김이다(PRD 4.4) */
 export function setFixedCostHidden(db: Db, id: number, hidden: boolean) {
   return db.update(fixedCosts).set({ hidden }).where(eq(fixedCosts.id, id));
+}
+
+/** 산 결제가 취소된 할부는 남은 회차가 없어 숨긴다. 매달 내는 고정비는 한 번 취소돼도 남긴다 */
+export function hideInstallment(db: Writer, id: number) {
+  return db
+    .update(fixedCosts)
+    .set({ hidden: true })
+    .where(and(eq(fixedCosts.id, id), isNotNull(fixedCosts.installmentStart)));
 }
 
 /** 이름이 같은 항목이 이미 있는가. 같은 종류(지출·수입) 안에서만 본다 */

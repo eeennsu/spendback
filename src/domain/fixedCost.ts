@@ -79,8 +79,14 @@ export function fixedCostChecklist<T extends Item>(
       date: paymentDate(item.dayOfMonth, month),
       recorded: recordedIds.has(item.id),
     }))
-    // 등록 전에 지난 결제일을 미기록으로 잡지 않는다. 그래도 사용자가 연결한 거래가 있으면 기록으로 센다
-    .filter(row => row.recorded || row.date >= toLocalDate(new Date(row.item.createdAt)));
+    // 등록 전에 지난 결제일을 미기록으로 잡지 않는다. 그래도 사용자가 연결한 거래가 있으면 기록으로 센다.
+    // 할부는 시작 달부터 확인하므로(dueIn) 지난 날짜로 뒤늦게 입력해도 등록일 전 회차를 확인한다
+    .filter(
+      row =>
+        row.recorded ||
+        row.item.installmentStart !== null ||
+        row.date >= toLocalDate(new Date(row.item.createdAt)),
+    );
 
   return {
     total: rows.length,

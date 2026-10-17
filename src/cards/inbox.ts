@@ -14,9 +14,14 @@ import {
   transactionsByIds,
   updateInbox,
 } from '../db/cardInbox';
-import { type InstallmentPlan, startInstallment } from '../db/lists';
+import { type InstallmentPlan, hideInstallment, startInstallment } from '../db/lists';
 import { cardInbox } from '../db/schema';
-import { type TransactionInput, addTransaction, deleteTransaction } from '../db/transactions';
+import {
+  type TransactionInput,
+  addTransaction,
+  deleteTransaction,
+  getTransaction,
+} from '../db/transactions';
 import { addDays } from '../domain/date';
 import { type Generate, NarratorError } from '../retro/narrate';
 import { isPaymentGateway, knownMerchants, normalizeMerchant } from './merchant';
@@ -238,11 +243,15 @@ export function dismissInbox(db: Db, id: number) {
   return updateInbox(db, id, { status: 'dismissed' });
 }
 
-/** 취소를 확인하면 짝지은 거래를 지운다. 사용자가 이미 지웠으면 처리만 한다 */
+/** 취소를 확인하면 짝지은 거래를 지운다. 할부로 산 결제면 할부 항목도 숨긴다. 사용자가 이미 지웠으면 처리만 한다 */
 export async function confirmCancel(db: Db, id: number) {
   const row = await getInbox(db, id);
+  const paired = row?.pairedTransactionId
+    ? await getTransaction(db, row.pairedTransactionId)
+    : undefined;
   await db.transaction(async tx => {
-    if (row?.pairedTransactionId) await deleteTransaction(tx, row.pairedTransactionId);
+    if (paired) await deleteTransaction(tx, paired.id);
+    if (paired?.fixedCostId) await hideInstallment(tx, paired.fixedCostId);
     await tx.update(cardInbox).set({ status: 'done' }).where(eq(cardInbox.id, id));
   });
 }

@@ -20,7 +20,7 @@ export type Generation =
   | { status: 'writing'; sentences: string[]; templates: string[]; retrying: boolean }
   /** 방금 만들어 저장했다. 화면의 DB 읽기가 따라오기 전에도 새 회고를 보인다 */
   | { status: 'saved'; facts: KeyedFacts; output: Output; modelId: string }
-  | { status: 'fallback'; reason: 'no-model' | 'load-failed' | 'check-failed' }
+  | { status: 'fallback'; reason: 'no-model' | 'load-failed' | 'check-failed' | 'save-failed' }
   | { status: 'cancelled' };
 
 /**
@@ -125,17 +125,23 @@ export function useGeneration(period: PeriodRef) {
     if (result.status === 'done') {
       const keyed = result.keyed;
       const output = result.output;
-      await mutate(db =>
-        saveRetrospective(db, {
-          kind: period.kind,
-          periodStart: period.start,
-          periodEnd: period.end,
-          facts: keyed,
-          output,
-          modelId: model.id,
-          promptVersion: PROMPT_VERSION,
-        }),
-      );
+      try {
+        await mutate(db =>
+          saveRetrospective(db, {
+            kind: period.kind,
+            periodStart: period.start,
+            periodEnd: period.end,
+            facts: keyed,
+            output,
+            modelId: model.id,
+            promptVersion: PROMPT_VERSION,
+          }),
+        );
+      } catch {
+        // 호출부가 기다리지 않아(void) 던지면 화면이 '쓰는 중'에 멈춘다
+        setState({ status: 'fallback', reason: 'save-failed' });
+        return;
+      }
       setState({ status: 'saved', facts: keyed, output, modelId: model.id });
     } else if (result.status === 'fallback') {
       setState({ status: 'fallback', reason: result.reason });

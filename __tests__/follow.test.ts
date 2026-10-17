@@ -60,11 +60,12 @@ describe('computeFacts의 follow: 대상의 이번 달과 지난달 변동비 �
   const facts = (
     follow: Parameters<typeof computeFacts>[0]['follow'],
     transactions: ReturnType<typeof tx>[],
+    firstRecordDate = '2026-01-01',
   ) =>
     computeFacts({
       period: { kind: 'monthly', start: '2026-09-01' },
       transactions,
-      firstRecordDate: '2026-01-01',
+      firstRecordDate,
       budgets: [],
       categories: [],
       follow,
@@ -98,6 +99,11 @@ describe('computeFacts의 follow: 대상의 이번 달과 지난달 변동비 �
       amount: 0,
       previous: 7000,
     });
+  });
+
+  test('지난달이 첫 기록일과 겹치면(반쪽 달) 변동비 증감처럼 비교하지 않는다', () => {
+    const transactions = [tx(1, '2026-08-25', 30000), tx(2, '2026-09-10', 60000)];
+    expect(facts({ kind: 'category', id: 3 }, transactions, '2026-08-25')).toBeUndefined();
   });
 
   test('두 달 모두 0이면 없다', () => {

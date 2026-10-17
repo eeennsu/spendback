@@ -1,7 +1,7 @@
 import { and, desc, eq, gte, inArray, isNotNull, lt, ne, sql } from 'drizzle-orm';
 
 import type { Db } from '.';
-import { cardInbox, transactions } from './schema';
+import { cardInbox, fixedCosts, transactions } from './schema';
 
 /**
  * 카드 알림 대기열과 그 판단에 쓰는 거래 조회(PRD 4.9). 무엇을 넣고 짝짓고 추천할지는 src/cards/inbox.ts가 정한다.
@@ -64,10 +64,12 @@ export function merchantExpensesSince(db: Db, from: string) {
     .select({
       id: transactions.id,
       merchant: sql<string>`${transactions.merchant}`,
-      amount: transactions.amount,
+      // 할부로 저장한 결제의 거래는 1회차 금액이라, 전액으로 오는 취소와 짝지을 수 있게 총액으로 본다
+      amount: sql<number>`coalesce(${fixedCosts.installmentTotal}, ${transactions.amount})`,
       date: transactions.date,
     })
     .from(transactions)
+    .leftJoin(fixedCosts, eq(fixedCosts.id, transactions.fixedCostId))
     .where(
       and(
         eq(transactions.type, 'expense'),

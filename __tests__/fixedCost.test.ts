@@ -136,6 +136,16 @@ describe('할부(PRD 4.4)', () => {
     ).toEqual([['월세'], ['TV', '월세'], ['TV', '월세'], ['월세']]);
   });
 
+  test('지난 날짜로 뒤늦게 입력한 할부는 등록일 전에 지난 회차도 확인한다', () => {
+    const tv = item('TV', 10, {
+      installmentMonths: 6,
+      installmentStart: '2026-09',
+      createdAt: registered(10, 17),
+    });
+    const october = fixedCostChecklist([tv], [linked(tv, '2026-09-10')], '2026-10', '2026-10-17');
+    expect(names(october.overdue)).toEqual(['TV']);
+  });
+
   test('회차는 시작 달이 1회차다. 마지막 달이 지나면 끝난 할부다', () => {
     const tv = { installmentStart: '2026-11', installmentMonths: 3 };
     expect(installmentRound(tv, '2026-11')).toBe(1);

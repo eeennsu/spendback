@@ -10,7 +10,7 @@ import {
 } from '../src/cards/inbox';
 import { DEV_APP } from '../src/cards/parse';
 import type { Db } from '../src/db';
-import { allFixedCosts } from '../src/db/lists';
+import { addFixedCost, allFixedCosts } from '../src/db/lists';
 import { cardInbox } from '../src/db/schema';
 import { type TransactionInput, addTransaction, getTransaction } from '../src/db/transactions';
 import { fakeGenerate } from '../src/retro/fake';
@@ -319,6 +319,44 @@ describe('저장과 처리', () => {
     await confirmCancel(db, item.id);
     expect(await getTransaction(db, id)).toBeUndefined();
     expect((await rows(db))[0].status).toBe('done');
+  });
+
+  test('할부로 저장한 결제는 전액 취소와 짝짓고, 확인하면 할부 항목도 숨긴다', async () => {
+    const db = testDb();
+    await syncInbox(db, [raw('승인 300,000원 10/03 19:00 하이마트')], NOW);
+    const [approval] = await rows(db);
+    const id = await saveFromInbox(
+      db,
+      approval.id,
+      expense({ amount: 300000, date: '2026-10-03', categoryId: 5 }),
+      undefined,
+      { months: 3, name: '하이마트' },
+    );
+    await syncInbox(db, [raw('취소 300,000원 10/03 19:10 하이마트')], NOW);
+    const cancel = (await rows(db)).find(r => r.kind === 'cancel')!;
+    expect(cancel.pairedTransactionId).toBe(id);
+    await confirmCancel(db, cancel.id);
+    expect(await getTransaction(db, id)).toBeUndefined();
+    expect(await allFixedCosts(db)).toMatchObject([{ name: '하이마트', hidden: true }]);
+  });
+
+  test('매달 내는 고정비는 한 번 취소돼도 숨기지 않는다', async () => {
+    const db = testDb();
+    await addFixedCost(db, {
+      name: '넷플릭스',
+      amount: 4500,
+      categoryId: 2,
+      dayOfMonth: 28,
+      paymentMethod: null,
+    });
+    const [netflix] = await allFixedCosts(db);
+    await addTransaction(
+      db,
+      expense({ merchant: '넷플릭스', isFixed: true, fixedCostId: netflix.id }),
+    );
+    await syncInbox(db, [raw('취소 4,500원 10/03 14:30 넷플릭스')], NOW);
+    await confirmCancel(db, (await rows(db))[0].id);
+    expect(await allFixedCosts(db)).toMatchObject([{ name: '넷플릭스', hidden: false }]);
   });
 
   test('추천 정확도는 추천을 고치지 않고 저장한 비율이다', async () => {

@@ -171,9 +171,9 @@ export function computeFacts({
       .slice(0, 3),
     /** 수입 기록이 있을 때만. 지출은 고정비를 포함한다 */
     incomeRatio: income > 0 ? { income, expense: sum(expenses) } : undefined,
-    /** 지난달 제안의 대상에 쓴 이번 달과 지난달 변동비. 둘 다 0이면 없다 */
+    /** 지난달 제안의 대상에 쓴 이번 달과 지난달 변동비. 둘 다 0이거나 지난달이 반쪽 기간이면(change와 같다) 없다 */
     follow:
-      follow && (followAmount || followPrevious)
+      comparable && follow && (followAmount || followPrevious)
         ? { target: follow, amount: followAmount ?? 0, previous: followPrevious ?? 0 }
         : undefined,
   };

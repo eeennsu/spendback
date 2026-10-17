@@ -187,7 +187,9 @@ export async function exportBackup(db: Db, now = new Date()): Promise<Backup> {
 /** 가져오기 전에 사용자에게 보여 줄 오류. 스키마 메시지를 그대로 보이지 않는다 */
 export class BackupError extends Error {}
 
-const list = (value: unknown): object[] => (Array.isArray(value) ? value : []);
+/** 목록이 아니면(깨졌거나 없음) 그대로 둬 스키마가 거부하게 한다. 빈 목록으로 바꾸면 전체 교체가 기록을 지운다 */
+const fill = (value: unknown, defaults: object) =>
+  Array.isArray(value) ? value.map((row: object) => ({ ...defaults, ...row })) : value;
 
 /**
  * 옛 파일을 지금 버전으로 읽는다. 버전 1의 거래에는 가맹점과 추천값이, 버전 1·2의 고정비에는 할부가 없다.
@@ -198,18 +200,16 @@ function upgrade(raw: Record<string, unknown>) {
   return {
     ...raw,
     version: BACKUP_VERSION,
-    transactions: list(raw.transactions).map(tx => ({
+    transactions: fill(raw.transactions, {
       merchant: null,
       suggestedCategoryId: null,
       suggestionSource: null,
-      ...tx,
-    })),
-    fixedCosts: list(raw.fixedCosts).map(item => ({
+    }),
+    fixedCosts: fill(raw.fixedCosts, {
       installmentMonths: null,
       installmentTotal: null,
       installmentStart: null,
-      ...item,
-    })),
+    }),
   };
 }
 

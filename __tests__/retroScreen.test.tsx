@@ -4,6 +4,7 @@ import type { EffectCallback } from 'react';
 import { registerGlobalCss } from '../jest/css';
 import { db } from '../src/db';
 import { addFixedCost, addInstallment } from '../src/db/lists';
+import * as retrospectivesModule from '../src/db/retrospectives';
 import { saveRetrospective } from '../src/db/retrospectives';
 import { categories, fixedCosts, retrospectives, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
@@ -402,7 +403,9 @@ test('카테고리 표의 나머지 묶음은 기본 카테고리 "기타"와 �
 });
 
 test('지난달 회고의 제안이 가리킨 지출의 변화를 코드가 판정해 문장으로 쓴다(PRD 4.6)', async () => {
-  // 7월에 식비 30,000원, 7월 회고는 식비를 두고 제안했다. 8월 식비는 46,000원이다
+  // 7월에 식비 30,000원, 7월 회고는 식비를 두고 제안했다. 8월 식비는 46,000원이다. 첫 기록이 6월이라 7월은
+  // 반쪽 달이 아니다
+  await addTransaction(db, expense({ amount: 5000, date: '2026-06-20' }));
   await addTransaction(db, expense({ amount: 30000, date: '2026-07-10' }));
   await august(4);
   await saveRetrospective(db, {
@@ -516,6 +519,29 @@ test('다 만들면 저장하고, 늘 있는 상태 줄(live region)이 쓴 모�
   expect(screen.getByText('변동비는 46,000원였어요.')).toBeOnTheScreen();
   expect(screen.queryByText('아직 회고가 없어요')).toBeNull();
   expect(await db.select().from(retrospectives)).toHaveLength(1);
+});
+
+test('다 만들었는데 저장하지 못하면 쓰는 중에 멈추지 않고 폴백을 보인다', async () => {
+  withModel();
+  pendingNarrator();
+  jest.mocked(narrate).mockImplementationOnce(async ({ facts, names }) => ({
+    status: 'done',
+    keyed: keyFacts(facts, names),
+    output: { headline: '변동비는 {total.variable}였어요.', insights: [], suggestion: '' },
+    attempts: 1,
+  }));
+  const save = jest
+    .spyOn(retrospectivesModule, 'saveRetrospective')
+    .mockRejectedValueOnce(new Error('disk full'));
+  await august(4);
+  await mount('2026-08-01');
+
+  expect(
+    await screen.findByText('회고를 저장하지 못해 앱이 고른 사실만 보여 줘요'),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText('취소')).toBeNull();
+  expect(screen.queryByText('모델 관리로 이동')).toBeNull();
+  save.mockRestore();
 });
 
 test('그 달에 시작한 할부는 고정비라 변동비 지표에서 빠져도 총지출 카드에 남긴다(PRD 4.6)', async () => {

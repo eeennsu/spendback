@@ -310,6 +310,7 @@ const FALLBACK = {
   'no-model': '모델이 없어 앱이 고른 사실만 보여 줘요',
   'load-failed': '모델을 불러오지 못해 앱이 고른 사실만 보여 줘요',
   'check-failed': '회고를 엮지 못해 앱이 고른 사실만 보여 줘요',
+  'save-failed': '회고를 저장하지 못해 앱이 고른 사실만 보여 줘요',
 } as const;
 
 /** 회고 카드의 문장. 폴백에는 제안이 없다 */
@@ -394,7 +395,7 @@ function Narrative({
     // 상태 줄은 저장본의 "…가 기기 안에서 엮은 회고예요"처럼 문장 위의 흐린 머리말이다. 저장본이 있는 기간에서
     // 다시 만들기가 실패하면 저장본을 그대로 보인다. 덮어쓰기는 성공했을 때만이다(PRD 4.6). 그때 다시 만들기는
     // 헤더에 있어 카드에는 모델 관리만 둔다(6차 032)
-    const modelProblem = generation.reason !== 'check-failed';
+    const modelProblem = generation.reason === 'no-model' || generation.reason === 'load-failed';
     status = {
       text: saved ? '다시 만들지 못해 저장한 회고를 보여 줘요' : FALLBACK[generation.reason],
       lead: false,

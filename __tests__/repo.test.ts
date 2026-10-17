@@ -384,6 +384,17 @@ describe('백업', () => {
     });
   });
 
+  test('옛 버전 파일도 거래·고정비가 목록이 아니거나 없으면 받지 않는다(전체 교체로 기록을 지우지 않게)', async () => {
+    const backup = await exportBackup(await filled());
+    for (const version of [1, 2]) {
+      for (const broken of [{ transactions: 'oops' }, { fixedCosts: undefined }]) {
+        expect(() => parseBackup(JSON.stringify({ ...backup, version, ...broken }))).toThrow(
+          '백업의 기록이 올바르지 않아요',
+        );
+      }
+    }
+  });
+
   test('가져오면 카드 알림 대기열의 추천과 짝을 비워 새 기록으로 다시 정한다', async () => {
     const db = testDb();
     await db.insert(cardInbox).values({

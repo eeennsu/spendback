@@ -153,9 +153,9 @@ export function HomeScreen() {
             >
               <Stack className='flex-1 gap-1'>
                 <Text>이유·만족도 고르기</Text>
-                <Text size='sm' tone='muted' className='tabular-nums'>
+                <Prose size='sm' tone='muted' className='tabular-nums'>
                   {`이유나 만족도가 빈 지출 ${data.untagged}건 · 회고에 쓰여요`}
-                </Text>
+                </Prose>
               </Stack>
             </Row>
           </Card>

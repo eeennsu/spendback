@@ -1,4 +1,4 @@
-import { Button, Text } from '@eeennsu/native';
+import { Button } from '@eeennsu/native';
 import { useState } from 'react';
 import { FlatList, useWindowDimensions } from 'react-native';
 import { ScrollView, View } from 'react-native-css/components';
@@ -45,11 +45,13 @@ export function TaggingScreen() {
   // 입력 시트의 저장 줄과 같이 버튼이 꺼진 이유와 누르면 일어날 일을 버튼 위에 쓴다(DESIGN.md 3.7)
   const status =
     notice?.text ??
-    (count === 0
-      ? '지출을 고르세요'
-      : !picked
-        ? '이유나 만족도를 골라 주세요'
-        : '고른 값만 붙이고 이미 있는 값은 그대로 둬요');
+    (rows.length === 0
+      ? ''
+      : count === 0
+        ? '지출을 고르세요'
+        : !picked
+          ? '이유나 만족도를 골라 주세요'
+          : '고른 값만 붙이고 이미 있는 값은 그대로 둬요');
 
   const apply = async () => {
     try {
@@ -121,10 +123,12 @@ export function TaggingScreen() {
           );
         }}
       />
-      {rows.length > 0 && (
-        <View className='border-t border-border bg-surface'>
-          {/* 글자를 크게 하거나 태그가 늘어도 목록과 버튼이 남게 칩만 스크롤한다 */}
+      {/* 마지막 지출까지 채워 목록이 비어도 상태 줄은 남아 결과를 읽는다. 칩과 버튼만 지출이 있을 때 둔다 */}
+      <View className={rows.length > 0 ? 'border-t border-border bg-surface' : undefined}>
+        {rows.length > 0 && (
+          // 글자를 크게 하거나 태그가 늘어도 목록과 버튼이 남게 칩만 스크롤한다. 넘치면 스크롤 막대를 늘 보인다
           <ScrollView
+            persistentScrollbar
             style={{ maxHeight: height * 0.4 }}
             contentContainerClassName='gap-3 px-4 pt-3'
           >
@@ -153,23 +157,25 @@ export function TaggingScreen() {
               }}
             />
           </ScrollView>
-          <View className='gap-2 px-4 pb-3 pt-3'>
-            {/* 접근성 prop만 가진 View는 평탄화돼 live region이 사라진다(DESIGN.md 3.7, 입력 시트와 같다) */}
-            <View accessibilityLiveRegion='polite' collapsable={false}>
-              <Text size='sm' tone={notice?.failed ? 'danger' : 'muted'}>
-                {status}
-              </Text>
-            </View>
+        )}
+        <View className='gap-2 px-4 pb-3 pt-3'>
+          {/* 접근성 prop만 가진 View는 평탄화돼 live region이 사라진다(DESIGN.md 3.7, 입력 시트와 같다) */}
+          <View accessibilityLiveRegion='polite' collapsable={false}>
+            <Prose size='sm' tone={notice?.failed ? 'danger' : 'muted'}>
+              {status}
+            </Prose>
+          </View>
+          {rows.length > 0 && (
             <Button
               label={count > 0 ? `${count}건에 적용` : '적용'}
               disabled={count === 0 || !picked}
               onPress={apply}
             />
-          </View>
-          {/* 제스처 막대 자리. style을 주면 react-native-css가 className 여백을 덮어써 빈 뷰로 비운다(ScreenScroll과 같다) */}
-          <View style={{ height: insets.bottom }} />
+          )}
         </View>
-      )}
+        {/* 제스처 막대 자리. style을 주면 react-native-css가 className 여백을 덮어써 빈 뷰로 비운다(ScreenScroll과 같다) */}
+        <View style={{ height: insets.bottom }} />
+      </View>
     </View>
   );
 }

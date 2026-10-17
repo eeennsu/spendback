@@ -285,6 +285,18 @@ describe('이유·만족도 고르기', () => {
     });
   });
 
+  test('마지막 지출까지 채워 목록이 비어도 상태 줄이 결과를 남긴다', async () => {
+    await addTransaction(db, expense({ date: '2026-10-02', reasonTagId: 1 }));
+    await mount(<TaggingScreen />);
+
+    await fireEvent.press(await screen.findByRole('checkbox', { name: /^식비/ }));
+    await fireEvent.press(screen.getByRole('button', { name: '보통' }));
+    await fireEvent.press(screen.getByRole('button', { name: '1건에 적용' }));
+
+    expect(await screen.findByText('고를 지출이 없어요')).toBeOnTheScreen();
+    expect(screen.getByText('1건에 적용했어요')).toBeOnTheScreen();
+  });
+
   test('고를 지출이 없으면 빈 상태다', async () => {
     await addTransaction(
       db,

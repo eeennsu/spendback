@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "building-react-native-apps@callstack-agent-skills": true,
+    "testing-react-native-apps@callstack-agent-skills": true,
+    "mobile-taste-skill@dotclaude": true
+  }
+}

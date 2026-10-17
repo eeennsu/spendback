@@ -84,7 +84,7 @@ function BudgetForm({
                 size='lg'
                 value={amountText(total)}
                 onValueChange={text => setTotal(editAmount(total, text))}
-                className='flex-1 text-xl tabular-nums'
+                className='flex-1 pl-4 pr-4 text-xl tabular-nums'
               />
               <Text size='lg'>원</Text>
             </Stack>
@@ -120,7 +120,7 @@ function BudgetForm({
                   onValueChange={text =>
                     setPerCategory(p => ({ ...p, [category.id]: editAmount(value, text) }))
                   }
-                  className='flex-1 tabular-nums'
+                  className='flex-1 pl-4 pr-4 tabular-nums'
                 />
                 <Text>원</Text>
               </Stack>

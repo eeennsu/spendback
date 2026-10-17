@@ -110,7 +110,14 @@ function Form({
         <Card className='gap-6'>
           <Stack className='gap-1'>
             <Label htmlFor='name'>이름</Label>
-            <Input id='name' label='이름' size='lg' value={name} onValueChange={setName} />
+            <Input
+              id='name'
+              label='이름'
+              size='lg'
+              value={name}
+              onValueChange={setName}
+              className='pl-4 pr-4'
+            />
           </Stack>
           <Stack className='gap-1'>
             <Label htmlFor='amount'>예상 금액</Label>
@@ -122,7 +129,7 @@ function Form({
                 size='lg'
                 value={amountText(amount)}
                 onValueChange={text => setAmount(editAmount(amount, text))}
-                className='flex-1 text-xl tabular-nums'
+                className='flex-1 pl-4 pr-4 text-xl tabular-nums'
               />
               <Text>원</Text>
             </Stack>
@@ -147,7 +154,7 @@ function Form({
                 size='lg'
                 value={day}
                 onValueChange={text => setDay(text.replace(/\D/g, '').slice(0, 2))}
-                className='w-20 tabular-nums'
+                className='w-20 pl-4 pr-4 tabular-nums'
               />
               <Text>일</Text>
             </Stack>

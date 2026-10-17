@@ -128,6 +128,7 @@ function EditableRow({
           value={name}
           onValueChange={setName}
           size='lg'
+          className='pl-4 pr-4'
         />
         {error !== '' && (
           <Text size='sm' tone='danger'>
@@ -187,7 +188,7 @@ function AddRow({ label, onAdd }: { label: string; onAdd: (name: string) => Prom
           value={name}
           onValueChange={setName}
           size='lg'
-          className='flex-1'
+          className='flex-1 pl-4 pr-4'
         />
         <Button
           label='추가'

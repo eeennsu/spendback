@@ -11,10 +11,10 @@ name: 카드 알림 · 승인
     direction: DOWN
 - tapOn: '스타벅스 역삼점 기록, 카테고리 고르기 · 오늘, 12,300원'
 
-# 시트: 금액·날짜·메모·카드가 채워져 있고 카테고리만 고른다
+# 시트: 금액·날짜·메모(가맹점)가 채워져 있고 카테고리만 고른다. 결제수단(카드)은 시트에 없고 저장 값에만 남는다
 - assertVisible: '스타벅스 역삼점 기록'
 - assertVisible: '12,300'
-- assertVisible: '스타벅스 역삼점 · 카드'
+- assertVisible: '스타벅스 역삼점'
 - tapOn: '카페·간식'
 - tapOn: '저장'
 - assertNotVisible: '스타벅스 역삼점 기록'

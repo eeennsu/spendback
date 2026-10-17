@@ -7,9 +7,14 @@ import { spawnSync } from 'node:child_process';
 const APP = 'com.eeennsu.spendback';
 const LISTENER = `${APP}/${APP}.cards.CardNotificationService`;
 
+// 흐름이 앱 데이터를 지운다. 실제 기록이 있는 폰이 함께 꽂혀 있으면 ANDROID_SERIAL로 기기를 정한다. adb는 이 값을
+// 따르고, maestro에는 --device로 넘긴다
+const serial = process.env.ANDROID_SERIAL;
+
 function run(command: string, args: string[]) {
+  const full = command === 'maestro' && serial ? ['--device', serial, ...args] : args;
   // Windows에서 maestro는 .bat이라 셸로 부른다
-  const result = spawnSync(command, args, { stdio: 'inherit', shell: command === 'maestro' });
+  const result = spawnSync(command, full, { stdio: 'inherit', shell: command === 'maestro' });
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 

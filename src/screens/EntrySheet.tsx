@@ -7,7 +7,14 @@ import { Pressable, ScrollView, Switch, View } from 'react-native-css/components
 
 import { type InboxItem, dismissInbox, inboxView, saveFromInbox } from '../cards/inbox';
 import type { Db } from '../db';
-import { type CategoryRow, type FixedCostRow, type ReasonTagRow, allCategories } from '../db/lists';
+import {
+  type CategoryRow,
+  type FixedCostRow,
+  type InstallmentPlan,
+  type ReasonTagRow,
+  addInstallment,
+  allCategories,
+} from '../db/lists';
 import {
   type TransactionInput,
   type TransactionRow,
@@ -20,7 +27,13 @@ import {
 } from '../db/transactions';
 import { addDays, toLocalDate } from '../domain/date';
 import { amountText, editAmount } from '../domain/entry';
-import { paymentDate } from '../domain/fixedCost';
+import {
+  INSTALLMENT_MONTHS,
+  installmentOver,
+  paymentDate,
+  splitInstallment,
+} from '../domain/fixedCost';
+import { formatWon } from '../domain/format';
 import { render } from '../retro/render';
 import { mutate, read, useQuery, useToday } from '../state/data';
 import { SATISFACTION, useLists } from '../state/lists';
@@ -69,6 +82,15 @@ export function EntrySheet({ route }: StaticScreenProps<Params>) {
     />
   );
 }
+
+/** 할부 개월 수 칩(PRD 4.4). 나머지는 "직접"으로 2~36개월을 넣는다 */
+const INSTALLMENT_CHOICES: Array<{ value: number | 'custom'; label: string }> = [
+  { value: 2, label: '2개월' },
+  { value: 3, label: '3개월' },
+  { value: 6, label: '6개월' },
+  { value: 12, label: '12개월' },
+  { value: 'custom', label: '직접' },
+];
 
 type Values = Omit<TransactionInput, 'amount' | 'categoryId' | 'isFixed'> & {
   isFixed: boolean;
@@ -163,8 +185,17 @@ function EntryForm({
   const [failed, setFailed] = useState('');
   const amountRef = useRef<{ focus(): void; blur(): void }>(null);
   const set = (patch: Partial<Values>) => setValues(v => ({ ...v, ...patch }));
+  // 할부(PRD 4.4). 거래 값이 아니라 저장할 때 항목을 만드는 계획이라 values 밖에 둔다. null이면 일시불이다
+  const [installment, setInstallment] = useState<{
+    choice: number | 'custom' | undefined;
+    custom: string;
+  } | null>(null);
 
   const expense = values.type === 'expense';
+  // 할부는 새 지출을 적을 때만 시작한다. 수정이나 고정비 항목의 회차 기록에서는 켜지 않는다
+  const canInstall = expense && editingId === undefined && fixedItem === undefined;
+  const months =
+    installment?.choice === 'custom' ? Number(installment.custom) : installment?.choice;
   // 숨긴 카테고리는 고르지 않지만, 수정하는 거래가 이미 쓰고 있으면 보인다
   const categoryOptions = categories
     .filter(c => c.type === values.type && (!c.hidden || c.id === initial.categoryId))
@@ -172,8 +203,11 @@ function EntryForm({
   const tagOptions = reasonTags
     .filter(t => !t.hidden || t.id === initial.reasonTagId)
     .map(t => ({ value: t.id, label: t.name }));
+  // 끝난 할부는 더 연결하지 않는다
   const fixedOptions = fixedCosts
-    .filter(f => !f.hidden || f.id === initial.fixedCostId)
+    .filter(
+      f => (!f.hidden && !installmentOver(f, today.slice(0, 7))) || f.id === initial.fixedCostId,
+    )
     .map(f => ({ value: f.id, label: f.name }));
 
   // 카드 알림의 추천은 시트를 연 뒤에 올 수 있다. 아직 고르지 않았으면 추천을 고른 것으로 본다
@@ -181,10 +215,18 @@ function EntryForm({
   const missing =
     values.amount === ''
       ? '금액을 입력해 주세요'
-      : categoryOptions.some(o => o.value === categoryId)
-        ? ''
-        : '카테고리를 골라 주세요';
-  const dirty = JSON.stringify(values) !== JSON.stringify(initial);
+      : !categoryOptions.some(o => o.value === categoryId)
+        ? '카테고리를 골라 주세요'
+        : !installment
+          ? ''
+          : months === undefined || (installment.choice === 'custom' && installment.custom === '')
+            ? '할부 개월 수를 골라 주세요'
+            : months < INSTALLMENT_MONTHS.min || months > INSTALLMENT_MONTHS.max
+              ? `할부는 ${INSTALLMENT_MONTHS.min}~${INSTALLMENT_MONTHS.max}개월이에요`
+              : Number(values.amount) < months
+                ? '할부 금액이 개월 수보다 작아요'
+                : '';
+  const dirty = JSON.stringify(values) !== JSON.stringify(initial) || installment !== null;
   const memo = values.memo ?? '';
   const suggestions = useQuery(`memo:${values.type}:${memo}`, db =>
     memoSuggestions(db, memo, values.type),
@@ -217,6 +259,13 @@ function EntryForm({
       isFixed: false,
       fixedCostId: null,
     });
+    setInstallment(null);
+  };
+
+  // 할부가 곧 고정비라 고정비 스위치와 연결을 비운다
+  const toggleInstallment = (on: boolean) => {
+    setInstallment(on ? { choice: undefined, custom: '' } : null);
+    if (on) set({ isFixed: false, fixedCostId: null });
   };
 
   const pickMemo = async (suggestion: string) => {
@@ -253,11 +302,20 @@ function EntryForm({
       categoryId,
       memo: values.memo?.trim() ? values.memo.trim() : null,
     };
+    // 할부 항목 이름은 메모다. 메모가 없으면 카테고리 이름으로 짓는다
+    const plan: InstallmentPlan | undefined =
+      installment && months !== undefined
+        ? {
+            months,
+            name: input.memo ?? `${categories.find(c => c.id === categoryId)?.name ?? '지출'} 할부`,
+          }
+        : undefined;
     await write(async db => {
       // 폼이 보인 추천을 함께 남긴다. 추천을 고치지 않고 저장한 비율이 정확도다(PRD 4.9)
-      if (inbox) await saveFromInbox(db, inbox.id, input, inbox.suggestion);
-      else if (editingId === undefined) await addTransaction(db, input);
-      else await updateTransaction(db, editingId, input);
+      if (inbox) await saveFromInbox(db, inbox.id, input, inbox.suggestion, plan);
+      else if (editingId !== undefined) await updateTransaction(db, editingId, input);
+      else if (plan) await addInstallment(db, input, plan);
+      else await addTransaction(db, input);
     }, '저장하지 못했어요. 다시 눌러 주세요');
   };
 
@@ -295,13 +353,19 @@ function EntryForm({
   const summary = [
     values.reasonTagId !== null && tagOptions.find(t => t.value === values.reasonTagId)?.label,
     values.satisfaction !== null && SATISFACTION.find(s => s.value === values.satisfaction)?.label,
+    installment && (months ? `${months}개월 할부` : '할부'),
     values.isFixed && (values.fixedCostId !== null ? '고정비 연결' : '고정비'),
   ].filter((s): s is string => typeof s === 'string');
 
-  // 저장할 수 있으면 어느 날짜로 저장하는지 쓴다. 키보드가 뜨면 날짜 칩이 가려져도 기본값(오늘)이 보인다
+  // 저장할 수 있으면 어느 날짜로 저장하는지 쓴다. 키보드가 뜨면 날짜 칩이 가려져도 기본값(오늘)이 보인다.
+  // 할부면 산 날이 1회차이고 다음 달부터 같은 날에 월 납부액을 확인한다(PRD 4.4)
   const dateText =
     dateChoice === 'today' ? '오늘' : dateChoice === 'yesterday' ? '어제' : otherLabel;
-  const status = failed || (missing !== '' ? missing : `${dateText} 날짜로 저장해요`);
+  const ready =
+    installment && months
+      ? `${months}개월 할부로 ${dateText} 1회차를 저장해요 · 매달 ${formatWon(splitInstallment(Number(values.amount), months).monthly)}`
+      : `${dateText} 날짜로 저장해요`;
+  const status = failed || (missing !== '' ? missing : ready);
 
   const footer = (
     // 가운데가 넘쳐 스크롤되면 아래 버튼 영역과의 경계를 긋는다. 잘린 칸이 없는 칸처럼 보이지 않게 한다
@@ -354,7 +418,7 @@ function EntryForm({
         keyboardShouldPersistTaps='handled'
       >
         <Stack className='gap-1'>
-          <Label htmlFor='amount'>금액</Label>
+          <Label htmlFor='amount'>{installment ? '금액(할부 총액)' : '금액'}</Label>
           <Stack direction='row' align='center' className='gap-2'>
             <Input
               ref={amountRef}
@@ -474,9 +538,11 @@ function EntryForm({
             <Prose size='sm' tone='muted'>
               {summary.length > 0
                 ? summary.join(' · ')
-                : expense
-                  ? '구분 · 이유 · 만족도 · 고정비'
-                  : '구분'}
+                : canInstall
+                  ? '구분 · 이유 · 만족도 · 할부 · 고정비'
+                  : expense
+                    ? '구분 · 이유 · 만족도 · 고정비'
+                    : '구분'}
             </Prose>
           </Stack>
           <Icon name={more ? 'chevron-up' : 'chevron-down'} tone='muted' />
@@ -511,7 +577,51 @@ function EntryForm({
                 optional
               />
             )}
-            {expense && (
+            {canInstall && (
+              <SwitchRow
+                label='할부'
+                description='무이자 할부예요. 금액에 총액을 넣으면 오늘이 1회차이고, 다음 달부터 홈에서 매달 확인해요'
+                value={installment !== null}
+                onChange={toggleInstallment}
+              >
+                <Switch
+                  value={installment !== null}
+                  onValueChange={toggleInstallment}
+                  accessibilityElementsHidden
+                  importantForAccessibility='no-hide-descendants'
+                />
+              </SwitchRow>
+            )}
+            {canInstall && installment && (
+              <Stack className='gap-2'>
+                <Choices
+                  label='개월 수'
+                  options={INSTALLMENT_CHOICES}
+                  value={installment.choice}
+                  onChange={choice => setInstallment({ ...installment, choice })}
+                />
+                {installment.choice === 'custom' && (
+                  <Stack direction='row' align='center' className='gap-2'>
+                    <Input
+                      id='months'
+                      label='할부 개월 수'
+                      kind='number'
+                      size='lg'
+                      value={installment.custom}
+                      onValueChange={text =>
+                        setInstallment({
+                          ...installment,
+                          custom: text.replace(/\D/g, '').slice(0, 2),
+                        })
+                      }
+                      className='w-20 pl-4 pr-4 tabular-nums'
+                    />
+                    <Text>개월</Text>
+                  </Stack>
+                )}
+              </Stack>
+            )}
+            {expense && !installment && (
               <SwitchRow
                 label='고정비'
                 description='월세·구독처럼 매달 나가는 지출이에요. 켜면 등록한 항목에 연결해요'
@@ -530,7 +640,7 @@ function EntryForm({
                 />
               </SwitchRow>
             )}
-            {expense && values.isFixed && fixedOptions.length > 0 && (
+            {expense && !installment && values.isFixed && fixedOptions.length > 0 && (
               <Choices
                 label='연결할 고정비 항목'
                 options={fixedOptions}

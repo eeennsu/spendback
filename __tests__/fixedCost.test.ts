@@ -1,7 +1,18 @@
-import { fixedCostChecklist, paymentDate } from '../src/domain/fixedCost';
+import {
+  fixedCostChecklist,
+  installmentEnd,
+  installmentOver,
+  installmentProgress,
+  installmentRound,
+  paymentDate,
+  splitInstallment,
+} from '../src/domain/fixedCost';
 import type { FixedCost, Transaction } from '../src/domain/types';
 
-type Item = Pick<FixedCost, 'id' | 'name' | 'dayOfMonth' | 'hidden' | 'createdAt'>;
+type Item = Pick<
+  FixedCost,
+  'id' | 'name' | 'dayOfMonth' | 'hidden' | 'createdAt' | 'installmentMonths' | 'installmentStart'
+>;
 
 /** 등록일은 기기 로컬 시간이다 */
 const registered = (month: number, day: number) => new Date(2026, month - 1, day, 15).getTime();
@@ -9,7 +20,16 @@ const registered = (month: number, day: number) => new Date(2026, month - 1, day
 let seq = 0;
 function item(name: string, dayOfMonth: number, overrides: Partial<Item> = {}): Item {
   seq += 1;
-  return { id: seq, name, dayOfMonth, hidden: false, createdAt: registered(1, 1), ...overrides };
+  return {
+    id: seq,
+    name,
+    dayOfMonth,
+    hidden: false,
+    createdAt: registered(1, 1),
+    installmentMonths: null,
+    installmentStart: null,
+    ...overrides,
+  };
 }
 
 function linked(to: Item, date: string): Pick<Transaction, 'date' | 'fixedCostId'> {
@@ -89,5 +109,51 @@ describe('fixedCostChecklist(PRD 4.4)', () => {
   test('끝난 달은 기록하지 않은 항목이 모두 밀린 것이다(월간 회고 전 확인)', () => {
     const list = fixedCostChecklist(items, [linked(rent, '2026-08-25')], '2026-08', '2026-09-24');
     expect(names(list.overdue)).toEqual(['음악 구독', '넷플릭스', '휴대폰 요금']);
+  });
+});
+
+describe('할부(PRD 4.4)', () => {
+  test('월 납부액은 총액 ÷ 개월 수를 원 단위로 내리고, 나머지는 1회차에 붙인다', () => {
+    expect(splitInstallment(1_200_000, 12)).toEqual({ monthly: 100_000, first: 100_000 });
+    expect(splitInstallment(100_000, 3)).toEqual({ monthly: 33_333, first: 33_334 });
+  });
+
+  test('마지막 달은 시작 달부터 개월 수만큼 뒤다. 할부가 아니면 없다', () => {
+    expect(installmentEnd({ installmentStart: '2026-11', installmentMonths: 3 })).toBe('2027-01');
+    expect(installmentEnd({ installmentStart: null, installmentMonths: null })).toBeUndefined();
+  });
+
+  test('체크리스트는 시작 달부터 마지막 달까지만 할부를 확인한다', () => {
+    const tv = item('TV', 17, {
+      installmentMonths: 3,
+      installmentStart: '2026-02',
+      createdAt: registered(2, 17),
+    });
+    const rent = item('월세', 25);
+    const months = ['2026-01', '2026-02', '2026-04', '2026-05'];
+    expect(
+      months.map(month => names(fixedCostChecklist([tv, rent], [], month, '2026-12-31').overdue)),
+    ).toEqual([['월세'], ['TV', '월세'], ['TV', '월세'], ['월세']]);
+  });
+
+  test('회차는 시작 달이 1회차다. 마지막 달이 지나면 끝난 할부다', () => {
+    const tv = { installmentStart: '2026-11', installmentMonths: 3 };
+    expect(installmentRound(tv, '2026-11')).toBe(1);
+    expect(installmentRound(tv, '2027-01')).toBe(3);
+    expect([installmentOver(tv, '2027-01'), installmentOver(tv, '2027-02')]).toEqual([false, true]);
+    const rent = { installmentStart: null, installmentMonths: null };
+    expect([installmentRound(rent, '2026-11'), installmentOver(rent, '2099-01')]).toEqual([
+      undefined,
+      false,
+    ]);
+  });
+
+  test('진행은 연결된 거래로 센다. 남은 금액은 총액에서 낸 금액을 뺀다', () => {
+    const tv = { installmentTotal: 100_000, installmentMonths: 3 };
+    expect(installmentProgress(tv, [{ amount: 33_334 }, { amount: 33_333 }])).toEqual({
+      paid: 2,
+      remaining: 33_333,
+    });
+    expect(installmentProgress(tv, [])).toEqual({ paid: 0, remaining: 100_000 });
   });
 });

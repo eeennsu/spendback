@@ -1,14 +1,16 @@
 import { usePreventRemove } from '@react-navigation/native';
 import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
+import { eq } from 'drizzle-orm';
 import { type ReactElement, type ReactNode, useState } from 'react';
 
 import { registerGlobalCss } from '../jest/css';
 import { db } from '../src/db';
 import { setBudget } from '../src/db/budgets';
-import { addFixedCost, renameCategory } from '../src/db/lists';
+import { addFixedCost, addInstallment, renameCategory } from '../src/db/lists';
 import { budgets, fixedCosts, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
 import { EntrySheet } from '../src/screens/EntrySheet';
+import { FixedCostsScreen } from '../src/screens/FixedCostsScreen';
 import { HistoryScreen } from '../src/screens/HistoryScreen';
 import { HomeScreen } from '../src/screens/HomeScreen';
 import { useHistoryFilter } from '../src/state/ui';
@@ -88,6 +90,18 @@ beforeEach(async () => {
   await db.delete(budgets);
 });
 
+/** 산 날(1회차)에 기록한 할부. 항목도 산 날에 만든 것으로 둔다 */
+async function installment(name: string, date: string, months: number) {
+  await addInstallment(db, expense({ amount: 100000, date, categoryId: 5, memo: name }), {
+    months,
+    name,
+  });
+  await db
+    .update(fixedCosts)
+    .set({ createdAt: Date.parse(`${date}T12:00:00`) })
+    .where(eq(fixedCosts.name, name));
+}
+
 async function fixedItem() {
   await addFixedCost(db, {
     name: '휴대폰 요금',
@@ -145,6 +159,15 @@ describe('홈', () => {
     expect(mockNavigation.navigate).toHaveBeenCalledWith('Entry', {
       fixedCostId: expect.any(Number),
     });
+  });
+
+  test('밀린 할부 줄은 "예상" 대신 회차를 쓴다', async () => {
+    await installment('TV', '2026-08-10', 3);
+    await mount(<HomeScreen />);
+
+    expect(
+      await screen.findByRole('button', { name: 'TV 기록, 10일 결제 · 33,333원 · 할부 2/3회차' }),
+    ).toBeOnTheScreen();
   });
 
   test('떠 있는 기록 버튼은 누르는 동안 투명해지지 않고 표면색이 진해진다', async () => {
@@ -300,6 +323,54 @@ describe('입력 시트', () => {
     expect(screen.getByRole('button', { name: '휴대폰 요금' })).toBeOnTheScreen();
   });
 
+  test('할부를 켜면 금액이 총액이고, 저장하면 할부 항목과 오늘 1회차가 생긴다(PRD 4.4)', async () => {
+    await mount(entry());
+
+    await fireEvent.changeText(await screen.findByLabelText('금액'), '100000');
+    await fireEvent.press(chipIn('카테고리', '쇼핑'));
+    await fireEvent.press(screen.getByRole('button', { name: /추가 정보 더 보기/ }));
+    await fireEvent.press(screen.getByRole('switch', { name: '할부' }));
+    // 할부가 곧 고정비라 고정비 스위치는 가린다
+    expect(screen.queryByRole('switch', { name: '고정비' })).toBeNull();
+    expect(screen.getByText('할부 개월 수를 골라 주세요')).toBeOnTheScreen();
+    expect(save().props.accessibilityState).toMatchObject({ disabled: true });
+
+    await fireEvent.press(chipIn('개월 수', '3개월'));
+    expect(
+      screen.getByText('3개월 할부로 오늘 1회차를 저장해요 · 매달 33,333원'),
+    ).toBeOnTheScreen();
+    await fireEvent.press(save());
+
+    const [item] = await db.select().from(fixedCosts);
+    expect(item).toMatchObject({
+      name: '쇼핑 할부',
+      amount: 33333,
+      installmentMonths: 3,
+      installmentTotal: 100000,
+      installmentStart: '2026-09',
+      dayOfMonth: 24,
+    });
+    expect(await db.select().from(transactions)).toMatchObject([
+      { amount: 33334, date: '2026-09-24', isFixed: true, fixedCostId: item.id },
+    ]);
+  });
+
+  test('직접 넣은 개월 수는 2~36개월이다', async () => {
+    await mount(entry());
+
+    await fireEvent.changeText(await screen.findByLabelText('금액'), '100000');
+    await fireEvent.press(chipIn('카테고리', '쇼핑'));
+    await fireEvent.press(screen.getByRole('button', { name: /추가 정보 더 보기/ }));
+    await fireEvent.press(screen.getByRole('switch', { name: '할부' }));
+    await fireEvent.press(chipIn('개월 수', '직접'));
+    await fireEvent.changeText(screen.getByLabelText('할부 개월 수'), '48');
+    expect(screen.getByText('할부는 2~36개월이에요')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('할부 개월 수'), '24');
+    expect(
+      screen.getByText('24개월 할부로 오늘 1회차를 저장해요 · 매달 4,166원'),
+    ).toBeOnTheScreen();
+  });
+
   test('홈 고정비 줄에서 열면 항목으로 채워 연다(PRD 4.4)', async () => {
     await fixedItem();
     const [item] = await db.select().from(fixedCosts);
@@ -341,6 +412,20 @@ describe('입력 시트', () => {
     expect(screen.getByLabelText('금액').props.value).toBe('4,500');
     // 삭제는 추가 정보를 펼치지 않아도 있다
     expect(screen.getByRole('button', { name: '삭제' })).toBeOnTheScreen();
+  });
+});
+
+describe('고정비 항목', () => {
+  test('할부는 회차와 남은 금액을 보이고, 마지막 달이 지나면 끝난 할부로 내려간다', async () => {
+    await installment('TV', '2026-08-10', 3);
+    await installment('이어폰', '2026-05-02', 2);
+    await mount(<FixedCostsScreen />);
+
+    expect(await screen.findByText('할부 1/3회 · 남은 66,666원')).toBeOnTheScreen();
+    expect(screen.getByText('끝난 할부')).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: '이어폰, 할부 1/2회 · 남은 50,000원' }),
+    ).toBeOnTheScreen();
   });
 });
 

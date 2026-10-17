@@ -1,7 +1,9 @@
 import { and, asc, eq, max } from 'drizzle-orm';
 
 import type { Db } from '.';
+import { splitInstallment } from '../domain/fixedCost';
 import { categories, fixedCosts, reasonTags } from './schema';
+import { type TransactionInput, type Writer, addTransaction } from './transactions';
 
 /**
  * 사용자가 편집하는 목록: 카테고리, 이유 태그, 고정비 항목(PRD 4.2, 4.4).
@@ -63,12 +65,50 @@ export type FixedCostInput = Pick<
   'name' | 'amount' | 'categoryId' | 'dayOfMonth' | 'paymentMethod'
 >;
 
-export async function addFixedCost(db: Db, input: FixedCostInput) {
+async function nextFixedCostOrder(db: Writer) {
   const row = await db
     .select({ last: max(fixedCosts.sortOrder) })
     .from(fixedCosts)
     .get();
-  await db.insert(fixedCosts).values({ ...input, sortOrder: (row?.last ?? -1) + 1 });
+  return (row?.last ?? -1) + 1;
+}
+
+export async function addFixedCost(db: Db, input: FixedCostInput) {
+  await db.insert(fixedCosts).values({ ...input, sortOrder: await nextFixedCostOrder(db) });
+}
+
+export type InstallmentPlan = { months: number; name: string };
+
+/**
+ * 할부를 시작한다(PRD 4.4). 산 날의 지출(input, 금액은 총액)로 할부 항목을 만들고, 그 항목에 연결한 1회차 거래 입력을
+ * 돌려준다. 산 날이 1회차라 결제일은 산 날의 일이다. 거래는 부르는 쪽이 같은 트랜잭션 안에서 넣는다
+ */
+export async function startInstallment(
+  db: Writer,
+  input: TransactionInput,
+  plan: InstallmentPlan,
+): Promise<TransactionInput> {
+  const { monthly, first } = splitInstallment(input.amount, plan.months);
+  const [item] = await db
+    .insert(fixedCosts)
+    .values({
+      name: plan.name,
+      amount: monthly,
+      categoryId: input.categoryId,
+      dayOfMonth: Number(input.date.slice(8)),
+      paymentMethod: input.paymentMethod ?? null,
+      installmentMonths: plan.months,
+      installmentTotal: input.amount,
+      installmentStart: input.date.slice(0, 7),
+      sortOrder: await nextFixedCostOrder(db),
+    })
+    .returning({ id: fixedCosts.id });
+  return { ...input, amount: first, isFixed: true, fixedCostId: item.id };
+}
+
+/** 할부 항목과 1회차 거래를 함께 만든다. 거래 id를 돌려준다 */
+export function addInstallment(db: Db, input: TransactionInput, plan: InstallmentPlan) {
+  return db.transaction(async tx => addTransaction(tx, await startInstallment(tx, input, plan)));
 }
 
 export function updateFixedCost(db: Db, id: number, input: FixedCostInput) {

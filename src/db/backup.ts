@@ -18,11 +18,13 @@ import {
  * 전체 교체한다. 도중에 실패하면 기존 데이터가 그대로 남는다. 설정(사용 모델)은 기기에 딸린 값이라 넣지 않는다.
  * 스키마를 바꾸면 BACKUP_VERSION을 올리고 옛 버전을 읽는 변환을 둔다(upgrade).
  * 버전 2는 거래에 카드 알림의 가맹점과 추천값(PRD 4.9)을 더했다. 카드 알림 대기열은 기기에 딸린 값이라 넣지 않는다.
+ * 버전 3은 고정비 항목에 할부(개월 수, 총액, 시작 달, PRD 4.4)를 더했다.
  */
-export const BACKUP_VERSION = 2;
+export const BACKUP_VERSION = 3;
 
 const id = z.number().int().positive();
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const month = z.string().regex(/^\d{4}-\d{2}$/);
 const time = z.number().int().nonnegative();
 const type = z.enum(['expense', 'income']);
 const paymentMethod = z.enum(['card', 'cash', 'transfer']).nullable();
@@ -51,6 +53,9 @@ const FixedCostSchema = z.object({
   categoryId: id,
   dayOfMonth: z.number().int().min(1).max(31),
   paymentMethod,
+  installmentMonths: z.number().int().min(2).nullable(),
+  installmentTotal: z.number().int().positive().nullable(),
+  installmentStart: month.nullable(),
   sortOrder: z.number().int(),
   hidden: z.boolean(),
   createdAt: time,
@@ -77,7 +82,7 @@ const TransactionSchema = z.object({
 });
 
 const BudgetSchema = z.object({
-  effectiveFrom: z.string().regex(/^\d{4}-\d{2}$/),
+  effectiveFrom: month,
   // 예산 화면처럼 0원은 받지 않는다. 홈은 0원으로 비율을 낼 수 없다
   total: z.number().int().positive(),
   categoryBudgets: z.array(z.object({ categoryId: id, amount: z.number().int().positive() })),
@@ -153,6 +158,9 @@ export const BackupSchema = z
     });
     backup.fixedCosts.forEach((item, i) => {
       if (!categoryIds.has(item.categoryId)) broken(['fixedCosts', i], '없는 카테고리');
+      const installment = [item.installmentMonths, item.installmentTotal, item.installmentStart];
+      if (installment.some(v => v === null) && installment.some(v => v !== null))
+        broken(['fixedCosts', i], '할부 값 일부만 있음');
     });
     backup.budgets.forEach((budget, i) => {
       if (budget.categoryBudgets.some(c => !categoryIds.has(c.categoryId)))
@@ -179,18 +187,28 @@ export async function exportBackup(db: Db, now = new Date()): Promise<Backup> {
 /** 가져오기 전에 사용자에게 보여 줄 오류. 스키마 메시지를 그대로 보이지 않는다 */
 export class BackupError extends Error {}
 
-/** 버전 1 파일의 거래에는 가맹점과 추천값이 없다. 없는 것(null)으로 채워 버전 2로 읽는다 */
+const list = (value: unknown): object[] => (Array.isArray(value) ? value : []);
+
+/**
+ * 옛 파일을 지금 버전으로 읽는다. 버전 1의 거래에는 가맹점과 추천값이, 버전 1·2의 고정비에는 할부가 없다.
+ * 없는 것(null)으로 채운다
+ */
 function upgrade(raw: Record<string, unknown>) {
-  if (raw.version !== 1) return raw;
-  const transactions = Array.isArray(raw.transactions) ? raw.transactions : [];
+  if (raw.version === BACKUP_VERSION) return raw;
   return {
     ...raw,
     version: BACKUP_VERSION,
-    transactions: transactions.map((tx: object) => ({
+    transactions: list(raw.transactions).map(tx => ({
       merchant: null,
       suggestedCategoryId: null,
       suggestionSource: null,
       ...tx,
+    })),
+    fixedCosts: list(raw.fixedCosts).map(item => ({
+      installmentMonths: null,
+      installmentTotal: null,
+      installmentStart: null,
+      ...item,
     })),
   };
 }
@@ -205,7 +223,7 @@ export function parseBackup(text: string): Backup {
   }
   const head = raw as { app?: unknown; version?: unknown } | null;
   if (head?.app !== 'spendback') throw new BackupError('spendback 백업 파일이 아니에요');
-  if (head.version !== 1 && head.version !== BACKUP_VERSION)
+  if (head.version !== 1 && head.version !== 2 && head.version !== BACKUP_VERSION)
     throw new BackupError('지원하지 않는 백업 버전이에요');
   const parsed = BackupSchema.safeParse(upgrade(raw as Record<string, unknown>));
   if (!parsed.success) {

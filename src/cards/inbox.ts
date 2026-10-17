@@ -14,6 +14,7 @@ import {
   transactionsByIds,
   updateInbox,
 } from '../db/cardInbox';
+import { type InstallmentPlan, startInstallment } from '../db/lists';
 import { cardInbox } from '../db/schema';
 import { type TransactionInput, addTransaction, deleteTransaction } from '../db/transactions';
 import { addDays } from '../domain/date';
@@ -208,17 +209,21 @@ export async function suggestPending(
   return written;
 }
 
-/** 폼에서 확인한 승인을 거래로 저장한다. 가맹점 원문과 폼이 보인 추천을 함께 남긴다(정확도) */
+/**
+ * 폼에서 확인한 승인을 거래로 저장한다. 가맹점 원문과 폼이 보인 추천을 함께 남긴다(정확도).
+ * 할부면 알림의 전액으로 할부 항목을 만들고 1회차를 거래로 남긴다(PRD 4.4)
+ */
 export async function saveFromInbox(
   db: Db,
   id: number,
   input: TransactionInput,
   suggestion?: Suggestion,
+  installment?: InstallmentPlan,
 ) {
   const row = await getInbox(db, id);
   return db.transaction(async tx => {
     const transactionId = await addTransaction(tx, {
-      ...input,
+      ...(installment ? await startInstallment(tx, input, installment) : input),
       merchant: row?.merchant ?? null,
       suggestedCategoryId: suggestion?.categoryId ?? null,
       suggestionSource: suggestion?.source ?? null,

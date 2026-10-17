@@ -8,7 +8,7 @@ import { recentExpenses, transactionsBetween } from '../db/transactions';
 import { monthStatus } from '../domain/budget';
 import { daysInMonth } from '../domain/date';
 import { leadingEmoji, relativeDate } from '../domain/entry';
-import { fixedCostChecklist, paymentDate } from '../domain/fixedCost';
+import { fixedCostChecklist, installmentRound, paymentDate } from '../domain/fixedCost';
 import { formatPercent, formatWon, formatWonFraction } from '../domain/format';
 import { useQuery, useToday } from '../state/data';
 import { useLists } from '../state/lists';
@@ -97,7 +97,13 @@ export function HomeScreen() {
                 </Prose>
                 <View>
                   {checklist.overdue.map(item => {
-                    const detail = `${Number(paymentDate(item.dayOfMonth, month).slice(8))}일 결제 · 예상 ${formatWon(item.amount)}`;
+                    const day = `${Number(paymentDate(item.dayOfMonth, month).slice(8))}일 결제`;
+                    // 할부는 금액이 정해져 있어 "예상" 대신 회차를 쓴다(PRD 4.4)
+                    const round = installmentRound(item, month);
+                    const detail =
+                      round === undefined
+                        ? `${day} · 예상 ${formatWon(item.amount)}`
+                        : `${day} · ${formatWon(item.amount)} · 할부 ${round}/${item.installmentMonths}회차`;
                     return (
                       <Row
                         key={item.id}

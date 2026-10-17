@@ -45,6 +45,14 @@ export function getTransaction(db: Db, id: number) {
   return db.select().from(transactions).where(eq(transactions.id, id)).get();
 }
 
+/** 고정비 항목에 연결된 거래의 금액(할부 진행, PRD 4.4) */
+export function linkedPayments(db: Db, fixedCostIds: number[]) {
+  return db
+    .select({ fixedCostId: transactions.fixedCostId, amount: transactions.amount })
+    .from(transactions)
+    .where(inArray(transactions.fixedCostId, fixedCostIds));
+}
+
 /** 날짜 범위(양 끝 포함)의 거래. 최근 날짜 먼저, 같은 날은 나중에 쓴 것 먼저 */
 export function transactionsBetween(db: Db, from: string, to: string) {
   return db

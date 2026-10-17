@@ -1,6 +1,7 @@
 import { testDb } from '../jest/db';
 import type { Db } from '../src/db';
 import {
+  type Backup,
   BackupError,
   backupSummary,
   exportBackup,
@@ -11,6 +12,7 @@ import { allBudgets, setBudget } from '../src/db/budgets';
 import {
   addCategory,
   addFixedCost,
+  addInstallment,
   allCategories,
   allFixedCosts,
   categoryNameTaken,
@@ -169,6 +171,32 @@ describe('목록·예산·설정', () => {
     ]);
   });
 
+  test('할부는 고정비 항목과 1회차 거래를 함께 만든다. 나머지 원은 1회차에 붙는다(PRD 4.4)', async () => {
+    const db = testDb();
+    const id = await addInstallment(
+      db,
+      expense({ amount: 100000, date: '2026-10-17', categoryId: 5, memo: 'TV' }),
+      { months: 3, name: 'TV' },
+    );
+    const [item] = await allFixedCosts(db);
+    expect(item).toMatchObject({
+      name: 'TV',
+      amount: 33333,
+      categoryId: 5,
+      dayOfMonth: 17,
+      installmentMonths: 3,
+      installmentTotal: 100000,
+      installmentStart: '2026-10',
+    });
+    expect(await getTransaction(db, id)).toMatchObject({
+      amount: 33334,
+      date: '2026-10-17',
+      isFixed: true,
+      fixedCostId: item.id,
+      memo: 'TV',
+    });
+  });
+
   test('설정은 JSON으로 저장한다', async () => {
     const db = testDb();
     expect(await getSetting(db, 'model')).toBeUndefined();
@@ -179,6 +207,13 @@ describe('목록·예산·설정', () => {
 });
 
 describe('백업', () => {
+  const withoutInstallment = ({
+    installmentMonths: _m,
+    installmentTotal: _t,
+    installmentStart: _s,
+    ...item
+  }: Backup['fixedCosts'][number]) => item;
+
   async function filled() {
     const db = testDb();
     await addFixedCost(db, {
@@ -203,6 +238,10 @@ describe('백업', () => {
         suggestionSource: 'llm',
       }),
     );
+    await addInstallment(db, expense({ amount: 1200000, date: '2026-09-10', categoryId: 5 }), {
+      months: 12,
+      name: '쇼핑 할부',
+    });
     await setBudget(db, '2026-09', 1200000, [{ categoryId: 1, amount: 300000 }]);
     await saveRetrospective(db, {
       kind: 'monthly',
@@ -226,7 +265,11 @@ describe('백업', () => {
   test('내보낸 파일을 다른 기기에 가져오면 기록과 고정비 연결이 같다', async () => {
     const source = await filled();
     const backup = parseBackup(JSON.stringify(await exportBackup(source)));
-    expect(backupSummary(backup)).toEqual({ transactions: 3, fixedCosts: 1, retrospectives: 1 });
+    expect(backupSummary(backup)).toEqual({ transactions: 4, fixedCosts: 2, retrospectives: 1 });
+    expect(backup.fixedCosts[1]).toMatchObject({
+      installmentMonths: 12,
+      installmentTotal: 1200000,
+    });
     expect(backup.transactions[2]).toMatchObject({
       merchant: '스타벅스 역삼점',
       suggestionSource: 'llm',
@@ -244,7 +287,7 @@ describe('백업', () => {
     const backup = await exportBackup(await filled());
     expect(() => parseBackup('not json')).toThrow(new BackupError('JSON 파일이 아니에요'));
     expect(() => parseBackup('{"app":"other"}')).toThrow('spendback 백업 파일이 아니에요');
-    expect(() => parseBackup(JSON.stringify({ ...backup, version: 3 }))).toThrow(
+    expect(() => parseBackup(JSON.stringify({ ...backup, version: 4 }))).toThrow(
       '지원하지 않는 백업 버전이에요',
     );
     const broken = {
@@ -291,13 +334,26 @@ describe('백업', () => {
       transactions: backup.transactions.map(
         ({ merchant: _m, suggestedCategoryId: _c, suggestionSource: _s, ...tx }) => tx,
       ),
+      fixedCosts: backup.fixedCosts.map(withoutInstallment),
     };
     const read = parseBackup(JSON.stringify(v1));
-    expect(read.version).toBe(2);
+    expect(read.version).toBe(3);
     expect(read.transactions[2]).toMatchObject({
       merchant: null,
       suggestedCategoryId: null,
       suggestionSource: null,
+    });
+  });
+
+  test('버전 2 파일은 고정비에 할부가 없는 것으로 읽는다', async () => {
+    const backup = await exportBackup(await filled());
+    const v2 = { ...backup, version: 2, fixedCosts: backup.fixedCosts.map(withoutInstallment) };
+    const read = parseBackup(JSON.stringify(v2));
+    expect(read.version).toBe(3);
+    expect(read.fixedCosts[1]).toMatchObject({
+      installmentMonths: null,
+      installmentTotal: null,
+      installmentStart: null,
     });
   });
 

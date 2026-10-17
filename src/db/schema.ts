@@ -58,6 +58,13 @@ export const fixedCosts = sqliteTable(
     /** 그 달에 없는 날이면 말일로 본다 */
     dayOfMonth: integer('day_of_month').notNull(),
     paymentMethod: text('payment_method', { enum: PAYMENT_METHODS }),
+    /**
+     * 무이자 할부(PRD 4.4). 셋 다 있거나 셋 다 없다. 시작 달(YYYY-MM)부터 개월 수만큼만 체크리스트에 오르고,
+     * amount는 총액 ÷ 개월 수를 내린 월 납부액이다. 나머지 원은 시작 달(1회차) 거래에 붙는다
+     */
+    installmentMonths: integer('installment_months'),
+    installmentTotal: integer('installment_total'),
+    installmentStart: text('installment_start'),
     sortOrder: integer('sort_order').notNull(),
     hidden: hidden(),
     createdAt: createdAt(),

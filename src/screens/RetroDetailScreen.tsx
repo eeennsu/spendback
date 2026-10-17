@@ -238,6 +238,14 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
         )}
         {/* 회고 문장이 증감을 말해 비교 줄을 뺐어도 원인은 회고 문장에 없어 늘 쓴다 */}
         {driverLine ? <Prose className='tabular-nums'>{driverLine}</Prose> : null}
+        {/* 그 달에 시작한 할부(PRD 4.6). 고정비라 변동비 지표에서 빠지는 구매 결정을 카드가 남긴다 */}
+        {lists.fixedCosts
+          .filter(item => !item.hidden && item.installmentStart === month)
+          .map(item => (
+            <Prose key={item.id} className='tabular-nums'>
+              {`새 할부: ${item.name} ${formatWon(item.installmentTotal ?? 0)} · ${item.installmentMonths}개월`}
+            </Prose>
+          ))}
       </Card>
 
       <Narrative

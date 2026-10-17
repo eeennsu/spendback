@@ -10,6 +10,7 @@ import {
 } from '../src/cards/inbox';
 import { DEV_APP } from '../src/cards/parse';
 import type { Db } from '../src/db';
+import { allFixedCosts } from '../src/db/lists';
 import { cardInbox } from '../src/db/schema';
 import { type TransactionInput, addTransaction, getTransaction } from '../src/db/transactions';
 import { fakeGenerate } from '../src/retro/fake';
@@ -286,6 +287,28 @@ describe('저장과 처리', () => {
     });
     expect((await rows(db))[0].status).toBe('done');
     expect(await inboxView(db, CATEGORIES)).toEqual([]);
+  });
+
+  test('할부로 저장하면 알림의 전액이 할부 항목이 되고 거래는 1회차다(PRD 4.4)', async () => {
+    const db = testDb();
+    await syncInbox(db, [raw('승인 300,000원 10/03 19:00 하이마트')], NOW);
+    const [item] = await rows(db);
+    const id = await saveFromInbox(
+      db,
+      item.id,
+      expense({ amount: 300000, date: '2026-10-03', categoryId: 5, memo: '하이마트' }),
+      undefined,
+      { months: 3, name: '하이마트' },
+    );
+    expect(await getTransaction(db, id)).toMatchObject({
+      amount: 100000,
+      isFixed: true,
+      merchant: '하이마트',
+    });
+    expect(await allFixedCosts(db)).toMatchObject([
+      { name: '하이마트', amount: 100000, installmentMonths: 3, installmentTotal: 300000 },
+    ]);
+    expect((await rows(db))[0].status).toBe('done');
   });
 
   test('취소를 확인하면 짝지은 거래를 지운다', async () => {

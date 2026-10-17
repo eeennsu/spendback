@@ -12,6 +12,8 @@ import {
   updateFixedCost,
 } from '../db/lists';
 import { amountText, editAmount } from '../domain/entry';
+import { installmentEnd } from '../domain/fixedCost';
+import { formatWon } from '../domain/format';
 import { render } from '../retro/render';
 import { mutate } from '../state/data';
 import { PAYMENT_METHODS, useLists } from '../state/lists';
@@ -19,7 +21,10 @@ import { FormFrame } from '../ui/keyboard';
 import { Choices } from '../ui/layout';
 import { Prose } from '../ui/prose';
 
-/** 고정비 항목 추가·수정(PRD 4.4). 이름, 예상 금액, 카테고리, 결제일(매월 N일), 결제수단 */
+/**
+ * 고정비 항목 추가·수정(PRD 4.4). 이름, 예상 금액, 카테고리, 결제일(매월 N일), 결제수단.
+ * 할부 항목은 이름과 카테고리만 고친다. 총액이나 개월 수가 틀렸거나 반품했으면 해지하고 다시 만든다
+ */
 export function FixedCostEditScreen({ route }: StaticScreenProps<{ id?: number } | undefined>) {
   const lists = useLists();
   if (!lists) return null;
@@ -46,6 +51,8 @@ function Form({
   const [categoryId, setCategoryId] = useState(item?.categoryId);
   const [day, setDay] = useState(item ? String(item.dayOfMonth) : '');
   const [paymentMethod, setPaymentMethod] = useState(item?.paymentMethod ?? undefined);
+  const end = item && installmentEnd(item);
+  const monthLabel = (month: string) => `${month.slice(0, 4)}년 ${Number(month.slice(5))}월`;
 
   const dayNumber = Number(day);
   const missing = !name.trim()
@@ -119,56 +126,75 @@ function Form({
               className='pl-4 pr-4'
             />
           </Stack>
-          <Stack className='gap-1'>
-            <Label htmlFor='amount'>예상 금액</Label>
-            <Stack direction='row' align='center' className='gap-2'>
-              <Input
-                id='amount'
-                label='예상 금액'
-                kind='number'
-                size='lg'
-                value={amountText(amount)}
-                onValueChange={text => setAmount(editAmount(amount, text))}
-                className='flex-1 pl-4 pr-4 text-xl tabular-nums'
-              />
-              <Text>원</Text>
+          {item?.installmentStart && end ? (
+            <Stack className='gap-1'>
+              <Text className='tabular-nums'>
+                {`할부 ${formatWon(item.installmentTotal ?? 0)} · ${item.installmentMonths}개월`}
+              </Text>
+              <Prose size='sm' tone='muted' className='tabular-nums'>
+                {`${monthLabel(item.installmentStart)}부터 ${monthLabel(end)}까지 매월 ${item.dayOfMonth}일 ${formatWon(item.amount)}`}
+              </Prose>
+              <Prose size='sm' tone='muted'>
+                총액과 개월 수는 고칠 수 없어요. 잘못 넣었거나 반품했으면 해지하고 다시 기록해요
+              </Prose>
             </Stack>
-            <Prose size='sm' tone='muted'>
-              입력 폼의 기본값으로만 써요. 실제 금액은 기록할 때 고쳐요
-            </Prose>
-          </Stack>
+          ) : null}
+          {!end && (
+            <Stack className='gap-1'>
+              <Label htmlFor='amount'>예상 금액</Label>
+              <Stack direction='row' align='center' className='gap-2'>
+                <Input
+                  id='amount'
+                  label='예상 금액'
+                  kind='number'
+                  size='lg'
+                  value={amountText(amount)}
+                  onValueChange={text => setAmount(editAmount(amount, text))}
+                  className='flex-1 pl-4 pr-4 text-xl tabular-nums'
+                />
+                <Text>원</Text>
+              </Stack>
+              <Prose size='sm' tone='muted'>
+                입력 폼의 기본값으로만 써요. 실제 금액은 기록할 때 고쳐요
+              </Prose>
+            </Stack>
+          )}
           <Choices
             label='카테고리'
             options={categories}
             value={categoryId}
             onChange={setCategoryId}
           />
-          <Stack className='gap-1'>
-            <Label htmlFor='day'>결제일</Label>
-            <Stack direction='row' align='center' className='gap-2'>
-              <Text>매월</Text>
-              <Input
-                id='day'
-                label='결제일'
-                kind='number'
-                size='lg'
-                value={day}
-                onValueChange={text => setDay(text.replace(/\D/g, '').slice(0, 2))}
-                className='w-20 pl-4 pr-4 tabular-nums'
-              />
-              <Text>일</Text>
+          {!end && (
+            <Stack className='gap-1'>
+              <Label htmlFor='day'>결제일</Label>
+              <Stack direction='row' align='center' className='gap-2'>
+                <Text>매월</Text>
+                <Input
+                  id='day'
+                  label='결제일'
+                  kind='number'
+                  size='lg'
+                  value={day}
+                  onValueChange={text => setDay(text.replace(/\D/g, '').slice(0, 2))}
+                  className='w-20 pl-4 pr-4 tabular-nums'
+                />
+                <Text>일</Text>
+              </Stack>
+              <Prose size='sm' tone='muted'>
+                그 달에 없는 날이면(2월 30일) 말일로 봐요
+              </Prose>
             </Stack>
-            <Prose size='sm' tone='muted'>
-              그 달에 없는 날이면(2월 30일) 말일로 봐요
-            </Prose>
-          </Stack>
-          <Choices
-            label='결제수단'
-            options={PAYMENT_METHODS}
-            value={paymentMethod}
-            onChange={setPaymentMethod}
-            optional
-          />
+          )}
+          {!end && (
+            <Choices
+              label='결제수단'
+              options={PAYMENT_METHODS}
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              optional
+            />
+          )}
         </Card>
         {item && (
           <Button

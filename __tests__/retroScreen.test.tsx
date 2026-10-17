@@ -3,7 +3,7 @@ import type { EffectCallback } from 'react';
 
 import { registerGlobalCss } from '../jest/css';
 import { db } from '../src/db';
-import { addFixedCost } from '../src/db/lists';
+import { addFixedCost, addInstallment } from '../src/db/lists';
 import { saveRetrospective } from '../src/db/retrospectives';
 import { categories, fixedCosts, retrospectives, transactions } from '../src/db/schema';
 import { type TransactionInput, addTransaction } from '../src/db/transactions';
@@ -516,4 +516,15 @@ test('다 만들면 저장하고, 늘 있는 상태 줄(live region)이 쓴 모�
   expect(screen.getByText('변동비는 46,000원였어요.')).toBeOnTheScreen();
   expect(screen.queryByText('아직 회고가 없어요')).toBeNull();
   expect(await db.select().from(retrospectives)).toHaveLength(1);
+});
+
+test('그 달에 시작한 할부는 고정비라 변동비 지표에서 빠져도 총지출 카드에 남긴다(PRD 4.6)', async () => {
+  await august(3);
+  await addInstallment(db, expense({ amount: 1200000, date: '2026-08-20', categoryId: 5 }), {
+    months: 12,
+    name: 'TV',
+  });
+  await mount('2026-08-01');
+
+  expect(await screen.findByText('새 할부: TV 1,200,000원 · 12개월')).toBeOnTheScreen();
 });

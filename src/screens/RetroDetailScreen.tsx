@@ -243,7 +243,7 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
           .filter(item => !item.hidden && item.installmentStart === month)
           .map(item => (
             <Prose key={item.id} className='tabular-nums'>
-              {`새 할부: ${item.name} ${formatWon(item.installmentTotal ?? 0)} · ${item.installmentMonths}개월`}
+              {`새 할부: ${item.name} ${formatWon(item.installmentTotal ?? 0)}을 ${item.installmentMonths}개월로 나눠 내요`}
             </Prose>
           ))}
       </Card>

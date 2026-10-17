@@ -132,7 +132,7 @@ function Form({
                 {`할부 ${formatWon(item.installmentTotal ?? 0)} · ${item.installmentMonths}개월`}
               </Text>
               <Prose size='sm' tone='muted' className='tabular-nums'>
-                {`${monthLabel(item.installmentStart)}부터 ${monthLabel(end)}까지 매월 ${item.dayOfMonth}일 ${formatWon(item.amount)}`}
+                {`${monthLabel(item.installmentStart)}부터 ${monthLabel(end)}까지 매월 ${item.dayOfMonth}일 · ${formatWon(item.amount)}`}
               </Prose>
               <Prose size='sm' tone='muted'>
                 총액과 개월 수는 고칠 수 없어요. 잘못 넣었거나 반품했으면 해지하고 다시 기록해요

@@ -526,5 +526,5 @@ test('그 달에 시작한 할부는 고정비라 변동비 지표에서 빠져�
   });
   await mount('2026-08-01');
 
-  expect(await screen.findByText('새 할부: TV 1,200,000원 · 12개월')).toBeOnTheScreen();
+  expect(await screen.findByText('새 할부: TV 1,200,000원을 12개월로 나눠 내요')).toBeOnTheScreen();
 });

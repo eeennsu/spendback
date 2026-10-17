@@ -37,7 +37,7 @@ import { formatWon } from '../domain/format';
 import { render } from '../retro/render';
 import { mutate, read, useQuery, useToday } from '../state/data';
 import { SATISFACTION, useLists } from '../state/lists';
-import { Choices, SwitchRow } from '../ui/layout';
+import { Choices, SwitchRow, compactChips } from '../ui/layout';
 import { Prose } from '../ui/prose';
 import { Sheet } from '../ui/sheet';
 import { visibleExpenseCategories } from './CardInboxSection';
@@ -265,7 +265,10 @@ function EntryForm({
   // 할부가 곧 고정비라 고정비 스위치와 연결을 비운다
   const toggleInstallment = (on: boolean) => {
     setInstallment(on ? { choice: undefined, custom: '' } : null);
-    if (on) set({ isFixed: false, fixedCostId: null });
+    if (!on) return;
+    set({ isFixed: false, fixedCostId: null });
+    // 새로 나온 개월 수 칩이 아래 버튼 영역에 가리지 않게 끝까지 내린다(9차 I-01). 할부 아래에는 다른 항목이 없다
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
   const pickMemo = async (suggestion: string) => {
@@ -460,18 +463,21 @@ function EntryForm({
 
         <Stack className='gap-2'>
           <Label>날짜</Label>
-          <Stack direction='row' wrap className='gap-3'>
+          <Stack direction='row' wrap className={compactChips.row}>
             <Chip
+              className={compactChips.chip}
               label='오늘'
               selected={dateChoice === 'today'}
               onPress={() => set({ date: today })}
             />
             <Chip
+              className={compactChips.chip}
               label='어제'
               selected={dateChoice === 'yesterday'}
               onPress={() => set({ date: yesterday })}
             />
             <Chip
+              className={compactChips.chip}
               label={otherLabel}
               selected={dateChoice === 'other'}
               onPress={() => setPicking(true)}
@@ -504,9 +510,14 @@ function EntryForm({
             />
           </Stack>
           {suggestions && suggestions.length > 0 && (
-            <Stack direction='row' wrap className='gap-3'>
+            <Stack direction='row' wrap className={compactChips.row}>
               {suggestions.map(suggestion => (
-                <Chip key={suggestion} label={suggestion} onPress={() => pickMemo(suggestion)} />
+                <Chip
+                  key={suggestion}
+                  label={suggestion}
+                  onPress={() => pickMemo(suggestion)}
+                  className={compactChips.chip}
+                />
               ))}
             </Stack>
           )}
@@ -552,6 +563,7 @@ function EntryForm({
           <>
             <Choices
               label='구분'
+              compact
               options={[
                 { value: 'expense', label: '지출' },
                 { value: 'income', label: '수입' },
@@ -562,6 +574,7 @@ function EntryForm({
             {expense && (
               <Choices
                 label='이유'
+                compact
                 options={tagOptions}
                 value={values.reasonTagId ?? undefined}
                 onChange={reasonTagId => set({ reasonTagId: reasonTagId ?? null })}
@@ -571,6 +584,7 @@ function EntryForm({
             {expense && (
               <Choices
                 label='만족도'
+                compact
                 options={SATISFACTION}
                 value={values.satisfaction ?? undefined}
                 onChange={satisfaction => set({ satisfaction: satisfaction ?? null })}
@@ -596,6 +610,7 @@ function EntryForm({
               <Stack className='gap-2'>
                 <Choices
                   label='개월 수'
+                  compact
                   options={INSTALLMENT_CHOICES}
                   value={installment.choice}
                   onChange={choice => setInstallment({ ...installment, choice })}
@@ -613,6 +628,12 @@ function EntryForm({
                           ...installment,
                           custom: text.replace(/\D/g, '').slice(0, 2),
                         })
+                      }
+                      // 범위 밖이면 칸이 오류를 보인다(9차 I-04). 이유는 저장 위 상태 줄이 쓴다
+                      invalid={
+                        months !== undefined &&
+                        installment.custom !== '' &&
+                        (months < INSTALLMENT_MONTHS.min || months > INSTALLMENT_MONTHS.max)
                       }
                       className='w-20 pl-4 pr-4 tabular-nums'
                     />
@@ -643,6 +664,7 @@ function EntryForm({
             {expense && !installment && values.isFixed && fixedOptions.length > 0 && (
               <Choices
                 label='연결할 고정비 항목'
+                compact
                 options={fixedOptions}
                 value={values.fixedCostId ?? undefined}
                 onChange={fixedCostId => set({ fixedCostId: fixedCostId ?? null })}

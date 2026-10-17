@@ -230,9 +230,9 @@ export function RetroDetailScreen({ route }: StaticScreenProps<Params>) {
         {!saidChange && (
           <Prose className='tabular-nums'>
             {change === undefined
-              ? `${before}와 비교할 기록이 없어요`
+              ? `${before}과 비교할 기록이 없어요`
               : change === '같았어요'
-                ? `변동비가 ${before}와 같았어요`
+                ? `변동비가 ${before}과 같았어요`
                 : `변동비가 ${before}보다 ${change}`}
           </Prose>
         )}

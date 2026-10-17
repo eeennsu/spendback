@@ -229,7 +229,7 @@ test('저장본이 있으면 다시 만들지 않고, 코드가 채운 이름과
   // 서술어("늘었어요")는 강조하지 않는다
   expect(screen.queryByText('29,000원 늘었어요')).toBeNull();
   // 회고 문장이 변동비 증감을 말하지 않으면 카드의 비교 줄이 있다
-  expect(screen.getByText('지난달와 비교할 기록이 없어요')).toBeOnTheScreen();
+  expect(screen.getByText('지난달과 비교할 기록이 없어요')).toBeOnTheScreen();
   expect(llamaNarrator).not.toHaveBeenCalled();
 });
 

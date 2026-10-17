@@ -1,7 +1,7 @@
-import { Button, Stack } from '@eeennsu/native';
+import { Button, Text } from '@eeennsu/native';
 import { useState } from 'react';
-import { AccessibilityInfo, FlatList } from 'react-native';
-import { View } from 'react-native-css/components';
+import { FlatList, useWindowDimensions } from 'react-native';
+import { ScrollView, View } from 'react-native-css/components';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type TransactionRow, tagExpenses, untaggedExpenses } from '../db/transactions';
@@ -20,13 +20,15 @@ type Satisfaction = NonNullable<TransactionRow['satisfaction']>;
  */
 export function TaggingScreen() {
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const today = useToday();
   const lists = useLists();
   const rows = useQuery('tagging', db => untaggedExpenses(db, TAGGING_FROM));
   const [selected, setSelected] = useState<ReadonlySet<number>>(new Set());
   const [reasonTagId, setReasonTagId] = useState<number>();
   const [satisfaction, setSatisfaction] = useState<Satisfaction>();
-  const [failed, setFailed] = useState(false);
+  // 적용한 결과. 다음에 무언가 고르면 지운다
+  const [notice, setNotice] = useState<{ text: string; failed: boolean }>();
 
   if (!rows || !lists) return <View className='flex-1 bg-canvas' />;
 
@@ -36,9 +38,18 @@ export function TaggingScreen() {
     const next = new Set(selected);
     if (!next.delete(id)) next.add(id);
     setSelected(next);
+    setNotice(undefined);
   };
   const count = selected.size;
-  const ready = count > 0 && (reasonTagId !== undefined || satisfaction !== undefined);
+  const picked = reasonTagId !== undefined || satisfaction !== undefined;
+  // 입력 시트의 저장 줄과 같이 버튼이 꺼진 이유와 누르면 일어날 일을 버튼 위에 쓴다(DESIGN.md 3.7)
+  const status =
+    notice?.text ??
+    (count === 0
+      ? '지출을 고르세요'
+      : !picked
+        ? '이유나 만족도를 골라 주세요'
+        : '고른 값만 붙이고 이미 있는 값은 그대로 둬요');
 
   const apply = async () => {
     try {
@@ -50,14 +61,13 @@ export function TaggingScreen() {
       );
     } catch (error) {
       console.error(error);
-      setFailed(true);
+      setNotice({ text: '저장하지 못했어요. 다시 눌러 주세요', failed: true });
       return;
     }
-    setFailed(false);
+    setNotice({ text: `${count}건에 적용했어요`, failed: false });
     setSelected(new Set());
     setReasonTagId(undefined);
     setSatisfaction(undefined);
-    AccessibilityInfo.announceForAccessibility(`${count}건에 적용했어요`);
   };
 
   return (
@@ -70,7 +80,7 @@ export function TaggingScreen() {
         ListHeaderComponent={
           rows.length > 0 ? (
             <Prose size='sm' tone='muted' className='pb-2'>
-              {`비어 있는 지출 ${rows.length}건이에요. 골라서 이유와 만족도를 한 번에 정해요`}
+              {`이유나 만족도가 빈 지출 ${rows.length}건이에요. 골라서 한 번에 정해요`}
             </Prose>
           ) : undefined
         }
@@ -83,12 +93,15 @@ export function TaggingScreen() {
         renderItem={({ item }) => {
           const name = leadingEmoji(category(item.categoryId));
           const title = item.memo || name.rest;
-          // 이미 고른 값을 보여 어느 쪽이 비었는지 알게 한다
+          const reason =
+            item.reasonTagId === null ? undefined : lists.names.reasonTags.get(item.reasonTagId);
+          const feeling = SATISFACTION.find(s => s.value === item.satisfaction)?.label;
+          // 이미 고른 값에 이름을 붙여 어느 쪽이 비었는지 알게 한다
           const meta = [
             title === name.rest ? undefined : name.rest,
             relativeDate(item.date, today),
-            item.reasonTagId === null ? undefined : lists.names.reasonTags.get(item.reasonTagId),
-            SATISFACTION.find(s => s.value === item.satisfaction)?.label,
+            reason && `이유 ${reason}`,
+            feeling && `만족도 ${feeling}`,
           ]
             .filter(Boolean)
             .join(' · ');
@@ -109,38 +122,53 @@ export function TaggingScreen() {
         }}
       />
       {rows.length > 0 && (
-        <Stack className='gap-3 border-t border-border bg-surface px-4 pt-3'>
-          <Choices
-            label='이유'
-            compact
-            optional
-            options={lists.reasonTags
-              .filter(t => !t.hidden)
-              .map(t => ({ value: t.id, label: t.name }))}
-            value={reasonTagId}
-            onChange={setReasonTagId}
-          />
-          <Choices
-            label='만족도'
-            compact
-            optional
-            options={SATISFACTION}
-            value={satisfaction}
-            onChange={setSatisfaction}
-          />
-          {failed && (
-            <Prose size='sm' tone='danger'>
-              저장하지 못했어요. 다시 눌러 주세요
-            </Prose>
-          )}
-          <Button
-            label={count > 0 ? `${count}건에 적용` : '지출을 고르세요'}
-            disabled={!ready}
-            onPress={apply}
-          />
+        <View className='border-t border-border bg-surface'>
+          {/* 글자를 크게 하거나 태그가 늘어도 목록과 버튼이 남게 칩만 스크롤한다 */}
+          <ScrollView
+            style={{ maxHeight: height * 0.4 }}
+            contentContainerClassName='gap-3 px-4 pt-3'
+          >
+            <Choices
+              label='이유'
+              compact
+              optional
+              options={lists.reasonTags
+                .filter(t => !t.hidden)
+                .map(t => ({ value: t.id, label: t.name }))}
+              value={reasonTagId}
+              onChange={value => {
+                setReasonTagId(value);
+                setNotice(undefined);
+              }}
+            />
+            <Choices
+              label='만족도'
+              compact
+              optional
+              options={SATISFACTION}
+              value={satisfaction}
+              onChange={value => {
+                setSatisfaction(value);
+                setNotice(undefined);
+              }}
+            />
+          </ScrollView>
+          <View className='gap-2 px-4 pb-3 pt-3'>
+            {/* 접근성 prop만 가진 View는 평탄화돼 live region이 사라진다(DESIGN.md 3.7, 입력 시트와 같다) */}
+            <View accessibilityLiveRegion='polite' collapsable={false}>
+              <Text size='sm' tone={notice?.failed ? 'danger' : 'muted'}>
+                {status}
+              </Text>
+            </View>
+            <Button
+              label={count > 0 ? `${count}건에 적용` : '적용'}
+              disabled={count === 0 || !picked}
+              onPress={apply}
+            />
+          </View>
           {/* 제스처 막대 자리. style을 주면 react-native-css가 className 여백을 덮어써 빈 뷰로 비운다(ScreenScroll과 같다) */}
           <View style={{ height: insets.bottom }} />
-        </Stack>
+        </View>
       )}
     </View>
   );

@@ -204,7 +204,7 @@ describe('홈', () => {
 
     await fireEvent.press(
       await screen.findByRole('button', {
-        name: '이번 달 지출 64,500원, 고정비 55,000원 포함, 수입 3,000,000원. 내역 보기',
+        name: '이번 달 지출 64,500원, 변동비 9,500원, 고정비 55,000원, 수입 3,000,000원. 내역 보기',
       }),
     );
     expect(mockNavigation.navigate).toHaveBeenCalledWith('Tabs', { screen: 'History' });
@@ -219,7 +219,9 @@ describe('홈', () => {
 
     await act(() => mutate(d => addTransaction(d, expense({ date: '2026-10-02' }))));
     await fireEvent.press(
-      await screen.findByRole('button', { name: '이유·만족도 고르기, 비어 있는 지출 1건' }),
+      await screen.findByRole('button', {
+        name: '이유·만족도 고르기, 이유나 만족도가 빈 지출 1건',
+      }),
     );
     expect(mockNavigation.navigate).toHaveBeenCalledWith('Tagging');
   });
@@ -235,7 +237,7 @@ describe('홈', () => {
 });
 
 describe('이유·만족도 고르기', () => {
-  const apply = () => screen.getByRole('button', { name: /에 적용$|^지출을 고르세요$/ });
+  const apply = () => screen.getByRole('button', { name: /적용$/ });
 
   test('여러 지출을 골라 고른 값만 한 번에 붙이고, 둘 다 채운 지출은 목록에서 빠진다', async () => {
     const coffee = await addTransaction(db, expense({ date: '2026-10-02', memo: '커피' }));
@@ -247,24 +249,27 @@ describe('이유·만족도 고르기', () => {
     await mount(<TaggingScreen />);
 
     expect(
-      await screen.findByText('비어 있는 지출 3건이에요. 골라서 이유와 만족도를 한 번에 정해요'),
+      await screen.findByText('이유나 만족도가 빈 지출 3건이에요. 골라서 한 번에 정해요'),
     ).toBeOnTheScreen();
-    // 이미 고른 값은 아랫줄에 보인다
+    // 이미 고른 값은 이름을 붙여 아랫줄에 보인다
     expect(
-      screen.getByRole('checkbox', { name: '점심, 식비 · 10월 3일 · 필요, 9,500원' }),
+      screen.getByRole('checkbox', { name: '점심, 식비 · 10월 3일 · 이유 필요, 9,500원' }),
     ).toBeOnTheScreen();
+    // 버튼이 꺼진 이유는 버튼 위 줄이 말한다
     expect(apply()).toBeDisabled();
+    expect(screen.getByText('지출을 고르세요')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('checkbox', { name: /^커피/ }));
     await fireEvent.press(screen.getByRole('checkbox', { name: /^점심/ }));
     expect(screen.getByRole('checkbox', { name: /^커피/ })).toBeChecked();
-    // 지출만 고르고 값을 고르지 않으면 적용할 것이 없다
     expect(apply()).toBeDisabled();
+    expect(screen.getByText('이유나 만족도를 골라 주세요')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: '후회' }));
-    await fireEvent.press(apply());
+    await fireEvent.press(screen.getByRole('button', { name: '2건에 적용' }));
 
+    expect(await screen.findByText('2건에 적용했어요')).toBeOnTheScreen();
     expect(
-      await screen.findByText('비어 있는 지출 2건이에요. 골라서 이유와 만족도를 한 번에 정해요'),
+      screen.getByText('이유나 만족도가 빈 지출 2건이에요. 골라서 한 번에 정해요'),
     ).toBeOnTheScreen();
     expect(screen.queryByRole('checkbox', { name: /^점심/ })).toBeNull();
     expect(screen.getByRole('checkbox', { name: /^커피/ })).not.toBeChecked();

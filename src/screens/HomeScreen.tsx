@@ -144,16 +144,17 @@ export function HomeScreen() {
         <CardInboxSection today={today} />
 
         {data.untagged > 0 && (
-          <Card>
+          // 줄 하나라 카드 위아래 여백을 줄여 숫자 카드보다 가볍게 둔다
+          <Card className='py-3'>
             <Row
               chevron
-              label={`이유·만족도 고르기, 비어 있는 지출 ${data.untagged}건`}
+              label={`이유·만족도 고르기, 이유나 만족도가 빈 지출 ${data.untagged}건`}
               onPress={() => navigation.navigate('Tagging')}
             >
               <Stack className='flex-1 gap-1'>
                 <Text>이유·만족도 고르기</Text>
                 <Text size='sm' tone='muted' className='tabular-nums'>
-                  {`비어 있는 지출 ${data.untagged}건 · 회고에 쓰여요`}
+                  {`이유나 만족도가 빈 지출 ${data.untagged}건 · 회고에 쓰여요`}
                 </Text>
               </Stack>
             </Row>
@@ -251,8 +252,8 @@ export function HomeScreen() {
 type MonthRow = { type: 'expense' | 'income'; amount: number; isFixed: boolean };
 
 /**
- * 이번 달 지출 합계(DESIGN.md 4.2). 내역 위의 합계와 같은 값이라 고정비를 넣는다. 위 예산의 사용액은 변동비만이라 고정비
- * 몫을 적어 두 숫자가 다른 까닭을 보인다. 카드 전체가 이번 달 내역을 여는 버튼이다
+ * 이번 달 지출 합계(DESIGN.md 4.2). 내역 위의 합계와 같은 값이라 고정비를 넣는다. 위 예산의 사용액은 변동비만이라
+ * 변동비와 고정비로 나눠 적어 두 숫자가 이어지게 한다. 카드 전체가 이번 달 내역을 여는 버튼이다
  */
 function MonthTotal({ rows, onPress }: { rows: MonthRow[]; onPress: () => void }) {
   const sum = (pick: (row: MonthRow) => boolean) =>
@@ -261,9 +262,9 @@ function MonthTotal({ rows, onPress }: { rows: MonthRow[]; onPress: () => void }
   const fixed = sum(r => r.type === 'expense' && r.isFixed);
   const income = sum(r => r.type === 'income');
   const detail = [
-    fixed > 0 ? `고정비 ${formatWon(fixed)} 포함` : undefined,
-    income > 0 ? `수입 ${formatWon(income)}` : undefined,
-  ].filter((s): s is string => s !== undefined);
+    ...(fixed > 0 ? [`변동비 ${formatWon(expense - fixed)}`, `고정비 ${formatWon(fixed)}`] : []),
+    ...(income > 0 ? [`수입 ${formatWon(income)}`] : []),
+  ];
   return (
     <Pressable
       accessibilityRole='button'

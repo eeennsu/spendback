@@ -98,7 +98,8 @@ export function Row({
       accessibilityState={checked === undefined ? undefined : { checked }}
       accessibilityLabel={label}
       onPress={onPress}
-      className={cn(className, 'active:bg-surface-hover')}
+      // 고른 줄은 바탕을 깔아 체크 칸 말고도 훑어 찾을 수 있게 한다
+      className={cn(className, checked && 'bg-surface', 'active:bg-surface-hover')}
     >
       {checked !== undefined && (
         <View

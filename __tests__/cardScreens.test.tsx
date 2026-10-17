@@ -170,7 +170,7 @@ describe('홈의 카드 알림', () => {
 
     const row = await screen.findByRole('button', { name: /^읽지 못한 알림/ });
     expect(within(row).getByText('승인 거절 · 한도를 확인하세요')).toBeOnTheScreen();
-    answerAlert('넘기기');
+    answerAlert('삭제');
     await fireEvent.press(row);
     expect(await db.select().from(cardInbox)).toMatchObject([{ status: 'dismissed' }]);
   });
@@ -186,7 +186,7 @@ describe('홈의 카드 알림', () => {
     expect(alert.mock.calls[0][1]).toBe('승인 거절 · 한도를 확인하세요');
     alert.mockRestore();
 
-    answerAlert('직접 기록');
+    answerAlert('기록');
     await fireEvent.press(row);
     expect(mockNavigation.navigate).toHaveBeenCalledWith('Entry', {});
     expect(await db.select().from(cardInbox)).toMatchObject([{ status: 'dismissed' }]);
@@ -211,8 +211,8 @@ describe('카드 알림에서 연 입력 시트', () => {
       selected: true,
     });
     expect(screen.getByText('전에 이 가맹점을 카페·간식에 적었어요')).toBeOnTheScreen();
-    // 메모와 결제수단은 선택 항목 안에 있어 접힌 줄이 값을 보인다
-    expect(screen.getByText('스타벅스 역삼점 · 카드')).toBeOnTheScreen();
+    // 메모는 가맹점으로 채운다. 결제수단(카드)은 시트에 없고 저장 값에만 남는다
+    expect(screen.getByLabelText('메모 (선택)').props.value).toBe('스타벅스 역삼점');
 
     await fireEvent.press(save());
     const rows = await db.select().from(transactions);

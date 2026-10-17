@@ -252,24 +252,21 @@ describe('입력 시트', () => {
     expect(mockNavigation.goBack).toHaveBeenCalled();
   });
 
-  test('선택 항목은 접혀 있다가 펼치면 보이고, 결제수단은 미리 고르지 않는다', async () => {
+  test('메모는 접힘 밖에 있고, 추가 정보는 접혀 있다가 펼치면 보이며, 결제수단은 없다', async () => {
     await mount(entry());
 
     await screen.findByText('지출 기록');
+    expect(screen.getByLabelText('메모 (선택)')).toBeOnTheScreen();
     expect(screen.queryByText('만족도')).toBeNull();
-    await fireEvent.press(screen.getByRole('button', { name: /선택 항목 더 보기/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /추가 정보 더 보기/ }));
     expect(screen.getByText('만족도')).toBeOnTheScreen();
-    for (const method of ['카드', '현금', '계좌이체']) {
-      expect(screen.getByRole('button', { name: method }).props.accessibilityState).toMatchObject({
-        selected: false,
-      });
-    }
+    expect(screen.queryByText('결제수단')).toBeNull();
   });
 
   test('수입으로 바꾸면 수입 카테고리만 남고 지출 전용 항목이 사라진다', async () => {
     await mount(entry());
 
-    await fireEvent.press(await screen.findByRole('button', { name: /선택 항목 더 보기/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: /추가 정보 더 보기/ }));
     await fireEvent.press(screen.getByRole('button', { name: '수입' }));
 
     expect(screen.getByText('수입 기록')).toBeOnTheScreen();
@@ -281,7 +278,7 @@ describe('입력 시트', () => {
   test('선택 칩은 다시 누르면 선택이 풀린다', async () => {
     await mount(entry());
 
-    await fireEvent.press(await screen.findByRole('button', { name: /선택 항목 더 보기/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: /추가 정보 더 보기/ }));
     const regret = () => screen.getByRole('button', { name: '후회' });
     await fireEvent.press(regret());
     expect(regret().props.accessibilityState).toMatchObject({ selected: true });
@@ -293,7 +290,7 @@ describe('입력 시트', () => {
     await fixedItem();
     await mount(entry());
 
-    await fireEvent.press(await screen.findByRole('button', { name: /선택 항목 더 보기/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: /추가 정보 더 보기/ }));
     expect(screen.queryByText('연결할 고정비 항목')).toBeNull();
     await fireEvent.press(screen.getByRole('switch', { name: '고정비' }));
     expect(screen.getByRole('switch', { name: '고정비' }).props.accessibilityState).toMatchObject({
@@ -311,8 +308,9 @@ describe('입력 시트', () => {
     expect(await screen.findByText('휴대폰 요금 기록')).toBeOnTheScreen();
     expect(screen.getByLabelText('금액').props.value).toBe('55,000');
     expect(chipIn('날짜', '9월 21일').props.accessibilityState).toMatchObject({ selected: true });
-    // 선택 항목에 값이 있으면 접힌 줄이 항목 이름 대신 값을 보인다(DESIGN.md 4.3)
-    expect(screen.getByText('휴대폰 요금 · 카드 · 고정비 연결')).toBeOnTheScreen();
+    // 추가 정보에 값이 있으면 접힌 줄이 항목 이름 대신 값을 보인다(DESIGN.md 4.3)
+    expect(screen.getByLabelText('메모 (선택)').props.value).toBe('휴대폰 요금');
+    expect(screen.getByText('고정비 연결')).toBeOnTheScreen();
 
     await fireEvent.press(save());
     expect(await db.select().from(transactions)).toMatchObject([
@@ -341,7 +339,7 @@ describe('입력 시트', () => {
 
     expect(await screen.findByText('지출 수정')).toBeOnTheScreen();
     expect(screen.getByLabelText('금액').props.value).toBe('4,500');
-    // 삭제는 선택 항목을 펼치지 않아도 있다
+    // 삭제는 추가 정보를 펼치지 않아도 있다
     expect(screen.getByRole('button', { name: '삭제' })).toBeOnTheScreen();
   });
 });

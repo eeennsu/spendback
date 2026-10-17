@@ -23,7 +23,7 @@ import { amountText, editAmount } from '../domain/entry';
 import { paymentDate } from '../domain/fixedCost';
 import { render } from '../retro/render';
 import { mutate, read, useQuery, useToday } from '../state/data';
-import { PAYMENT_METHODS, SATISFACTION, useLists } from '../state/lists';
+import { SATISFACTION, useLists } from '../state/lists';
 import { Choices, SwitchRow } from '../ui/layout';
 import { Prose } from '../ui/prose';
 import { Sheet } from '../ui/sheet';
@@ -34,8 +34,8 @@ type Params =
   { transactionId?: number; fixedCostId?: number; month?: string; inboxId?: number } | undefined;
 
 /**
- * 입력 시트(PRD 4.1, docs/DESIGN.md 4.3). 금액 → 카테고리 → 저장, 3번에 끝나도록 필수 항목만 먼저 보이고 나머지는
- * "선택 항목"으로 접는다. 거래 줄에서 열면 수정, 홈 고정비 줄이나 월간 회고의 미기록 알림에서 열면 그 항목과 그 달의
+ * 입력 시트(PRD 4.1, docs/DESIGN.md 4.3). 금액 → 카테고리 → 저장, 3번에 끝나도록 필수 항목과 메모만 먼저 보이고
+ * 나머지는 "추가 정보"로 접는다. 거래 줄에서 열면 수정, 홈 고정비 줄이나 월간 회고의 미기록 알림에서 열면 그 항목과 그 달의
  * 결제일로 채운 채로 연다(PRD 4.4). 홈 카드 알림 줄에서 열면 알림 값과 추천 카테고리로 채운다(PRD 4.9)
  */
 export function EntrySheet({ route }: StaticScreenProps<Params>) {
@@ -295,9 +295,6 @@ function EntryForm({
   const summary = [
     values.reasonTagId !== null && tagOptions.find(t => t.value === values.reasonTagId)?.label,
     values.satisfaction !== null && SATISFACTION.find(s => s.value === values.satisfaction)?.label,
-    memo.trim() || undefined,
-    values.paymentMethod !== null &&
-      PAYMENT_METHODS.find(p => p.value === values.paymentMethod)?.label,
     values.isFixed && (values.fixedCostId !== null ? '고정비 연결' : '고정비'),
   ].filter((s): s is string => typeof s === 'string');
 
@@ -368,7 +365,7 @@ function EntryForm({
               value={amountText(values.amount)}
               onValueChange={text => set({ amount: editAmount(values.amount, text) })}
               // placeholder는 두지 않는다. 라벨이 칸의 뜻을 말한다(DESIGN.md 4.3)
-              className='flex-1 text-2xl tabular-nums'
+              className='flex-1 pl-4 pr-4 text-2xl tabular-nums'
             />
             <Text size='lg'>원</Text>
           </Stack>
@@ -380,6 +377,7 @@ function EntryForm({
             options={categoryOptions}
             value={categoryId}
             onChange={categoryId => categoryId !== undefined && set({ categoryId })}
+            compact
           />
           {inbox?.gateway && (
             <Prose size='sm' tone='muted'>
@@ -429,6 +427,27 @@ function EntryForm({
           />
         )}
 
+        <Stack className='gap-2'>
+          <Stack className='gap-1'>
+            <Label htmlFor='memo'>메모 (선택)</Label>
+            <Input
+              id='memo'
+              label='메모'
+              size='lg'
+              value={memo}
+              onValueChange={text => set({ memo: text })}
+              className='pl-4 pr-4'
+            />
+          </Stack>
+          {suggestions && suggestions.length > 0 && (
+            <Stack direction='row' wrap className='gap-3'>
+              {suggestions.map(suggestion => (
+                <Chip key={suggestion} label={suggestion} onPress={() => pickMemo(suggestion)} />
+              ))}
+            </Stack>
+          )}
+        </Stack>
+
         <Pressable
           accessibilityRole='button'
           accessibilityState={{ expanded: more }}
@@ -451,13 +470,13 @@ function EntryForm({
           className='-mx-6 flex-row items-center gap-3 px-6 py-3 active:bg-surface-hover'
         >
           <Stack className='flex-1 gap-1'>
-            <Text>{more ? '선택 항목 접기' : '선택 항목 더 보기'}</Text>
+            <Text>{more ? '추가 정보 접기' : '추가 정보 더 보기'}</Text>
             <Prose size='sm' tone='muted'>
               {summary.length > 0
                 ? summary.join(' · ')
                 : expense
-                  ? '구분 · 이유 · 만족도 · 메모 · 결제수단 · 고정비'
-                  : '구분 · 메모 · 결제수단'}
+                  ? '구분 · 이유 · 만족도 · 고정비'
+                  : '구분'}
             </Prose>
           </Stack>
           <Icon name={more ? 'chevron-up' : 'chevron-down'} tone='muted' />
@@ -492,36 +511,6 @@ function EntryForm({
                 optional
               />
             )}
-            <Stack className='gap-2'>
-              <Stack className='gap-1'>
-                <Label htmlFor='memo'>메모</Label>
-                <Input
-                  id='memo'
-                  label='메모'
-                  size='lg'
-                  value={memo}
-                  onValueChange={text => set({ memo: text })}
-                />
-              </Stack>
-              {suggestions && suggestions.length > 0 && (
-                <Stack direction='row' wrap className='gap-3'>
-                  {suggestions.map(suggestion => (
-                    <Chip
-                      key={suggestion}
-                      label={suggestion}
-                      onPress={() => pickMemo(suggestion)}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </Stack>
-            <Choices
-              label='결제수단'
-              options={PAYMENT_METHODS}
-              value={values.paymentMethod ?? undefined}
-              onChange={paymentMethod => set({ paymentMethod: paymentMethod ?? null })}
-              optional
-            />
             {expense && (
               <SwitchRow
                 label='고정비'

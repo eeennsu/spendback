@@ -25,7 +25,7 @@ name: 카드 알림 · 승인
     direction: DOWN
 - tapOn: '읽지 못한 알림.*'
 - assertVisible: '.*승인 거절 안내.*'
-- tapOn: '넘기기'
+- tapOn: '삭제'
 - assertNotVisible: '읽지 못한 알림.*'
 
 # 최근 지출에 메모(가맹점)와 고른 카테고리로 남았다

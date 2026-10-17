@@ -109,15 +109,15 @@ function InboxRow({
         label={`${title}, ${item.text}`}
         onPress={() =>
           Alert.alert(title, body, [
-            { text: '닫기', style: 'cancel' },
+            { text: '그냥 닫기', style: 'cancel' },
             {
-              text: '직접 기록',
+              text: '기록',
               onPress: () => {
                 dismiss();
                 record();
               },
             },
-            { text: '넘기기', onPress: dismiss },
+            { text: '삭제', onPress: dismiss },
           ])
         }
       />

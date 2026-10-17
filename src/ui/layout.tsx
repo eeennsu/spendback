@@ -166,30 +166,36 @@ export function MoneyRow({
   );
 }
 
-/** 한 가지를 고르는 칩 묶음. optional이면 고른 칩을 다시 눌러 선택을 지운다(필수 항목은 지우지 않는다) */
+/**
+ * 한 가지를 고르는 칩 묶음. optional이면 고른 칩을 다시 눌러 선택을 지운다(필수 항목은 지우지 않는다).
+ * compact는 칩이 많은 묶음(입력 시트 카테고리)이 줄을 덜 쓰게 가로만 좁힌다. 높이는 누름 영역 48 때문에 그대로다
+ */
 export function Choices<T extends string | number>({
   label,
   options,
   value,
   onChange,
   optional = false,
+  compact = false,
 }: {
   label: string;
   options: ReadonlyArray<{ value: T; label: string }>;
   value: T | undefined;
   onChange: (value: T | undefined) => void;
   optional?: boolean;
+  compact?: boolean;
 }) {
   return (
     <Stack className='gap-2'>
       <Label>{label}</Label>
-      <Stack direction='row' wrap className='gap-3'>
+      <Stack direction='row' wrap className={compact ? 'gap-x-2 gap-y-3' : 'gap-3'}>
         {options.map(option => (
           <Chip
             key={String(option.value)}
             label={option.label}
             selected={option.value === value}
             onPress={() => onChange(optional && option.value === value ? undefined : option.value)}
+            className={compact ? 'px-3' : undefined}
           />
         ))}
       </Stack>
